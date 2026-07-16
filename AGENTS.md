@@ -196,7 +196,7 @@ Ordered roughly by impact vs. effort. Check items off as completed.
 - [x] Add parallel build (`-j $(nproc)`) to `configure.py`.
 - [ ] Decide whether to keep vendored SFML 2.5.0 or upgrade to SFML 3.x
       (API changes: `sf::Window`/`sf::RenderWindow`, audio module renames).
-- [ ] Replace the hand-rolled `configure.py` with a documented CMakePresets.json
+- [x] Replace the hand-rolled `configure.py` with a documented CMakePresets.json
       flow (keep `configure.py` as a thin wrapper for now).
 - [ ] Add CI (GitHub Actions) building on Linux (GCC + Clang) and Windows.
 - [ ] Introduce `-Werror` again **only after** all legacy warnings are gone, or
