@@ -92,7 +92,7 @@ Example:
 runs `resource/script/App/war.lts`, an AI skirmish test. The `war` app runs
 on Linux with working mouse UI — pressing Escape opens the menu, and EXIT GAME
 works. Many other apps are broken or incomplete, but some work well enough to
-fly around a system. Other apps to try: `dogfight`, `hud`.
+fly around a system. Other apps to try: `dogfight`.
 
 > The `run` helper sets `LD_LIBRARY_PATH` so the bundled FMOD runtime
 > libraries in `extbin/linux64` and `bin` are found automatically.
@@ -167,7 +167,7 @@ python configure.py run war
   system, serializer, LTSL scripting), `Game`, `Component`, `UI`, `Module`
   (SoundEngine/FMOD, Physics, Scheduler), `Audio`, `Volume`.
 - **`src/launch/`** — the `launch` executable entry point (`main()`).
-- **`ext/SFML/`** — vendored SFML 2.5.0, built statically into `liblt.so`.
+- **`ext/SFML/`** — vendored SFML 2.6.2, built statically into `liblt.so`.
 - **`extbin/`** — shipped runtime binaries (FMOD).
 - **`resource/`** — game data: 169 `.jsl` shaders, textures, fonts, LTSL scripts.
 - **`script/`** — Python tooling (`tloc`, `assetlist`, ...).

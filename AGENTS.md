@@ -31,7 +31,7 @@ CMakeLists.txt        Top-level build (project = LTheory)
 configure.py          Build/run helper (configure, build, clean, run)
 src/launch/           The launcher executable entry point (main())
 src/liblt/            The engine library: LTE + all subsystems (built as liblt.so)
-ext/SFML/             Vendored SFML 2.5.0 (built statically into liblt)
+ext/SFML/             Vendored SFML 2.6.2 (built statically into liblt)
 extbin/               Shipped runtime binaries (FMOD) — tracked
 resource/             Game data: shaders (.jsl), textures, fonts, scripts
 script/               Python tooling (tloc, assetlist, install_dependencies.sh)
@@ -93,7 +93,7 @@ python3 configure.py run <app>  # runs bin/launch <app> with LD_LIBRARY_PATH set
 
 | Library    | Version / State            | Role                         | Status / Notes |
 |------------|----------------------------|------------------------------|----------------|
-| **SFML**   | 2.5.0, vendored `ext/SFML` | Window, GL context, input, audio, graphics | Patched for modern glxext.h + C++17. **Upgrade candidate.** |
+| **SFML**   | 2.6.2, vendored `ext/SFML` | Window, GL context, input, audio, graphics | Upgraded from 2.5.0. Uses deprecated key aliases (`BackSpace`, `Dash`, etc.) that work but may be cleaned up later. |
 | **FMOD**   | 4.44.24 (ex-api), binary   | 3D audio, music, sound       | Closed-source. Prebuilt `.so` in `extbin/linux64`. **Hard to upgrade** (old low-level API). |
 | **FreeType**| system (`libfreetype-dev`)| Font rasterization           | Uses SYStem freetype; bundled copy removed from `extbin/linux64` (conflicted). |
 | **GLEW**   | system (`libglew-dev`)     | OpenGL extension loading     | Link-only. |
@@ -192,8 +192,10 @@ Ordered roughly by impact vs. effort. Check items off as completed.
 ### Build & Tooling
 - [x] Fix all build errors and warnings for GCC 15 + CMake 4 on Linux.
 - [x] Add parallel build (`-j $(nproc)`) to `configure.py`.
-- [ ] Decide whether to keep vendored SFML 2.5.0 or upgrade to SFML 3.x
-      (API changes: `sf::Window`/`sf::RenderWindow`, audio module renames).
+- [x] Upgrade vendored SFML from 2.5.0 to 2.6.2 (completed, build clean,
+      all working apps verified).
+- [ ] Consider SFML 3.x upgrade (breaking API changes: `sf::Window`/
+      `sf::RenderWindow`, audio module renames, C++11 minimum).
 - [x] Replace the hand-rolled `configure.py` with a documented CMakePresets.json
       flow (keep `configure.py` as a thin wrapper for now).
 - [ ] Add CI (GitHub Actions) building on Linux (GCC + Clang) and Windows.
@@ -208,6 +210,10 @@ Ordered roughly by impact vs. effort. Check items off as completed.
       This is the riskiest dependency to move.
 - [x] Confirm system **FreeType** usage; remove any remaining bundled copies.
 - [ ] Upgrade **UTF8-CPP** include to a current release.
+- [ ] Replace deprecated SFML 2.6 keyboard key names in `Keyboard.cpp`
+      (`BackSpace` → `Backspace`, `Dash` → `Hyphen`, `Quote` → `Apostrophe`,
+      `Return` → `Enter`, `SemiColon` → `Semicolon`, `BackSlash` → `Backslash`,
+      `Tilde` → `Grave`). Currently works via deprecated aliases.
 - [ ] Consider upgrading **GLEW** → GLFW/glad if SFML is upgraded anyway.
 
 ### Engine Code
@@ -219,7 +225,13 @@ Ordered roughly by impact vs. effort. Check items off as completed.
 - [ ] Add unit tests for `LTE` core (Serializer, Type, Vector/Array, String).
 
 ### Content / LTSL
-- [ ] Catalog which `resource/script/App/*.lts` apps currently run vs. crash.
+- [x] Catalog which `resource/script/App/*.lts` apps currently run vs. crash.
+      Working: `war`, `dogfight`. Broken (need investigation): `colony`,
+      `font`, `hnn`, `hud`, `image`, `launcher`, `map`, `market`,
+      `objectinfo`, `platemesh`, `threads`, `ui`, `widget`.
+- [ ] Investigate and fix broken apps: `colony`, `font`, `hnn`, `hud`,
+      `image`, `launcher`, `map`, `market`, `objectinfo`, `platemesh`,
+      `threads`, `ui`, `widget`.
 - [ ] Document the LTSL standard library surface exposed to scripts.
 - [ ] Decide on a path for new content once the platform is stable.
 
