@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2018 Laurent Gomila (laurent@sfml-dev.org)
+// Copyright (C) 2007-2023 Laurent Gomila (laurent@sfml-dev.org)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -26,6 +26,7 @@
 // Headers
 ////////////////////////////////////////////////////////////
 #include <SFML/System/Unix/ThreadImpl.hpp>
+#include <SFML/System/Err.hpp>
 #include <SFML/System/Thread.hpp>
 #include <iostream>
 #include <cassert>
@@ -42,7 +43,7 @@ m_isActive(true)
     m_isActive = pthread_create(&m_thread, NULL, &ThreadImpl::entryPoint, owner) == 0;
 
     if (!m_isActive)
-        std::cerr << "Failed to create thread" << std::endl;
+        err() << "Failed to create thread" << std::endl;
 }
 
 

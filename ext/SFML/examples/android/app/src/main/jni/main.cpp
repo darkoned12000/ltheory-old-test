@@ -6,7 +6,8 @@
 
 // Do we want to showcase direct JNI/NDK interaction?
 // Undefine this to get real cross-platform code.
-#define USE_JNI
+// Uncomment this to try JNI access; this seems to be broken in latest NDKs
+//#define USE_JNI
 
 #if defined(USE_JNI)
 // These headers are only needed for direct NDK/JDK interaction
@@ -90,20 +91,12 @@ int main(int argc, char *argv[])
     image.setOrigin(texture.getSize().x/2, texture.getSize().y/2);
 
     sf::Font font;
-    if (!font.loadFromFile("sansation.ttf"))
+    if (!font.loadFromFile("tuffy.ttf"))
         return EXIT_FAILURE;
 
     sf::Text text("Tap anywhere to move the logo.", font, 64);
     text.setFillColor(sf::Color::Black);
     text.setPosition(10, 10);
-
-    // Loading canary.wav fails for me for now; haven't had time to test why
-
-    /*sf::Music music;
-    if(!music.openFromFile("canary.wav"))
-        return EXIT_FAILURE;
-
-    music.play();*/
 
     sf::View view = window.getDefaultView();
 

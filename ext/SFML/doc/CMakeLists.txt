@@ -1,4 +1,3 @@
-
 # find doxygen
 if(SFML_OS_MACOSX)
     # Add some path to search doxygen in more directories.
@@ -27,7 +26,12 @@ if(SFML_OS_WINDOWS)
                  PATHS "C:/Program Files/HTML Help Workshop" "C:/Program Files (x86)/HTML Help Workshop"
                  DOC "HTML Help Compiler program")
     if(DOXYGEN_HHC_PROGRAM)
-        set(DOXYGEN_GENERATE_HTMLHELP YES)
+        if(DOXYGEN_VERSION VERSION_LESS "1.10.0")
+            set(DOXYGEN_GENERATE_HTMLHELP YES)
+        else()
+            message("Due to conflicts with the HTML output settings in Doxygen ${DOXYGEN_VERSION}, the HTML Help generation will be disabled")
+            set(DOXYGEN_GENERATE_HTMLHELP NO)
+        endif()
     else()
         set(DOXYGEN_GENERATE_HTMLHELP NO)
     endif()
@@ -43,6 +47,7 @@ configure_file(${DOXYGEN_INPUT_DIR}/doc/header.html.in ${DOXYGEN_OUTPUT_DIR}/hea
 
 # copy the files needed by the documentation
 configure_file(${DOXYGEN_INPUT_DIR}/doc/doxygen.css ${DOXYGEN_OUTPUT_DIR}/html/doxygen.css COPYONLY)
+configure_file(${DOXYGEN_INPUT_DIR}/doc/searchOverrides.css ${DOXYGEN_OUTPUT_DIR}/html/searchOverrides.css COPYONLY)
 
 # target setup
 add_custom_target(doc ALL
@@ -52,11 +57,14 @@ add_custom_target(doc ALL
                   WORKING_DIRECTORY ${DOXYGEN_INPUT_DIR})
 
 # setup install rules
+install(FILES ${DOXYGEN_OUTPUT_DIR}/SFML.tag
+        DESTINATION ${CMAKE_INSTALL_DOCDIR}
+        COMPONENT doc)
 install(DIRECTORY ${DOXYGEN_OUTPUT_DIR}/html
-        DESTINATION ${SFML_MISC_INSTALL_PREFIX}/doc
+        DESTINATION ${CMAKE_INSTALL_DOCDIR}
         COMPONENT doc)
 if(DOXYGEN_HHC_PROGRAM)
     install(FILES ${DOXYGEN_OUTPUT_DIR}/sfml.chm
-            DESTINATION ${SFML_MISC_INSTALL_PREFIX}/doc
+            DESTINATION ${CMAKE_INSTALL_DOCDIR}
             COMPONENT doc)
 endif()

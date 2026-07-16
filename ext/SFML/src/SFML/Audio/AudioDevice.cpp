@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2018 Laurent Gomila (laurent@sfml-dev.org)
+// Copyright (C) 2007-2023 Laurent Gomila (laurent@sfml-dev.org)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -22,13 +22,6 @@
 //
 ////////////////////////////////////////////////////////////
 
-// --- Revamp Work modifications (ltheory-old-test fork) ---
-// Copyright (C) 2025  darkoned12000
-// SPDX-License-Identifier: GPL-3.0-or-later
-// Part of the ltheory-old-test modernization effort (Revamp Work).
-// See NOTICE and LICENSE.GPL. Original SFML (c) Laurent Gomila, zlib license.
-// This file has been altered from the upstream SFML 2.5.0 source.
-
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
@@ -36,8 +29,15 @@
 #include <SFML/Audio/ALCheck.hpp>
 #include <SFML/Audio/Listener.hpp>
 #include <SFML/System/Err.hpp>
-#include <memory>
+#include <vector>
 
+#if defined(__APPLE__)
+    #if defined(__clang__)
+        #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    #elif defined(__GNUC__)
+        #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    #endif
+#endif
 
 namespace
 {
@@ -114,9 +114,13 @@ bool AudioDevice::isExtensionSupported(const std::string& extension)
     // This device will not be used in this function and merely
     // makes sure there is a valid OpenAL device for extension
     // queries if none has been created yet.
-    std::unique_ptr<AudioDevice> device;
+    //
+    // Using an std::vector for this since auto_ptr is deprecated
+    // and we have no better STL facility for dynamically allocating
+    // a temporary instance with strong exception guarantee.
+    std::vector<AudioDevice> device;
     if (!audioDevice)
-        device.reset(new AudioDevice);
+        device.resize(1);
 
     if ((extension.length() > 2) && (extension.substr(0, 3) == "ALC"))
         return alcIsExtensionPresent(audioDevice, extension.c_str()) != AL_FALSE;
@@ -132,9 +136,13 @@ int AudioDevice::getFormatFromChannelCount(unsigned int channelCount)
     // This device will not be used in this function and merely
     // makes sure there is a valid OpenAL device for format
     // queries if none has been created yet.
-    std::unique_ptr<AudioDevice> device;
+    //
+    // Using an std::vector for this since auto_ptr is deprecated
+    // and we have no better STL facility for dynamically allocating
+    // a temporary instance with strong exception guarantee.
+    std::vector<AudioDevice> device;
     if (!audioDevice)
-        device.reset(new AudioDevice);
+        device.resize(1);
 
     // Find the good format according to the number of channels
     int format = 0;

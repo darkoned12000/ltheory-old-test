@@ -20,7 +20,7 @@ function(compile_xib)
     endif()
 
     # Default args taken from Xcode 9 when it generates a nib from a xib
-    set(DEFAULT_ARGS --errors --warnings --notices --module cocoa --auto-activate-custom-fonts --target-device mac --minimum-deployment-target ${CMAKE_OSX_DEPLOYMENT_TARGET} --output-format human-readable-text)
+    set(DEFAULT_ARGS --errors --warnings --notices --module cocoa --auto-activate-custom-fonts --target-device mac --output-format human-readable-text)
 
     add_custom_command(OUTPUT "${THIS_OUTPUT}"
         COMMAND "${IBTOOL}" ${DEFAULT_ARGS} "${THIS_INPUT}" --compile "${THIS_OUTPUT}"
@@ -39,9 +39,9 @@ set(SRC ${SRCROOT}/CocoaAppDelegate.h
 compile_xib(INPUT "${SRCROOT}/MainMenu.xib" OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/MainMenu.nib")
 
 # all resource files
-set(RESOURCES ${SRCROOT}/resources/logo.png
-              ${SRCROOT}/resources/icon.icns
-              ${SRCROOT}/resources/sansation.ttf
+set(RESOURCES ${SRCROOT}/resources/icon.icns
+              ${SRCROOT}/resources/tuffy.ttf
+              ${SRCROOT}/resources/logo.png
               ${SRCROOT}/resources/blue.png
               ${SRCROOT}/resources/green.png
               ${SRCROOT}/resources/red.png

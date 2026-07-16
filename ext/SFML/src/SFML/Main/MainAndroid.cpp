@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2018 Laurent Gomila (laurent@sfml-dev.org)
+// Copyright (C) 2007-2023 Laurent Gomila (laurent@sfml-dev.org)
 //
 // This software is provided 'as-is', without any express or implied warranty.
 // In no event will the authors be held liable for any damages arising from the use of this software.
@@ -46,6 +46,10 @@
 #include <android/window.h>
 #include <android/native_activity.h>
 #include <cstring>
+#include <cassert>
+
+#define SF_GLAD_EGL_IMPLEMENTATION
+#include <glad/egl.h>
 
 
 extern int main(int argc, char *argv[]);
@@ -67,10 +71,10 @@ int getAndroidApiLevel(ANativeActivity* activity)
     jfieldID sdkIntFieldID = lJNIEnv->GetStaticFieldID(versionClass, "SDK_INT", "I");
     if (sdkIntFieldID == NULL)
         return 0;
-    
+
     jint sdkInt = 0;
     sdkInt = lJNIEnv->GetStaticIntField(versionClass, sdkIntFieldID);
-    
+
     return sdkInt;
 }
 
@@ -78,6 +82,8 @@ int getAndroidApiLevel(ANativeActivity* activity)
 ////////////////////////////////////////////////////////////
 ActivityStates* retrieveStates(ANativeActivity* activity)
 {
+    assert(activity != NULL);
+
     // Hide the ugly cast we find in each callback function
     return (ActivityStates*)activity->instance;
 }
@@ -92,6 +98,14 @@ static void initializeMain(ActivityStates* states)
     // Prepare and share the looper to be read later
     ALooper* looper = ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS);
     states->looper = looper;
+
+    /**
+     * Acquire increments a reference counter on the looper. This keeps android
+     * from collecting it before the activity thread has a chance to detach its
+     * input queue.
+     */
+    ALooper_acquire(states->looper);
+    ALooper_wake(states->looper);
 
     // Get the default configuration
     states->config = AConfiguration_new();
@@ -147,7 +161,6 @@ void goToFullscreenMode(ANativeActivity* activity)
         AWINDOW_FLAG_FULLSCREEN);
 
     // Hide the navigation bar
-    JavaVM* lJavaVM = activity->vm;
     JNIEnv* lJNIEnv = activity->env;
 
     jobject objectActivity = activity->clazz;
@@ -164,11 +177,11 @@ void goToFullscreenMode(ANativeActivity* activity)
 
     // Default flags
     jint flags = 0;
-    
+
     // API Level 14
     if (apiLevel >= 14)
     {
-        jfieldID FieldSYSTEM_UI_FLAG_LOW_PROFILE = lJNIEnv->GetStaticFieldID(classView, "SYSTEM_UI_FLAG_LOW_PROFILE", "I");
+        jfieldID FieldSYSTEM_UI_FLAG_LOW_PROFILE = lJNIEnv->GetStaticFieldID(classView, "SYSTEM_UI_FLAG_HIDE_NAVIGATION", "I");
         jint SYSTEM_UI_FLAG_LOW_PROFILE = lJNIEnv->GetStaticIntField(classView, FieldSYSTEM_UI_FLAG_LOW_PROFILE);
         flags |= SYSTEM_UI_FLAG_LOW_PROFILE;
     }
@@ -202,7 +215,6 @@ void getScreenSizeInPixels(ANativeActivity* activity, int* width, int* height)
     // DisplayMetrics dm = new DisplayMetrics();
     // getWindowManager().getDefaultDisplay().getMetrics(dm);
 
-    JavaVM* lJavaVM = activity->vm;
     JNIEnv* lJNIEnv = activity->env;
 
     jobject objectActivity = activity->clazz;
@@ -232,8 +244,51 @@ void getScreenSizeInPixels(ANativeActivity* activity, int* width, int* height)
 
 
 ////////////////////////////////////////////////////////////
+void getFullScreenSizeInPixels(ANativeActivity* activity, int* width, int* height)
+{
+    // Perform the following Java code:
+    //
+    // DisplayMetrics dm = new DisplayMetrics();
+    // getWindowManager().getDefaultDisplay().getRealMetrics(dm);
+
+    JNIEnv* lJNIEnv = activity->env;
+
+    jobject objectActivity = activity->clazz;
+    jclass classActivity = lJNIEnv->GetObjectClass(objectActivity);
+
+    jclass classDisplayMetrics = lJNIEnv->FindClass("android/util/DisplayMetrics");
+    jmethodID initDisplayMetrics = lJNIEnv->GetMethodID(classDisplayMetrics, "<init>", "()V");
+    jobject objectDisplayMetrics = lJNIEnv->NewObject(classDisplayMetrics, initDisplayMetrics);
+
+    jmethodID methodGetWindowManager = lJNIEnv->GetMethodID(classActivity, "getWindowManager", "()Landroid/view/WindowManager;");
+    jobject objectWindowManager = lJNIEnv->CallObjectMethod(objectActivity, methodGetWindowManager);
+
+    jclass classWindowManager = lJNIEnv->FindClass("android/view/WindowManager");
+    jmethodID methodGetDefaultDisplay = lJNIEnv->GetMethodID(classWindowManager, "getDefaultDisplay", "()Landroid/view/Display;");
+    jobject objectDisplay = lJNIEnv->CallObjectMethod(objectWindowManager, methodGetDefaultDisplay);
+
+    jclass classDisplay = lJNIEnv->FindClass("android/view/Display");
+    jmethodID methodGetMetrics;
+
+    // getRealMetrics is only supported on API level 17 and above, if we are below that, we will fall back to getMetrics
+    if(sf::priv::getAndroidApiLevel(activity) >= 17)
+        methodGetMetrics = lJNIEnv->GetMethodID(classDisplay, "getRealMetrics", "(Landroid/util/DisplayMetrics;)V");
+    else
+         methodGetMetrics = lJNIEnv->GetMethodID(classDisplay, "getMetrics", "(Landroid/util/DisplayMetrics;)V");
+    lJNIEnv->CallVoidMethod(objectDisplay, methodGetMetrics, objectDisplayMetrics);
+
+    jfieldID fieldWidthPixels = lJNIEnv->GetFieldID(classDisplayMetrics, "widthPixels", "I");
+    jfieldID fieldHeightPixels = lJNIEnv->GetFieldID(classDisplayMetrics, "heightPixels", "I");
+
+    *width = lJNIEnv->GetIntField(objectDisplayMetrics, fieldWidthPixels);
+    *height = lJNIEnv->GetIntField(objectDisplayMetrics, fieldHeightPixels);
+}
+
+
+////////////////////////////////////////////////////////////
 static void onStart(ANativeActivity* activity)
 {
+    (void) activity;
 }
 
 
@@ -273,6 +328,7 @@ static void onPause(ANativeActivity* activity)
 ////////////////////////////////////////////////////////////
 static void onStop(ANativeActivity* activity)
 {
+    (void) activity;
 }
 
 
@@ -316,7 +372,7 @@ static void onDestroy(ANativeActivity* activity)
     delete states;
 
     // Reset the activity pointer for all modules
-    sf::priv::getActivity(NULL, true);
+    sf::priv::resetActivity(NULL);
 
     // The application should now terminate
 }
@@ -325,6 +381,8 @@ static void onDestroy(ANativeActivity* activity)
 ////////////////////////////////////////////////////////////
 static void onNativeWindowCreated(ANativeActivity* activity, ANativeWindow* window)
 {
+    (void) window;
+
     sf::priv::ActivityStates* states = sf::priv::retrieveStates(activity);
     sf::Lock lock(states->mutex);
 
@@ -338,7 +396,7 @@ static void onNativeWindowCreated(ANativeActivity* activity, ANativeWindow* wind
 
     // Wait for the event to be taken into account by SFML
     states->updated = false;
-    while(!states->updated)
+    while(!(states->updated | states->terminated))
     {
         states->mutex.unlock();
         sf::sleep(sf::milliseconds(10));
@@ -350,6 +408,8 @@ static void onNativeWindowCreated(ANativeActivity* activity, ANativeWindow* wind
 ////////////////////////////////////////////////////////////
 static void onNativeWindowDestroyed(ANativeActivity* activity, ANativeWindow* window)
 {
+    (void) window;
+
     sf::priv::ActivityStates* states = sf::priv::retrieveStates(activity);
     sf::Lock lock(states->mutex);
 
@@ -363,7 +423,7 @@ static void onNativeWindowDestroyed(ANativeActivity* activity, ANativeWindow* wi
 
     // Wait for the event to be taken into account by SFML
     states->updated = false;
-    while(!states->updated)
+    while(!(states->updated | states->terminated))
     {
         states->mutex.unlock();
         sf::sleep(sf::milliseconds(10));
@@ -375,12 +435,16 @@ static void onNativeWindowDestroyed(ANativeActivity* activity, ANativeWindow* wi
 ////////////////////////////////////////////////////////////
 static void onNativeWindowRedrawNeeded(ANativeActivity* activity, ANativeWindow* window)
 {
+    (void) activity;
+    (void) window;
 }
 
 
 ////////////////////////////////////////////////////////////
 static void onNativeWindowResized(ANativeActivity* activity, ANativeWindow* window)
 {
+    (void) activity;
+    (void) window;
 }
 
 
@@ -410,8 +474,10 @@ static void onInputQueueDestroyed(ANativeActivity* activity, AInputQueue* queue)
     {
         sf::Lock lock(states->mutex);
 
-        states->inputQueue = NULL;
         AInputQueue_detachLooper(queue);
+        states->inputQueue = NULL;
+
+        ALooper_release(states->looper);
     }
 }
 
@@ -419,12 +485,16 @@ static void onInputQueueDestroyed(ANativeActivity* activity, AInputQueue* queue)
 ////////////////////////////////////////////////////////////
 static void onWindowFocusChanged(ANativeActivity* activity, int focused)
 {
+    (void) activity;
+    (void) focused;
 }
 
 
 ////////////////////////////////////////////////////////////
 static void onContentRectChanged(ANativeActivity* activity, const ARect* rect)
 {
+    (void) rect;
+
     // Retrieve our activity states from the activity instance
     sf::priv::ActivityStates* states = sf::priv::retrieveStates(activity);
     sf::Lock lock(states->mutex);
@@ -434,8 +504,8 @@ static void onContentRectChanged(ANativeActivity* activity, const ARect* rect)
         // Send an event to warn people about the window move/resize
         sf::Event event;
         event.type = sf::Event::Resized;
-        event.size.width = ANativeWindow_getWidth(states->window);
-        event.size.height = ANativeWindow_getHeight(states->window);
+        event.size.width = static_cast<unsigned int>(ANativeWindow_getWidth(states->window));
+        event.size.height = static_cast<unsigned int>(ANativeWindow_getHeight(states->window));
 
         states->forwardEvent(event);
     }
@@ -445,12 +515,14 @@ static void onContentRectChanged(ANativeActivity* activity, const ARect* rect)
 ////////////////////////////////////////////////////////////
 static void onConfigurationChanged(ANativeActivity* activity)
 {
+    (void) activity;
 }
 
 
 ////////////////////////////////////////////////////////////
 static void* onSaveInstanceState(ANativeActivity* activity, size_t* outLen)
 {
+    (void) activity;
     *outLen = 0;
 
     return NULL;
@@ -460,11 +532,12 @@ static void* onSaveInstanceState(ANativeActivity* activity, size_t* outLen)
 ////////////////////////////////////////////////////////////
 static void onLowMemory(ANativeActivity* activity)
 {
+    (void) activity;
 }
 
 
 ////////////////////////////////////////////////////////////
-void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_t savedStateSize)
+JNIEXPORT void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_t savedStateSize)
 {
     // Create an activity states (will keep us in the know, about events we care)
     sf::priv::ActivityStates* states = NULL;
@@ -480,6 +553,7 @@ void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_
     for (unsigned int i = 0; i < sf::Mouse::ButtonCount; i++)
         states->isButtonPressed[i] = false;
 
+    gladLoaderLoadEGL(EGL_DEFAULT_DISPLAY);
     states->display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 
     if (savedState != NULL)
@@ -495,7 +569,7 @@ void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_
     states->terminated = false;
 
     // Share it across the SFML modules
-    sf::priv::getActivity(states, true);
+    sf::priv::resetActivity(states);
 
     // These functions will update the activity states and therefore, will allow
     // SFML to be kept in the know
@@ -531,6 +605,7 @@ void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_
     eglInitialize(states->display, NULL, NULL);
 
     getScreenSizeInPixels(activity, &states->screenSize.x, &states->screenSize.y);
+    getFullScreenSizeInPixels(activity, &states->fullScreenSize.x, &states->fullScreenSize.y);
 
     // Redirect error messages to logcat
     sf::err().rdbuf(&states->logcat);
@@ -542,7 +617,7 @@ void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_
     // Wait for the main thread to be initialized
     states->mutex.lock();
 
-    while (!states->initialized)
+    while (!(states->initialized | states->terminated))
     {
         states->mutex.unlock();
         sf::sleep(sf::milliseconds(20));

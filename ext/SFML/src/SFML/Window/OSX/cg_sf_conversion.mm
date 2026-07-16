@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 // SFML - Simple and Fast Multimedia Library
-// Copyright (C) 2007-2018 Marco Antognini (antognini.marco@gmail.com),
+// Copyright (C) 2007-2023 Marco Antognini (antognini.marco@gmail.com),
 //                         Laurent Gomila (laurent@sfml-dev.org)
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -28,8 +28,17 @@
 ////////////////////////////////////////////////////////////
 #include <SFML/Window/OSX/cg_sf_conversion.hpp>
 #include <SFML/System/Err.hpp>
+#include <SFML/System/Vector2.hpp>
 
 #import <SFML/Window/OSX/Scaling.h>
+
+#if defined(__APPLE__)
+    #if defined(__clang__)
+        #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    #elif defined(__GNUC__)
+        #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    #endif
+#endif
 
 namespace sf
 {
@@ -87,11 +96,10 @@ VideoMode convertCGModeToSFMode(CGDisplayModeRef cgmode)
     //
     // [1]: "APIs for Supporting High Resolution" > "Additions and Changes for OS X v10.8"
     // https://developer.apple.com/library/mac/documentation/GraphicsAnimation/Conceptual/HighResolutionOSX/APIs/APIs.html#//apple_ref/doc/uid/TP40012302-CH5-SW27
-    VideoMode mode(CGDisplayModeGetWidth(cgmode), CGDisplayModeGetHeight(cgmode), modeBitsPerPixel(cgmode));
-    scaleOutWidthHeight(mode, nil);
-    return mode;
+    Vector2u size = Vector2u(Vector2<size_t>(CGDisplayModeGetPixelWidth(cgmode), CGDisplayModeGetPixelHeight(cgmode)));
+    scaleInXY(size, nil);
+    return VideoMode(size.x, size.y, static_cast<unsigned int>(modeBitsPerPixel(cgmode)));
 }
 
 } // namespace priv
 } // namespace sf
-
