@@ -1,0 +1,80 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Linux Release (RelWithDebInfo)",
+      "description": "Default development build using Unix Makefiles",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Linux Debug",
+      "description": "Debug build with full symbols, no optimization",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "ninja",
+      "displayName": "Linux Release (Ninja)",
+      "description": "Fast build using Ninja (install ninja-build first)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "ninja-debug",
+      "displayName": "Linux Debug (Ninja)",
+      "description": "Debug build using Ninja",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "displayName": "Default Build (Parallel)",
+      "description": "Parallel build using all available cores",
+      "configurePreset": "default",
+      "jobs": 0
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug Build (Parallel)",
+      "description": "Parallel debug build",
+      "configurePreset": "debug",
+      "jobs": 0
+    },
+    {
+      "name": "ninja",
+      "displayName": "Ninja Build (Parallel)",
+      "description": "Parallel build using Ninja",
+      "configurePreset": "ninja",
+      "jobs": 0
+    },
+    {
+      "name": "ninja-debug",
+      "displayName": "Ninja Debug Build (Parallel)",
+      "description": "Parallel debug build using Ninja",
+      "configurePreset": "ninja-debug",
+      "jobs": 0
+    }
+  ]
+}
