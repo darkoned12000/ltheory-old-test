@@ -87,7 +87,6 @@ if(WINDOWS)
 elseif(MAC)
 
   set(LINK_LIBRARIES
-    # enet
       fmodex
       fmodevent
       freetype
@@ -104,7 +103,6 @@ elseif(LINUX)
 
   set(LINK_LIBRARIES
       dl
-      # enet
       freetype
       sfml-graphics
       sfml-network
