@@ -1,0 +1,36 @@
+# Copyright (C) 2025  darkoned12000
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Part of the ltheory-old-test modernization effort (Revamp Work).
+# See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
+
+# Build outputs (generated locally by `python3 configure.py`)
+build/
+bin/
+cache/
+
+# Editor / OS cruft
+*.swp
+*~
+.DS_Store
+.vscode/
+.idea/
+*.user
+
+# CMake user presets
+CMakeUserPresets.json
+
+# Object / archive leftovers from in-tree builds
+*.o
+*.obj
+
+# Stale backup of prebuilt libs inside extbin (not needed)
+extbin/**/old/
+
+# NOTE on extbin/:
+#   extbin/ holds the engine's *shipped* runtime dependencies (FMOD, enet,
+#   prebuilt SFML, and the Windows/macOS freetype) and MUST be committed so a
+#   fresh clone can run without hunting for 12-year-old binaries.
+#   The bundled libfreetype.so* was intentionally removed from
+#   extbin/linux64 because the project links the SYSTEM freetype (see
+#   CMakeLists.txt LINK_LIBRARIES) and the old bundled copy shadowed it,
+#   triggering a CMake runtime-path conflict. Do not re-add it.

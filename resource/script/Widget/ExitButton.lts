@@ -1,0 +1,46 @@
+type ExitButton
+  String text
+  Float size
+  Bool focus false
+
+  function List CreateChildren (Widget self)
+    var l List
+    l +=
+      Components:AlignCenter
+        Custom Widget
+          Text:Text Fonts:Subheading text size (Vec3 1)
+    l
+
+  function Void PreDraw (Widget self)
+    var c
+      switch
+        focus 2.5 * Colors:Primary
+        otherwise (Vec3 0.15)
+    DrawPanel self.pos self.size c 0.5 1 0
+
+  function Void CaptureFocus (Widget self)
+    var c Cursor_Get
+    var p1 (Max self.pos ClipRegion_GetMin)
+    var p2 (Min self.pos + self.size ClipRegion_GetMax)
+    self.focusMouse = (p1 <= c && c <= p2)
+
+  function Void PostUpdate (Widget self)
+    if self.focusMouse && (! focus)
+      focus = true
+      self.Rebuild
+      Sound_Play "ui/hover.wav" 0.008
+
+    if (! self.focusMouse) && focus
+      focus = false
+      self.Rebuild
+
+    if self.focusMouse
+      if Mouse_LeftPressed
+        Exit
+
+function Widget Create (String text Float size)
+  Components:CaptureMouse
+    Components:Padding (Vec2 6 6) 6
+      Stack
+        Custom Widget
+          ExitButton text size
