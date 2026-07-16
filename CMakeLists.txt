@@ -161,6 +161,12 @@ foreach(TARGET ${TARGETS})
 
 endforeach(TARGET)
 
+# Treat warnings as errors for our own code (excludes vendored ext/SFML)
+target_compile_options(lt PRIVATE -Werror)
+foreach(TARGET ${TARGETS})
+  target_compile_options(${TARGET} PRIVATE -Werror)
+endforeach(TARGET)
+
 # Set target properties
 if(WINDOWS)
 
