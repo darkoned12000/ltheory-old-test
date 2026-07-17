@@ -199,8 +199,8 @@ Ordered roughly by impact vs. effort. Check items off as completed.
 - [x] Replace the hand-rolled `configure.py` with a documented CMakePresets.json
       flow (keep `configure.py` as a thin wrapper for now).
 - [ ] Add CI (GitHub Actions) building on Linux (GCC + Clang) and Windows.
-- [ ] Introduce `-Werror` again **only after** all legacy warnings are gone, or
-      scope it to a strict subset.
+- [x] Introduce `-Werror` scoped to project code (`lt`, `launch` targets).
+      Vendored `ext/SFML/` excluded. Build completes cleanly, zero warnings.
 - [ ] Reintroduce Git LFS properly if large resources warrant it (add
       `.gitattributes`).
 

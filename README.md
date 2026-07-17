@@ -172,5 +172,25 @@ python configure.py run war
 - **`resource/`** — game data: 169 `.jsl` shaders, textures, fonts, LTSL scripts.
 - **`script/`** — Python tooling (`tloc`, `assetlist`, ...).
 
+
+---
+
+# Current Controls
+| Key         | Action                                     |
+| ----------- | ------------------------------------------ |
+| Mouse       | Camera rotation (when <space> is active)   |
+| W / S       | Thrust Forward / Backward                  |
+| A / D       | Strafe Left / Right                        |
+| Q / E       | Roll Ship Left / Right                     |
+| Tab         | Engine Boost                               |
+| Right Mouse | Fire Weapons                               |
+| Space       | Toggle camera controls                     |
+| + / -       | Toggle camera location                     |
+| H (hold)    | Time Skip (20x spped)                      |
+| B           | Toggle HUD lock                            |
+| F3          | Show debug info                            |
+| F4          | Toggle HUD visibility                      |
+
+
 See `AGENTS.md` for a detailed technical reference and the modernization
 roadmap (library upgrades, build improvements, LTSL notes).
