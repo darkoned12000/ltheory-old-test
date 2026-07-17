@@ -1,0 +1,45 @@
+# Copyright (C) 2025  darkoned12000
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Part of the ltheory-old-test modernization effort (Revamp Work).
+# See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
+#
+# Local, self-contained system populator. The upstream Object/System.lts has a
+# degenerate planet placement (Vec3_Cylinder radius 0 -> planet spawns at the
+# origin, inside the camera) and a broken "Orbital rail" block (Object/WarpNode
+# fails to compile in this build), so we keep it untouched and use this instead.
+# Everything here is driven by self.GetSeed, so the same seed reproduces the
+# same system deterministically. Returns the created planet Object so the app
+# can spawn the player relative to it.
+
+function Object Init (Object self)
+  var rng (RNG_MTG self.GetSeed)
+  var systemScale 100000.0
+
+  self.SetName (CapitalCase (Grammar_Get "$system" rng))
+
+  # --- Planet -------------------------------------------------------------
+  # Place the planet at a true-3D orbital position (rng.Direction gives a unit
+  # vector in any direction) so its orbital plane is randomly inclined — this
+  # keeps the player's spawn from being coplanar with the rings. The name is
+  # seeded via Grammar_Get (NOT hardcoded) so it varies per seed.
+  var radius (systemScale * (1.0 + 0.1 * rng.Exp))
+  var orbitalR (systemScale * (0.8 + 0.2 * rng.Float))
+  var pos (orbitalR * rng.Direction)
+  var planet (Object_Planet (Item_PlanetType (rng.Int + 8)))
+  planet.SetPos pos
+  planet.SetScale radius
+  planet.SetName (CapitalCase (Grammar_Get "$system" rng))
+  self.AddInterior planet
+
+  # --- Asteroid belt (seeded, visible rock) -------------------------------
+  # ~1000 rocks in a shell JUST outside the planet's atmosphere so the player
+  # (who spawns near the planet) sees a real, dense belt. All positions/scales
+  # derive from `rng` (seeded), so the same seed reproduces the same field.
+  for i 0 i < 1000 i.++
+    var rock (Object_Asteroid (rng.Int))
+    rock.SetScale (150.0 * rng.Exp)
+    var shellR (radius * (1.6 + 0.7 * rng.Float))
+    rock.SetPos (pos + (shellR * rng.Sphere))
+    self.AddInterior rock
+
+  planet

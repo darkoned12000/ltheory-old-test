@@ -1,16 +1,11 @@
-function Texture Get ()
-  var path "/home/josh/Dropbox/lt/screenshot"
-  while path.IsDirectory
-    path += "/"
-    var contents path.ListDir
-    var selection (contents.Get (Int_Random contents.Size))
-    path += selection
+# Copyright (C) 2025  darkoned12000
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Part of the ltheory-old-test modernization effort (Revamp Work).
+# See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
 
-  switch
-    true
-      Texture_LoadFrom
-        Location_File path
-    otherwise
-      Texture/Filters:Artistic
-        Texture_LoadFrom
-          Location_File path
+function Texture Get ()
+  # Originally this walked Josh's hardcoded ~/Dropbox/lt/screenshot dir for a
+  # random screenshot. That path no longer exists, so just load the bundled
+  # splash texture. Keeping it a cheap, always-valid fallback unblocks the
+  # dev panel (Widget/DevPanel) and the apps that use this as a backdrop.
+  Texture_LoadFrom (Location_File "resource/texture/splash.png")

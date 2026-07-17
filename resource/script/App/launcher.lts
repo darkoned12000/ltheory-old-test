@@ -1,37 +1,158 @@
-type Selector
-  function List CreateChildren (Widget self)
-    var l List
-    var files (Directory_List "../lt/resource/script/App/")
-    for i 0 i < files.Size i.++
-      l +=
-        Widgets:Text Fonts:Default (files.Get i) 16.0 1
-    l
-  
-type App
-  Texture texture Texture/RandomScreenshot:Get
+# Copyright (C) 2025  darkoned12000
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Part of the ltheory-old-test modernization effort (Revamp Work).
+# See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
 
-  function List CreateChildren (Widget self)
-    var l List
-    l +=
-      Widget/Components:AlignCenter
-        ListV 8
-          Custom Widget
-            Selector
-    l
+# ============================================================================
+# launcher.lts — a driven launcher UI
+# ----------------------------------------------------------------------------
+# Lists every .lts app found in resource/script/App/ as a hover-highlighted,
+# clickable list, with a title bar and a mouse cursor.
+#
+# HOW IT RENDERS (the engine's "driven app" lifecycle):
+#   1. Main() returns an App value. The engine then calls Initialize() once,
+#      then Update() every frame.
+#   2. Initialize() builds the render pipeline and adds our UI widget.
+#   3. Update() ticks the interfaces and draws the frame.
+#
+# RENDER PIPELINE:
+#   The frame is produced by a RenderPass chain added to `gameView`:
+#       RenderPass_Clear      -> wipe the framebuffer to black (0,0,0,0)
+#       RenderPass_Camera     -> apply the (unused 3D) camera
+#       RenderPass_Interface  -> composite the `ui` interface (our widgets)
+#       RenderPass_PostFilter -> apply the dither post-process
+#   RenderPass_Clear MUST be first: a bare gameView.Draw has no clear, so any
+#   moving draw (the cursor) would accumulate into a smear/trail. The clear
+#   zeroes the frame every tick so only the current frame is visible.
+#
+# DRAWING CONTEXT:
+#   All UI drawing lives in LauncherScreen::PostDraw. A PostDraw hook runs
+#   inside the interface's draw pass (during gameView.Draw), so its Draw*
+#   calls go to the cleared per-frame overlay buffer — that is why the cursor
+#   does not leave a trail here, whereas drawing from App::Update would.
+#
+# MOUSE POSITION:
+#   We read the mouse with Mouse_GetPosImmediate (queries SFML directly) rather
+#   than Cursor_Get. Cursor_Get is only valid inside a widget draw/update
+#   context — it reads a cursor stack that Interface_Update/Interface_Draw
+#   push/pop around their widgets; outside that context it returns garbage.
+#
+# NOTE ON "LAUNCHING":
+#   LTSL has NO script-level API to start a different .lts app. The engine
+#   launches exactly one app by name (launch <app>) and scripts cannot spawn
+#   another. So clicking an entry can only SELECT/highlight it (yellow). There
+#   is intentionally no launch code, because none can exist in LTSL today.
+# ============================================================================
 
-  function Void PreDraw (Widget self)
-    DrawPanel self.pos self.size 1.0 * (Vec3 0.1 0.2 0.3) 1 1 0
-    Draw texture self.pos self.size 1.0
-
+# The widget that draws the whole launcher UI. Because it is added to the `ui`
+# interface as a Custom Widget, its PostDraw function is called once per frame
+# inside the interface draw pass.
+type LauncherScreen
   function Void PostDraw (Widget self)
-    Draw Icon/Cursors:Pointer Cursor_Get 12 4.0 * Colors:Primary 0.3
-    Widget/Dev/FrameInfo:Draw self
+    # Current mouse position in window pixels.
+    var m Mouse_GetPosImmediate
 
-function Data Main ()
-  widget:Create
-    Layer
-      Compositor_None
-      Mesh_Quad
-      1.0
-      Stack
-        Custom Widget App
+    # Per-frame mutable state. `static` keeps the value across frames (so a
+    # click "sticks" until another row is clicked) without needing an App member.
+    static selected -1
+    static clicked -1
+
+    # Enumerate the app directory. Directory_List returns a Vector<String> of
+    # filenames; .Size is the count, .Get i reads element i (note: `var`, not
+    # `ref`, because .Get returns a value here).
+    var files (Directory_List "resource/script/App/")
+
+    # Lay the rows out vertically starting at y = 96 (below the title bar).
+    var y 96.0
+    for i 0 i < files.Size i.++
+      # Filename of the i-th app (e.g. "war.lts", "dogfight.lts").
+      var name (files.Get i)
+      # Row rectangle: top-left p and size s (512 wide, 28 tall).
+      var p (Vec2 64 y)
+      var s (Vec2 512 28.0)
+      # Hover test: is the mouse m inside the row rectangle p..p+s?
+      # Vec2 comparisons p <= m and m <= p+s are component-wise.
+      var hover (p <= m && m <= p + s)
+      if hover
+        selected = i
+        # Mouse_LeftPressed is true on the frame the left button goes down.
+        if Mouse_LeftPressed
+          clicked = i
+
+      # Pick the row text color:
+      #   default grey (0.8), blue (Colors:Primary) on hover,
+      #   yellow (1,1,0.4) for the currently clicked/selected row.
+      var c (Vec3 0.8)
+      if hover
+        c = Colors:Primary
+      if (clicked == i)
+        c = (Vec3 1.0 1.0 0.4)
+
+      # Draw the row background panel, then the app name on top of it.
+      # DrawText args: font, text, position, size, color, alpha, centered?
+      DrawPanel p s 0.04 1 1 0
+      DrawText
+        Fonts:Default
+        name
+        p + (Vec2 12 6)
+        18
+        c
+        1
+        false
+      # advance to the next row
+      y = y + 28.0
+
+    # Title bar text, drawn once at the top.
+    DrawText
+      Fonts:Heading
+      "LIMIT THEORY - LAUNCHER"
+      (Vec2 64 32)
+      28
+      (Vec3 0.6 0.8 1.0)
+      1
+      false
+
+    # The mouse cursor: a filled blue circle (Glyph_Circle) at the live mouse
+    # position. Drawn here (inside PostDraw) so it is part of the cleared
+    # overlay and does not smear. Radius is 32 px.
+    Draw (Glyph_Circle 0 1 1 1) Mouse_GetPosImmediate 32 Colors:Primary 1.0
+
+# The application object. The engine drives this via Initialize()/Update().
+type App
+  Interface ui
+  Interface gameView
+  Camera camera
+
+  function Void Initialize ()
+    # Create and push a camera (required by the render pipeline even for 2D UI).
+    camera = Camera_Create
+    camera.Push
+
+    # Two interfaces: `ui` holds our widgets; `gameView` holds the rendered
+    # RenderPass pipeline that composites `ui` to the screen.
+    ui = (Interface_Create "UI")
+    gameView = (Interface_Create "Game View")
+
+    # Build the frame render pipeline and attach it to gameView.
+    # Each Append below is one stage of the pipeline (see header for details).
+    var passes Vector<Reference<RenderPassT>>
+    passes.Append (RenderPass_Clear (Vec4 0.0))
+    passes.Append (RenderPass_Camera camera)
+    passes.Append (RenderPass_Interface ui)
+    passes.Append (RenderPass_PostFilter "post/dither.jsl")
+    gameView.Add (Widget_Rendered passes)
+
+    # Add our launcher UI widget to the `ui` interface so its PostDraw runs.
+    ui.Add (Custom Widget LauncherScreen)
+
+  function Void Update ()
+    # Tick widget logic (hover/click state), then render the frame.
+    ui.Update
+    gameView.Update
+    gameView.Draw
+
+# Entry point: construct and return the App. The engine then calls
+# Initialize() once and Update() every frame.
+function App Main ()
+  var self App
+  self

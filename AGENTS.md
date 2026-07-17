@@ -185,6 +185,83 @@ reintroduce the old patterns:
 
 ---
 
+## 7b. Revamp Work: `ltheory-main` universe sandbox app
+
+A self-contained, seed-driven 3D sandbox app was built on top of the engine so
+the procedural-universe path can be exercised and customized without touching
+Josh's original apps. All of these are **Revamp Work** (GPL-3.0) new files:
+
+- **`resource/script/App/ltheory-main.lts`** — the app. It:
+  - Implements a `Config_Get(key)` loader reading
+    `resource/script/gameConfig.txt` (`key:value`, `#` comments, no spaces
+    around `:`). Re-parsed per call, so call it from `Initialize()` and cache.
+    (LTSL's `String_Split` 2-arg overload is not bindable in this build, so it
+    parses with `Substring`/`Length`.)
+  - Reads `seed`, `loadTime`, `playerCredits`, `shipHull` from config.
+  - Creates the system via `Object_System (Vec3 15.012) seed` (the C++ factory
+    makes the star + nebula + starfield; it does **not** make planets/asteroids).
+  - Calls `Object/SystemPopulate:Init root` (which now **returns** the created
+    planet object) to add a planet + ~1000-asteroid belt, seeded from
+    `root.GetSeed` → deterministic per seed. The planet is placed at a true-3D
+    `orbitalR * rng.Direction` (random orbital inclination) and given a seeded
+    grammar name (NOT hardcoded).
+  - Spawns the player ship **in the asteroid belt just outside the planet**
+    (at `planetRadius*2` along a tilted `(0.2, 0.6, 1)` direction), so the
+    rings are visible from spawn instead of edge-on, and the player starts among
+    visible rocks. 12 seeded AI ships go on a `planetRadius*4` shell (outside
+    the belt). For the planet-variety work behind this, see §8b.
+  - Uses a `Camera` with a third-person `SetRelativePos (Vec3 0 40 160)` offset.
+  - Shows a loader (`Custom Widget LoadingScreen`) for `loadTime` seconds, then
+    swaps `gameView` to a `Widget_Rendered` pass list (`RenderPass_Clear` →
+    `RenderPass_Camera` → `RenderPass_SMAA` → `RenderPass_Interface ui` →
+    `RenderPass_PostFilter "post/dither.jsl"`).
+  - **Scripted planet bounce**: the planet has a `Collidable` component but no
+    bounding box in this build, so `ltheory-main` enforces a barrier in `Update`
+    by scanning `root.GetInteriorObjects` for `o.GetType == "Planet"` and
+    clamping the player ship to `planetRadius * 1.1`. Found by **type, not name**
+    (robust to renames).
+  - Hotkeys: **F2** = `Widget/DevPanel` (dev monitor), **F3** = `Widget/DebugScene`
+    (live scene inspector overlay).
+- **`resource/script/Object/SystemPopulate.lts`** — local system populator
+  (`function Object Init (Object self)`; **returns** the planet so `ltheory-main`
+  can spawn the player relative to it). Why a separate file instead of the
+  upstream `Object/System.lts`: upstream's `Init` places the planet at
+  `Vec3_Cylinder 0 ...` (radius 0 → spawned at the origin, inside the camera) and
+  has a broken `Orbital rail` block (`Object/WarpNode` fails to compile in this
+  build). `SystemPopulate` instead places the planet at a real orbital radius,
+  adds a 1000-rock seeded belt (shell at `planetRadius*1.6..2.3`, rock scale
+  `150*Exp`), gives the planet a seeded `Grammar_Get "$system"` name, and **never**
+  calls the WarpNode block. Everything derives from one `RNG_MTG(self.GetSeed)`
+  so the layout is reproducible per seed.
+- **`resource/script/Widget/DebugScene.lts`** — debug overlay
+  (`Widget/DebugScene:Create root`). Lists every interior object of `root` with
+  live XYZ + distance from the player ship, colors the planet gold, and reports
+  the nearest-asteroid distance. Toggle with F3.
+- **`resource/script/gameConfig.txt`** — shared config (`key:value`, `#`
+  comments). `seed` drives `Object_System`; `loadTime` is the loader duration;
+  `playerCredits`/`shipHull` are the player's starting credits and ship class.
+
+> **LTSL quirk that bit us:** functions return their **last expression**; there
+> is no `return` keyword (using `return` fails to compile). See `docs/ltsl-docs.md`
+> §12.16. Also the two `switch -- case statement did not compile` lines printed
+> at startup are **benign** (same as `war.lts`); they do not prevent running.
+
+> **`Texture/RandomScreenshot.lts` was broken** (hardcoded
+> `/home/josh/Dropbox/lt/screenshot` path + a `return` keyword). It was rewritten
+> to just load `resource/texture/splash.png`. This also unblocks `Widget/DevPanel`
+> and the apps that used it as a backdrop (`widget.lts`, `ui.lts`, `map.lts`,
+> `image.lts`, `objectinfo.lts`, `market.lts`, `hud.lts`).
+
+> **`src/liblt/Game/Item/PlanetType.cpp` (C++, Revamp Work)** was modified to
+> add per-seed planet variety: `atmoDensity` (was frozen at `1.0`) now `0..2`,
+> `atmoTint` (was always white) now a seeded hue, the color palette widened from
+> a narrow reddish range to full hue, and a new `hasRings` field (~60% chance)
+> makes rings optional (they were previously added to **every** planet
+> unconditionally). See §8b.1 for the full context and §8b.3 Pass B for the
+> planned biome work that builds on this.
+
+---
+
 ## 8. Modernization TODO (roadmap)
 
 Ordered roughly by impact vs. effort. Check items off as completed.
@@ -226,14 +303,123 @@ Ordered roughly by impact vs. effort. Check items off as completed.
 
 ### Content / LTSL
 - [x] Catalog which `resource/script/App/*.lts` apps currently run vs. crash.
-      Working: `war`, `dogfight`. Broken (need investigation): `colony`,
-      `font`, `hnn`, `hud`, `image`, `launcher`, `map`, `market`,
-      `objectinfo`, `platemesh`, `threads`, `ui`, `widget`.
-- [ ] Investigate and fix broken apps: `colony`, `font`, `hnn`, `hud`,
-      `image`, `launcher`, `map`, `market`, `objectinfo`, `platemesh`,
-      `threads`, `ui`, `widget`.
+      Working: `war`, `dogfight`, `ltheory-main` (Revamp Work sandbox;
+      see §7b), `launcher` (pure-2D UI, see §14).
+- [x] `Texture/RandomScreenshot.lts` was broken (hardcoded
+      `/home/josh/Dropbox/lt/screenshot` path + a `return` keyword). It was rewritten
+      to just load `resource/texture/splash.png`. This also unblocks `Widget/DevPanel`
+      and the apps that used it as a backdrop (`widget.lts`, `ui.lts`, `map.lts`,
+      `image.lts`, `objectinfo.lts`, `market.lts`, `hud.lts`).
+- [ ] Investigate and fix remaining broken apps: `colony`, `font`, `hnn`,
+      `threads`, `platemesh`. (`widget`, `ui`, `map`, `image`, `objectinfo`,
+      `market`, `hud` are now at least partially unblocked by the
+      RandomScreenshot fix but still need per-app verification.)
 - [ ] Document the LTSL standard library surface exposed to scripts.
 - [ ] Decide on a path for new content once the platform is stable.
+- [ ] Document the LTSL standard library surface exposed to scripts.
+- [ ] Decide on a path for new content once the platform is stable.
+
+---
+
+## 8b. Universe Generation & Procedural Content (roadmap)
+
+This section captures the procedural-generation discoveries and the user's
+requested roadmap for richer, tweakable universe content. **None of this is
+implemented yet** — it is documented so the work can resume without re-deriving
+engine facts. The motivating long-term idea is to wire the **F2 DevTool
+(`Widget/DevPanel`)** to live-edit these generator parameters so the user can
+tweak a running app instead of editing `gameConfig.txt` and reloading.
+
+### 8b.1 Engine facts discovered (critical context)
+
+- **Planet surfaces have NO biome logic.** The surface is generated by
+  `src/liblt/Game/Graphics/Generator/PlanetSurface.cpp` → `resource/shader/fragment/gen/planet.jsl`
+  (4 channels: height, color, clouds, spare) baked into a cubemap. The only
+  seed-driven variation is noise `coef`/`freq`/`power`/`seed`. The *look* variety
+  comes from `Item_PlanetType` (`color1`/`color2` surface tint,
+  `atmoTint`/`atmoDensity`, plus `oceanLevel`/`cloudLevel` consumed by
+  `resource/shader/fragment/planet.jsl`). So every planet currently reads as a
+  similar "desert." Real biomes need a `biome` enum on `PlanetType` driving new
+  shader uniforms (see 8b.3).
+- **`Item_PlanetType` was (pre-Revamp) near-identical across seeds.** Originally
+  `atmoDensity = GetFloat(1.0, 1.0)` (always 1.0), `atmoTint = V3(1)` (always
+  white), and `color1`/`color2` came from a narrow reddish hue range
+  (`[0,0.25]`/`[0.25,0.5]`) heavily desaturated. **Revamp changed this** (see
+  §7b / `PlanetType.cpp`): atmosphere now random `0..2`, tint is a seeded hue,
+  palette is full-hue, and a `hasRings` flag makes ~60% of planets ringed (was
+  always ringed). This fixed "every seed has rings / looks the same."
+- **Stations exist but are NOT generated.** `Object_Station` + `Item_StationType`
+  (`src/liblt/Game/Item/StationType.cpp`, signature `Item_StationType(seed,
+  value, capacity, integrity)`) provide full stations with docks, market, and
+  mission board. `Object_System` / `SystemPopulate` never spawn them. They must
+  be added explicitly by the populator.
+- **`Object_System` makes only star + nebula + starfield + dust.** See
+  `src/liblt/Game/Object/System.cpp`:
+  - `kBaseStarCount = 100000`; starfield count = `kBaseStarCount + 2000*Gaussian`.
+  - Nebula color derived from star color via `Generator_Nebula_Args`.
+  - `Object_DustFlecks()` added at line ~254 (dust is its own object; density is
+    not currently exposed).
+  - The star is placed at a fixed `Spherical(60000000, ...)`; there is no
+    `sunBrightness`/`sunColor`/`fogLevel` argument today.
+- **Planet type variation point:** `SystemPopulate.lts` calls
+  `Object_Planet (Item_PlanetType (rng.Int + 8))`. The `+ 8` offset was chosen
+  arbitrarily to spread the seed away from 0.
+
+### 8b.2 Requested `gameConfig.txt` universe knobs
+
+The `Config_Get(key)` loader in `ltheory-main.lts` already parses `key:value`
+lines from `resource/script/gameConfig.txt` (no spaces around `:`; `#` comments).
+Proposed new keys to support (counts are pure-script; the visual ones need small
+C++ threading noted in 8b.3):
+
+| Key | Meaning | Wiring |
+|-----|---------|--------|
+| `numOfPlanets` | # planets in the system | loop in `SystemPopulate:Init` |
+| `numOfShips` | # AI ships | loop in `ltheory-main` |
+| `numOfAsteroids` | # asteroids in the belt | loop in `SystemPopulate:Init` |
+| `planetRingRatio` | probability a planet has rings (0..1) | thread into `Item_PlanetType` (add arg) |
+| `dustLevel` | dust fleck density | thread into `Object_DustFlecks` |
+| `fogLevel` | scene fog density | add to `Object_System` / draw state |
+| `sunBrightness` | star emissive intensity | thread into `Object_Star` |
+| `sunColor` | star tint (RGB) | thread into `GenerateStarColor` path |
+| `nebulaIntensity` | nebula opacity/color strength | thread into `Generator_Nebula_Args` |
+
+### 8b.3 Proposed implementation plan (two passes)
+
+**Pass A — config-driven counts + stations + multiple planets (mostly script,
+small C++).**
+- Add the §8b.2 keys to `gameConfig.txt` and read them in `ltheory-main.lts` /
+  `SystemPopulate.lts`.
+- Loop `numOfPlanets` (each planet on its own `rng.Direction` at varied
+  distance; distant ones are tiny discs + visible in F3 `DebugScene`).
+- Spawn `numOfShips` AI ships (already done for 12; generalize).
+- Loop `numOfAsteroids` for the belt.
+- **Stations: user chose "scattered in system"** — place `Item_StationType`
+  instances at random seeded positions across the system volume (not tied to the
+  planet). ~1–3 per system, each with `Item_StationType(seed, value, cap, integ)`.
+- Small C++: add a `ringRatio` arg to `Item_PlanetType` so `planetRingRatio`
+  overrides the hardcoded `0.6`.
+
+**Pass B — biomes + visual knobs (C++/GLSL).**
+- Add a `biome` enum to `PlanetType` (Desert / Terran / Ice / Lava / GasGiant /
+  Vegetation) that drives new uniforms in `gen/planet.jsl` + `planet.jsl`
+  (terrain palette, lava/ice shading, gas-giant banding, vegetation tint).
+- Thread `sunBrightness`/`sunColor`/`nebulaIntensity`/`fogLevel`/`dustLevel`
+  through `Object_System`'s args struct and the relevant generators/draw state.
+
+**Pass C (stretch) — live DevTool tweaking.**
+- Extend `Widget/DevPanel` (F2) or a dedicated `Widget/UniverseEditor` to expose
+  the §8b.2 knobs as editable fields that re-run `SystemPopulate` in place, so
+  the user can tune a running session without reloading. This depends on Pass A
+  landing the knobs behind a single re-init entry point.
+
+### 8b.4 Open questions / decisions needed
+- Should biomes change the planet *mesh* (height) too, or just the shader color?
+  (Mesh change is heavier; color-only is cheaper and likely sufficient.)
+- Gas-giant "planets" would use a different shader look — confirm that's in scope
+  or defer.
+- Station count / placement density for "scattered" — start with 1–3 and let the
+  user tune via `numOfStations` (add to §8b.2 table when implemented).
 
 ---
 

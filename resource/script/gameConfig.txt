@@ -1,0 +1,18 @@
+# gameConfig.txt -- shared config for LTSL apps (ltheory-main, war, etc.)
+#
+# Edit the values below. Rules:
+#   * One key:value per line.
+#   * NO spaces around ':' (LTSL has no string-trim): use "seed:98374", never "seed : 98374".
+#   * Lines starting with '#' are comments and are ignored by the loader.
+#   * Unknown keys are ignored; missing keys fall back to "" (ToInt/ToFloat -> 0).
+#
+# seed         : unsigned integer 0 .. 4294967295. Drives Object_System's
+#                procedural generation -- same number = same universe.
+# loadTime     : seconds the loading screen shows before fading to the game.
+#                If missing/invalid, ltheory-main falls back to 18.0.
+# playerCredits: starting credits given to the human player.
+# shipHull     : hull/item value passed to Item_ShipType (ship class/strength).
+seed:6679999
+loadTime:22.5
+playerCredits:10000
+shipHull:20000

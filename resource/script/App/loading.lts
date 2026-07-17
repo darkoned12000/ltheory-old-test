@@ -75,7 +75,7 @@ type LoadingApp
         0.3
         1
         true
-      
+
       DrawText
         Fonts:Heading
         "LIMIT THEORY"
@@ -85,7 +85,7 @@ type LoadingApp
         1
         true
 
-  
+
       var c1 (Vec3 0.1 0.5 1.0)
       var c2 (Vec3 0.5 0.7 1.0)
 

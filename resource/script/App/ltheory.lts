@@ -1,5 +1,5 @@
 function Int UniverseSeed ()
-  39
+  888
 
 type App
   Object universe
@@ -25,7 +25,7 @@ type App
     for it system.GetInteriorObjects it.HasMore it.Advance
       if it.Get.HasComponentDockable
         station = it.Get
-        
+
     switch
       station.IsNotNull
         ship.SetPos station.GetPos + 10000.0 * rng.Sphere
@@ -77,7 +77,7 @@ type App
         target = it.Get
       if target.IsNotNull
         target.Send (MessageStopUsing player.GetPiloting)
-    
+
     var container player.GetPiloting.GetContainer
     var dt (Min 0.1 FrameTimer_Get)
     if Key_H.Down dt *= 20.0

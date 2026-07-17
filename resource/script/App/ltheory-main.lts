@@ -1,0 +1,322 @@
+# Copyright (C) 2025  darkoned12000
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Part of the ltheory-old-test modernization effort (Revamp Work).
+# See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
+
+# ---------------------------------------------------------------------------
+# Shared config loader
+#   Reads "key:value" lines from resource/script/gameConfig.txt. Lines starting
+#   with '#' are comments and ignored. IMPORTANT: no spaces around ':' (LTSL has
+#   no string-trim), e.g. "seed:98374". Returns "" if the key is missing.
+#   The file is re-parsed on every call, so call from Initialize() and cache the
+#   result -- do NOT call it every frame.
+#   NOTE: LTSL has String_Split/Split on a delimiter, but the 2-arg overload is
+#   not bindable in this build, so we parse with Substring + Length instead.
+# ---------------------------------------------------------------------------
+function String Config_Get (String key)
+  var text (File_Read "resource/script/gameConfig.txt")
+  var lines (SplitLines text)
+  var klen (Length key)
+  for i 0 i < lines.Size i.++
+    var line (lines.Get i)
+    if (Substring line 0 1) != "#"
+      if (Contains line key)
+        if (Contains line ":")
+          # value starts right after "key:"
+          var llen (Length line)
+          var vstart (klen + 1)
+          var vlen (llen - vstart)
+          Substring line vstart vlen
+  ""
+
+type Node
+  Float energy
+  Float v
+
+type LoadingScreen
+  Float time 0
+  (Array Node) nodes (Array Node)
+
+  function Void Create (Widget self)
+    for i 0 i < 512 i.++
+      var node (Node 0 0)
+      if (i == 0)
+        node.energy = 0.0
+      nodes += node
+
+  function Void PostUpdate (Widget self)
+    var factor (1.0 - (ExpDecay FrameTimer_Get 1.0))
+    var elasticity 10.0
+    var speed 1.0
+    var damping 50.0
+
+    for k 0 k < 5 k.++
+      for i 0 i < nodes.Size i.++
+        ref node1 (nodes.Get i)
+        ref node2 (nodes.Get (Mod i + 1 nodes.Size))
+        var delta (node1.energy - node2.energy)
+        node2.v += elasticity * factor * delta
+        node1.v -= elasticity * factor * delta
+
+      for i 0 i < nodes.Size i.++
+        ref node (nodes.Get i)
+        node.energy += speed * factor * node.v
+        node.v *= (ExpDecay FrameTimer_Get damping)
+
+    if Float_Random < 0.01
+      var base (Mod (Abs Int_Random) nodes.Size)
+      var variance (Mix 0.05 0.4 Float_Random)
+      for i 0 i < 64 i.++
+        var t i / 64
+        t = 2.0 * t - 1.0
+        var e 0.5 * (Exp -1.0 * (Abs t / variance) ^ 1.0)
+        var index (Mod base + i nodes.Size)
+        ref node (nodes.Get index)
+        node.energy += e
+
+  function Void PreDraw (Widget self)
+    DrawPanel self.pos self.size 0.04 1 1 0
+
+  function Void PostDraw (Widget self)
+    DrawText
+      Font_Get "Gafata/Regular.ttf"
+      FrameTimer_GetEMA10 * 1000.0 + " ms"
+      self.pos + (Vec2 16 self.size.y - 16.0)
+      10
+      0.1
+      1
+      false
+
+    Draw Icon/Cursors:Pointer Cursor_Get 12 2.0 * Colors:Primary 1.0
+
+    var point (Glyph_Circle 0 1 1 1)
+    var c1 (Vec3 0.1 0.5 1.0)
+    var c2 (Vec3 0.5 0.7 1.0)
+
+    # Ramp 0->100% over LOAD_TIME (read from gameConfig.txt, fallback 18.0).
+    var LOAD_TIME (ToFloat (Config_Get "loadTime"))
+    if (LOAD_TIME < 0.5)
+      LOAD_TIME = 18.0
+    time += FrameTimer_Get
+    var completion (Floor 100.0 * (Min 1.0 (time / LOAD_TIME)))
+
+    var font Fonts:Default
+
+    DrawText
+      font
+      "[ LOADING  //  " + completion + "% ]"
+      self.Center
+      20
+      0.3
+      1
+      true
+
+    DrawText
+      Fonts:Heading
+      "LIMIT THEORY - REBOOT"
+      self.size * (Vec2 0.5 1.0) - (Vec2 0 64)
+      72
+      0.1
+      1
+      true
+
+    for i 0 i < nodes.Size i.++
+      var t i / nodes.Size
+      ref node (nodes.Get i)
+      var angle 2Pi * t
+      var dir (Vec2 angle.Cos angle.Sin)
+      var p1 self.Center + dir * 128
+      var mult 1.0 + (ExpDecay (Length Cursor_Get - p1) 64.0)
+      var h 2.0 * node.energy
+      h *= mult
+      var c 8.0 * (Abs node.v) * (Mix c1 c2 (Abs 2.0 * t - 1.0))
+      var p2 self.Center + dir * (256.0 + 128.0 * h)
+      Draw point p1 8 c 1.0
+      Draw point p2 16 c 1.0
+      Draw (Glyph_LineFade p1 p2 1 1) 0 1 c1 0.05
+
+type App
+  Interface ui
+  Interface gameView
+  Camera camera
+  Player player
+  Object root
+  Widget desktop Widget
+  Bool desktopVisible false
+  Widget debugWidget Widget
+  Bool debugVisible false
+
+  function Void Initialize ()
+    camera = Camera_Create
+    camera.Push
+    # Third-person offset so the camera sits outside the player ship instead of
+    # inside it (otherwise you see only background). Matches war.lts behavior,
+    # which avoids this by having many distant AI ships.
+    camera.SetRelativePos (Vec3 0 40 160)
+    camera.SetRelativeLookAt (Vec3 0 0 0)
+
+    ui = (Interface_Create "UI")
+    gameView = (Interface_Create "Game View")
+
+    # Read tunables from the shared gameConfig.txt (key=value, no spaces).
+    var universeSeed (ToInt (Config_Get "seed"))
+    var playerCredits (ToInt (Config_Get "playerCredits"))
+    var shipHull (ToInt (Config_Get "shipHull"))
+
+    root = (Object_System (Vec3 15.012) universeSeed)
+    var systemScale 100000.0
+    # Populate the system with seed-driven planets + asteroids. We use our own
+    # local populator (Object/SystemPopulate) instead of the upstream
+    # Object/System.lts, which has a broken planet placement + WarpNode block.
+    # SystemPopulate reads self.GetSeed (the universeSeed we passed), so the
+    # same seed = same system layout, deterministically. It returns the created
+    # planet so we can spawn the player relative to it.
+    var planet (Object/SystemPopulate:Init root)
+    var planetPos planet.GetPos
+    var planetRadius planet.GetScale.x
+
+    var shipType (Item_ShipType shipHull 55 1 1 1 1 1 1)
+    var ship shipType.Instantiate
+    # Spawn the player in the asteroid belt JUST outside the planet's atmosphere,
+    # tilted above the ring plane (the spawn direction has a +Y component) so the
+    # rings are visible from the start instead of edge-on. planetRadius*2.0 keeps
+    # us clear of the bounce radius (planetRadius*1.1) but well inside the belt.
+    # The asteroid belt sits at planetRadius*(1.6..2.3), so this puts the player
+    # right among the rocks.
+    var spawnDir (Normalize (Vec3 0.2 0.6 1.0))
+    ship.SetPos (planetPos + (planetRadius * 2.0 * spawnDir))
+    var weapon (Item_WeaponType 46)
+    while (ship.Plug weapon) 0
+    root.AddInterior ship
+
+    player = Player_Human
+    player.AddCredits playerCredits
+    player.AddAsset ship
+    player.Pilot ship
+    player.SetName "SuperSpaceSquirrel"
+
+    # Spawn a few AI ships (seeded) on a shell well outside the belt so the
+    # system has visible distant content, like war.lts does.
+    var aiRng (RNG_MTG (universeSeed + 7))
+    var type1 (Item_ShipType 10000 20 1 1 1 1 1 1)
+    var type2 (Item_ShipType 100000 20 1 1 1 1 1 1)
+    var type3 (Item_ShipType 1000000 20 1 1 1 1 1 1)
+    for i 0 i < 12 i.++
+      var choice (aiRng.Int 1 3)
+      var aiShip
+        switch
+          choice == 1 type1.Instantiate
+          choice == 2 type2.Instantiate
+          otherwise   type3.Instantiate
+      aiShip.SetPos (planetPos + ((planetRadius * 4.0) * aiRng.Direction))
+      root.AddInterior aiShip
+      var aiWeapon (Item_WeaponType aiRng.Int)
+      while (aiShip.Plug aiWeapon) 0
+
+    ui.Add (Widget/HUD:Create player)
+
+    Sound_PlayLooped "system/ambiance/089.wav" 0.05
+
+    gameView.Add (Custom Widget LoadingScreen)
+
+  function Void Update ()
+    static started false
+    static loadingElapsed 0.0
+    # Loading duration in seconds. Read from gameConfig.txt (key "loadTime").
+    # If the file/key is missing or parses to 0, fall back to 18.0 so the loader
+    # always shows (a 0 value would skip it). Note: LTSL has no '==' on floats,
+    # so we guard with '< 0.5' instead.
+    var LOAD_TIME (ToFloat (Config_Get "loadTime"))
+    if (LOAD_TIME < 0.5)
+      LOAD_TIME = 18.0
+
+    if (! started)
+      # Sample the clock AFTER Draw so it lines up with the bar's 'time'
+      # accumulator (which increments inside PostDraw during Draw). This keeps
+      # the two clocks in sync so the % bar reaches 100% exactly at the swap.
+      gameView.Update
+      gameView.Draw
+      loadingElapsed += FrameTimer_Get
+      if (loadingElapsed >= LOAD_TIME)
+        var passes Vector<Reference<RenderPassT>>
+        passes.Append (RenderPass_Clear (Vec4 0.0))
+        passes.Append (RenderPass_Camera camera)
+        passes.Append (RenderPass_SMAA)
+        passes.Append (RenderPass_Interface ui)
+        passes.Append (RenderPass_PostFilter "post/dither.jsl")
+        gameView.Clear
+        gameView.Add (Widget_Rendered passes)
+        started = true
+      return
+
+    var dt (Min 0.1 FrameTimer_Get)
+    root.Update dt
+
+    # Bounce the player off the planet's surface/atmosphere so you can't fly
+    # through the mesh. The planet has a Collidable component but no bounding
+    # box in this build, so collision is enforced here in script: if the ship
+    # gets within its radius * 1.1 of the planet center, push it back out
+    # along the surface normal (it slides along the atmosphere instead of
+    # penetrating). The planet is found by its object TYPE (not name), so this
+    # keeps working if the planet is renamed.
+    var ship player.GetPiloting
+    for it root.GetInteriorObjects it.HasMore it.Advance
+      var o it.Get
+      if (o.GetType == "Planet")
+        var toShip (ship.GetPos - o.GetPos)
+        var dist (Length toShip)
+        var minDist (o.GetScale.x * 1.1)
+        if (dist < minDist)
+          var normal (toShip / dist)
+          ship.SetPos (o.GetPos + (minDist * normal))
+
+    camera.SetTarget player.GetPiloting
+
+    if Key_Y.Pressed
+      var target Object
+      for it player.GetPiloting.GetTargets it.HasMore it.Advance
+        target = it.Get
+      if target.IsNotNull
+        target.Send (MessageStartUsing player.GetPiloting)
+
+    if Key_U.Pressed
+      var target Object
+      for it player.GetPiloting.GetTargets it.HasMore it.Advance
+        target = it.Get
+      if target.IsNotNull
+        target.Send (MessageStopUsing player.GetPiloting)
+
+    if Key_F2.Pressed
+      desktopVisible = desktopVisible.!
+      switch
+        desktopVisible
+          desktop =
+            Layer
+              Compositor_Basic 0.1 0.1 (Vec3 0.4 0.5 0.75)
+              Mesh_Quad
+              1
+              Widget/DevPanel:Create
+          ui.Add desktop
+        otherwise
+          desktop.Delete
+
+    if Key_F3.Pressed
+      debugVisible = debugVisible.!
+      switch
+        debugVisible
+          debugWidget = (Widget/DebugScene:Create root)
+          ui.Add debugWidget
+        otherwise
+          debugWidget.Delete
+
+    var container player.GetPiloting.GetContainer
+    if Key_H.Down dt *= 20.0
+    container.Update dt
+
+    ui.Update
+    gameView.Update
+    gameView.Draw
+
+function App Main ()
+  var self App
+  self

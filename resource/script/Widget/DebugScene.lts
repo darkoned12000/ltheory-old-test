@@ -1,0 +1,52 @@
+# Copyright (C) 2025  darkoned12000
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Part of the ltheory-old-test modernization effort (Revamp Work).
+# See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
+#
+# Debug overlay widget: lists every interior object of a target Object (the
+# system) by name, so we can see at a glance whether the planet / asteroids /
+# ships were actually added to the scene. Created via Widget/DebugScene:Create
+# root and toggled from the app (F3).
+
+type DebugScene
+  Object target
+
+  function Void PostDraw (Widget self)
+    var count 0
+    for it target.GetInteriorObjects it.HasMore it.Advance
+      count = count + 1
+    # Find the player ship so we can show live distance to each object.
+    var playerShip Object
+    for it target.GetInteriorObjects it.HasMore it.Advance
+      var o it.Get
+      if (o.GetType == "Ship")
+        playerShip = o
+    var nearestAsteroidDist 100000000.0
+    var y 360.0
+    DrawText Fonts:Default ("interior count: " + count) (Vec2 20 y) 18 (Vec3 0.4 1.0 0.4) 1 false
+    y = y + 24.0
+    var idx 0
+    for it target.GetInteriorObjects it.HasMore it.Advance
+      if idx < 24
+        var o it.Get
+        var p o.GetPos
+        var line (o.GetName + "  " + (Round p.x) + " " + (Round p.y) + " " + (Round p.z))
+        if playerShip.IsNotNull
+          var d (Length (p - playerShip.GetPos))
+          line = (line + "  d=" + (Round d))
+          if (o.GetType == "Asteroid")
+            if (d < nearestAsteroidDist)
+              nearestAsteroidDist = d
+        var c (Vec3 0.8 0.8 1.0)
+        if (o.GetType == "Planet")
+          c = (Vec3 1.0 0.8 0.2)
+        DrawText Fonts:Default line (Vec2 20 y) 13 c 1 false
+        y = y + 17.0
+      idx = idx + 1
+    if playerShip.IsNotNull
+      DrawText Fonts:Default ("nearest asteroid: " + (Round nearestAsteroidDist)) (Vec2 20 y) 14 (Vec3 1.0 0.5 0.3) 1 false
+
+function Widget Create (Object target)
+  Components:Expand
+    Custom Widget
+      DebugScene target

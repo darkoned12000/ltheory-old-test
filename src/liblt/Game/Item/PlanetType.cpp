@@ -42,7 +42,8 @@ AutoClassDerived(PlanetType, PlanetTypeBase,
   float, cloudLevel,
   Color, color1,
   Color, color2,
-  V3, wavelength)
+  V3, wavelength,
+  bool, hasRings)
 
   DERIVED_TYPE_EX(PlanetType)
   PlanetType() {}
@@ -112,19 +113,21 @@ Renderable Generate(PlanetType const& type) {
   }
 
   /* Rings. */ {
-    static Shader generate = Shader_Create("identity.jsl", "gen/planetring.jsl");
-    (*generate)("seed", rg->GetFloat());
+    if (type.hasRings) {
+      static Shader generate = Shader_Create("identity.jsl", "gen/planetring.jsl");
+      (*generate)("seed", rg->GetFloat());
 
-    Texture2D ringTexture = Texture_Create(1024, 1, GL_TextureFormat::R32F);
-    Texture_Generate(ringTexture, generate);
+      Texture2D ringTexture = Texture_Create(1024, 1, GL_TextureFormat::R32F);
+      Texture_Generate(ringTexture, generate);
 
-    ShaderInstance ringShaderInstance = ShaderInstance_Create(ringShader);
-    (*ringShaderInstance)
-      (RenderStateSwitch_BlendModeAlpha)
-      (RenderStateSwitch_CullModeDisabled)
-      ("rings", ringTexture);
-    DrawState_Link(ringShaderInstance);
-    model->Add(ringMesh, ringShaderInstance, false);
+      ShaderInstance ringShaderInstance = ShaderInstance_Create(ringShader);
+      (*ringShaderInstance)
+        (RenderStateSwitch_BlendModeAlpha)
+        (RenderStateSwitch_CullModeDisabled)
+        ("rings", ringTexture);
+      DrawState_Link(ringShaderInstance);
+      model->Add(ringMesh, ringShaderInstance, false);
+    }
   }
 
   return model;
@@ -140,14 +143,19 @@ DefineFunction(Item_PlanetType) { AUTO_FRAME;
   self->name = "Planet";
   self->scale = 100000;
   self->seed = args.seed;
-  self->atmoDensity = rg->GetFloat(1.0f, 1.0f);
-  self->atmoTint = V3(1);
+  // Wider, seed-driven palette + randomized atmosphere so planets visibly
+  // differ across seeds (the original code froze atmoDensity=1, atmoTint=white
+  // and used a narrow reddish hue range, so every planet looked identical).
+  self->atmoDensity = rg->GetFloat(0.0f, 2.0f);
+  self->atmoTint = Desaturate(rg->GetV3(0, 1.0f), rg->GetFloat(0.5f, 1.0f));
   self->cloudLevel = rg->GetFloat(-0.2f, 0.15f);
+  float desat = rg->GetFloat(0.4f, 1.0f);
+  self->color1 = Desaturate(rg->GetV3(0, 1.0f), desat);
+  self->color2 = Desaturate(rg->GetV3(0, 1.0f), desat);
+  self->wavelength = V3(1) / Pow(V3(0.66f, 0.53f, 0.4f) + rg->GetV3(-0.1f, 0.1f), 4.0f);
 
-  float desat = rg->GetFloat(0.75f, 1);
-  self->color1 = Desaturate(rg->GetV3(0, 0.25f), desat);
-  self->color2 = Desaturate(rg->GetV3(0.25f, 0.5f), desat);
-  self->wavelength = V3(1) / Pow(V3(0.66f, 0.53f, 0.4f) + rg->GetV3(0, -0.1f), 4.0f);
+  // ~60% of planets have rings; the rest are bare (gives seed-driven variety).
+  self->hasRings = rg->GetFloat() < 0.6f;
 
   self->renderable = Generate(*self);
   return self;
