@@ -599,10 +599,42 @@ Ordered best-ROI first. Each is independent unless noted.
       `draw`, `font`, `universe`, `sandbox`) compile every shader and render
       with zero GL errors under `BUILD_STRICT` (`DEBUG_GL_ERRORS`). The benign
       `Object/WarpNode`/`Object/WarpRail` LTSL warnings (also in `war`) remain.
-    - GLSL 4.x (400–460) is the only higher step and was deliberately NOT taken:
-      it gives no benefit here (no tessellation / compute / SSBO usage) and risks
-      new compile errors across the 169 shaders for zero upside. Note for later:
-      see the deferred EasyGL cleanup in §8c.3.
+    - GLSL 4.x (400–460) was deliberately NOT taken in Step 2: it gives no
+      benefit here (no tessellation / compute / SSBO usage yet) and risks new
+      compile errors across the 169 shaders for zero upside. **Future staged
+      upgrade to GLSL 4.30 is tracked separately below (item #2b).** Note for
+      later: see the deferred EasyGL cleanup in §8c.3.
+ 2b. **Staged GLSL upgrade toward 4.30 (compute + SSBO) — NOT started.**
+    - **Goal:** move the engine one GLSL *major* at a time (330 → 400 → 410 →
+      420 → 430) so each step surfaces a small, isolatable set of compile/runtime
+      errors rather than a wall of breakage across all 169 shaders at once.
+      Stop at **4.30**: that is the version that unlocks the features worth the
+      cost — **compute shaders** and **Shader Storage Buffer Objects (SSBO)** —
+      which let CPU-bound work (particle updates, culling, procedural
+      generation passes, large uniform/vertex arrays) move to the GPU.
+    - **Why stop at 4.30, not 4.50/4.60:** 450/460 add bindless textures and
+      indirect drawing, and at that point the industry-standard move is to a
+      low-level API (Vulkan/Metal/D3D12) rather than another OpenGL revision.
+      A 460-OpenGL rewrite and a Vulkan rewrite overlap heavily, so 4.30 is the
+      sensible ceiling for OpenGL work; evaluate Vulkan separately if compute
+      proves valuable.
+    - **Hard rule for each stage:** bump `kVersionDirective` one major version at
+      a time, rebuild, and fix ONLY the errors that version introduces. Do not
+      skip versions. Verify all runnable apps still render with zero GL errors
+      under `BUILD_STRICT` before moving on (same bar as Step 2).
+    - **Per-stage risk notes:**
+      - **400:** tessellation stages become available (not adopted yet — no
+        tessellated geometry in this engine). Main risk is stricter compile.
+      - **410/420:** more builtins; minimal behavioral change. Mostly a
+        compile-bar check.
+      - **430:** **the real work.** Adopting compute/SSBO requires rewriting the
+        draw orchestration and generation passes, not just the shaders. Treat
+        this stage as its own project (profile first to confirm the CPU bottleneck
+        justifies it — see §8c.2 #8 LTSL VM rationale).
+    - **Prerequisite cleanup before starting:** the deferred EasyGL wrapper
+      removal (§8c.3) and confirming the `texSample` shim approach still holds at
+      each version (the Mesa `texture` macro quirk is version-independent, but
+      re-validate).
 3. **Kill the `*(T const*)0` UB idioms (correctness).**
    - Replace with `std::declval`-style helpers / `offsetof` where valid. Touch
      `Type.h:373`, `Vec.h:25`, `Common.h:272`. Small, surgical.
