@@ -369,8 +369,20 @@ Type Type_Get(T const& t);
    resolution in Type_Get<T>(). The reference is never dereferenced by
    _Type_Get (which only uses the template parameter T); this relies on
    the same implementation-defined, universally-tolerated mechanism as
-   the standard offsetof macro. Centralized here so the idiom appears
-   exactly once rather than as scattered *(T const*)0 literals. */
+   the standard offsetof macro.
+
+   NOTE: this is a DELIBERATE, centralized end-state — NOT an oversight.
+   The scattered *(T const*)0 literals that previously appeared across
+   Vec.h / Map.h / VectorMap.h / XVector.h / Type.h were all removed and
+   now funnel through this single helper. We evaluated eliminating it
+   entirely by switching the _Type_Get(T const&) friends to _Type_Get(T*)
+   and passing a null pointer (which would be fully well-defined), but
+   that requires converting ~191 real-instance Type_Get(instance) callers
+   (e.g. Type_Get(self->n0) in AutoClass_Generated.h) and every reflection
+   macro to pass pointers instead of values. That is a large, risky
+   refactor of the serialization/reflection core for zero runtime benefit
+   (the dereferenced value is never read), so we intentionally keep this
+   one tolerated idiom centralized here. */
 template <class T>
 T const& Type_Ref() {
   return *static_cast<T const*>(0);
