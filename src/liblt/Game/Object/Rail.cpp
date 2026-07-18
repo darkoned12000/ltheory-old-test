@@ -68,13 +68,13 @@ AutoClassDerived(Rail, RailBaseT,
       self(self)
       {}
     
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       Bound3 myBox(self->position);
       myBox.AddPoint(self->position + self->direction * self->Damager.type->range);
       return myBox;
     }
 
-    void Render(DrawState* state) const {
+    void Render(DrawState* state) const override {
       /* Frustum culling. */
       if (!state->view->CanSee(GetBound()))
         return;
@@ -105,7 +105,7 @@ AutoClassDerived(Rail, RailBaseT,
     Drawable.renderable = (Renderable)(new RenderComponent(this));
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     age += Rand(0.9f, 1.0f / 0.9f) * state.dt;
@@ -134,7 +134,7 @@ AutoClassDerived(Rail, RailBaseT,
     position += velocity * state.dt;
   }
 
-  bool CanCollide(ObjectT const* o) const {
+  bool CanCollide(ObjectT const* o) const override {
     if (Damager.source && o->GetRoot() == Damager.source->GetRoot())
       return false;
     return true;

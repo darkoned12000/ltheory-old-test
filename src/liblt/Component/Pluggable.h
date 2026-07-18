@@ -26,7 +26,7 @@ AutoClass(ComponentPluggable,
 };
 
 AutoComponent(Pluggable)
-  float GetPowerFraction() const {
+  float GetPowerFraction() const override {
     return Pluggable.powerRequest > 0
       ? Pluggable.powerIn / Pluggable.powerRequest
       : 1;

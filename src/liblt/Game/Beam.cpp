@@ -55,7 +55,7 @@ AutoClassDerived(BeamImpl, Beam,
       self(self)
       {}
 
-    void Render(DrawState* state) const {
+    void Render(DrawState* state) const override {
       if (!self->Damager.source)
         return;
 
@@ -83,7 +83,7 @@ AutoClassDerived(BeamImpl, Beam,
     Drawable.renderable = (Renderable)(new RenderComponent(this));
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     if (!Damager.source) {
@@ -116,7 +116,7 @@ AutoClassDerived(BeamImpl, Beam,
     }
   }
 
-  bool CanCollide(const ObjectT* o) const {
+  bool CanCollide(const ObjectT* o) const override {
     if (Damager.source && o->GetRoot() == Damager.source->GetRoot())
       return false;
     return true;

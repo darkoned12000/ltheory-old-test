@@ -8,7 +8,7 @@ AutoClass(Tuple2,
   T1, x,
   T2, y)
 
-  Tuple2() {}
+  Tuple2() = default;
 
   template <class NT1, class NT2>
   operator Tuple2<NT1, NT2>() const {
@@ -38,7 +38,7 @@ AutoClass(Tuple3,
   T2, y,
   T3, z)
 
-  Tuple3() {}
+  Tuple3() = default;
 
   template <class NT1, class NT2, class NT3>
   operator Tuple3<NT1, NT2, NT3>() const {
@@ -66,7 +66,7 @@ AutoClass(Tuple4,
   T3, z,
   T4, w)
 
-  Tuple4() {}
+  Tuple4() = default;
 
   friend bool operator==(Tuple4 const& a, Tuple4 const& b) {
     return a.x == b.x && a.y == b.y && a.z == a.z && a.w == b.w;

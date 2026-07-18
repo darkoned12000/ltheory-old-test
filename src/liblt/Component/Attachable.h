@@ -49,23 +49,23 @@ AutoClass(ComponentAttachable,
 };
 
 AutoComponent(Attachable)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Attachable.Run(this, s);
     BaseT::OnUpdate(s);
   }
 
-  Transform const& GetLocalTransform() const {
+  Transform const& GetLocalTransform() const override {
     return Attachable.transform;
   }
 
-  void SetSupertype(Item const& type) {
+  void SetSupertype(Item const& type) override {
     if (type->GetScale() > 0)
       Attachable.SetScale(V3(type->GetScale()));
 
     BaseT::SetSupertype(type);
   }
 
-  void SetLocalTransform(Transform const& transform) {
+  void SetLocalTransform(Transform const& transform) override {
     Attachable.SetTransform(transform);
   }
 };

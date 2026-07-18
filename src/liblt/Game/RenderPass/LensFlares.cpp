@@ -29,7 +29,7 @@ namespace {
     float, depth,
     Light*, light)
 
-    LensFlare() {}
+    LensFlare() = default;
 
     friend bool operator<(LensFlare const& a, LensFlare const& b) {
       return
@@ -63,11 +63,11 @@ namespace {
       resultBuffer = Texture_Create(kMaxFlares, 1, GL_TextureFormat::R32F);
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Lens Flares";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       RendererZBuffer zBuffer(false);
 
       /* Generate flare texture. */ {

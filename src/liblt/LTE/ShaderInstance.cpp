@@ -16,14 +16,14 @@ namespace {
   AutoClass(Cell,
     ListElement<Cell>, next,
     RenderStateSwitch, state)
-    Cell() {}
+    Cell() = default;
   };
 
   int gActiveVersion = -1;
   bool gSkippedState = false;
 
   struct ShaderVar {
-    virtual ~ShaderVar() {}
+    virtual ~ShaderVar() = default;
     virtual ShaderVar* Clone() const = 0;
     virtual void Set(int varIndex, ShaderT* shader) = 0;
   };
@@ -40,11 +40,11 @@ namespace {
       g(g)
       {}
 
-    ShaderVar* Clone() const {
+    ShaderVar* Clone() const override {
       return new ShaderVarImpl(*this);
     }
 
-    void Set(int varIndex, ShaderT* shader) {
+    void Set(int varIndex, ShaderT* shader) override {
       (*shader)(varIndex, g());
     }
   };

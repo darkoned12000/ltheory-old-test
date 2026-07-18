@@ -10,18 +10,18 @@ namespace {
     float, thickness)
     DERIVED_TYPE_EX(SDFRing)
 
-    SDFRing() {}
+    SDFRing() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       return Abs(Length(p.GetXZ() - center.GetXZ()) - radius) - thickness;
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return Bound3(center - V3(radius + thickness),
                   center + V3(radius + thickness));
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return Stringize()
         | "(abs(length(" | p | ".xz - " | center | ".xz) - " | radius | ") - "
         | thickness | ")";

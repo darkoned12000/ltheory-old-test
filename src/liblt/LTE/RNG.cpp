@@ -97,7 +97,7 @@ namespace {
       x = (uint)((uint)214013 * x + (uint)2531011);
     }
 
-    uint GetInt() {
+    uint GetInt() override {
       Increment();
       return x;
     }
@@ -114,13 +114,13 @@ namespace {
       mt(arr, size)
       {}
 
-    uint GetInt() {
+    uint GetInt() override {
       return mt.getNext();
     }
   };
 
   struct DefaultRNG : public RNGT {
-    uint GetInt() {
+    uint GetInt() override {
       return rand() * RAND_MAX + rand();
     }
   };

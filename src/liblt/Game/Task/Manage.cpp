@@ -58,22 +58,22 @@ namespace {
     DERIVED_TYPE_EX(TaskManage)
     POOLED_TYPE
 
-    TaskManage() {}
+    TaskManage() = default;
 
     TaskManage(Project const& project) :
       project(project.t)
       {}
 
-    ~TaskManage() {
+    ~TaskManage() override {
       if (missionMonopolize)
         missionMonopolize->deleted = true;
     }
 
-    String GetName() const {
+    String GetName() const override {
       return "Manage";
     }
 
-    String GetNoun() const {
+    String GetNoun() const override {
       return "Manager";
     }
 
@@ -132,7 +132,7 @@ namespace {
       /* TODO. */
     }
 
-    void OnBegin(Object const& self, Data& data) {
+    void OnBegin(Object const& self, Data& data) override {
       data = TaskManageInstance();
       TaskManageInstance& it = data.Convert<TaskManageInstance>();
       /* TODO : Capital allocation based on personality. */
@@ -142,7 +142,7 @@ namespace {
       it.metaprojects[MetaprojectType_Secure].allocation = 0.3f;
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       TaskManageInstance& it = data.Convert<TaskManageInstance>();
 
       /* Split the project wallet among metaprojects. */ {
@@ -181,7 +181,7 @@ namespace {
       }
     }
 
-    void OnEnd(Object const& self, Data& data) {
+    void OnEnd(Object const& self, Data& data) override {
       /* Return any remaining wallet contents to the project owner. */
       TaskManageInstance& it = data.Convert<TaskManageInstance>();
       if (it.wallet)

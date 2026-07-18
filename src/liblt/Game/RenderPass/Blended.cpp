@@ -17,11 +17,11 @@ namespace {
       style(RenderStyle_Default(true))
       {}
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Blended";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       RenderStyle_Push(style);
       state->primary->Bind(0);
       for (size_t i = 0; i < state->visible.size(); ++i)

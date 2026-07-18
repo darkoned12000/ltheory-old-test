@@ -62,7 +62,7 @@ void ComponentSockets::Unplug(ObjectT* self, uint index) {
 AutoClass(SocketsIterator,
   Object, object,
   uint, index)
-  SocketsIterator() {}
+  SocketsIterator() = default;
 };
 
 FreeFunction(bool, Object_Plug,

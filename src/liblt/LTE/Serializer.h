@@ -6,7 +6,7 @@
 
 namespace LTE {
   struct Serializer {
-    virtual ~Serializer() {}
+    virtual ~Serializer() = default;
     virtual bool IsGood() const = 0;
     virtual int GetVersion() const = 0;
     virtual void Process(void* data, Type const& type) = 0;

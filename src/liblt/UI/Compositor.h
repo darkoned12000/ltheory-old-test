@@ -5,7 +5,7 @@
 #include "LTE/Reference.h"
 
 struct CompositorT : public RefCounted {
-  virtual ~CompositorT() {}
+  virtual ~CompositorT() = default;
 
   virtual void Composite(
     Texture2D const& layer,

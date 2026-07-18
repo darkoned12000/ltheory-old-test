@@ -33,7 +33,7 @@ namespace LTE {
     bool, constant,
     bool, reference)
 
-    Variable() {}
+    Variable() = default;
   };
 
   struct CompileEnvironment {

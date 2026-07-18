@@ -10,7 +10,7 @@ struct Parameter {
   String name;
   Type type;
 
-  Parameter() {}
+  Parameter() = default;
 
   Parameter(String const& name, Type const& type) :
     name(name),

@@ -18,9 +18,9 @@ namespace {
     DERIVED_TYPE_EX(ActionMine)
     POOLED_TYPE
 
-    ActionMine() {}
+    ActionMine() = default;
 
-    void Execute(UpdateState& state) const {
+    void Execute(UpdateState& state) const override {
       ObjectT* root = object->GetRoot();
       Pointer<ComponentMineable> mine = target->GetMineable();
       V3 phase = Normalize(target->GetTransform().InversePoint(point));
@@ -41,7 +41,7 @@ namespace {
           Event_Mined(object, target, mine->item, quantity));
     }
 
-    String GetName() const {
+    String GetName() const override {
       return "Mine";
     }
   };

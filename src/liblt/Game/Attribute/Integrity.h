@@ -13,11 +13,11 @@ struct Attribute_Integrity : public T {
     integrity(0)
     {}
 
-  Health const& GetIntegrity() const {
+  Health const& GetIntegrity() const override {
     return integrity;
   }
 
-  bool HasIntegrity() const {
+  bool HasIntegrity() const override {
     return true;
   }
 };

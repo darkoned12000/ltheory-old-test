@@ -24,25 +24,25 @@ namespace {
     Renderable, imposter)
     DERIVED_TYPE_EX(Imposter)
 
-    Imposter() {}
+    Imposter() = default;
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return source->GetBound();
     }
 
-    Mesh GetCollisionMesh() const {
+    Mesh GetCollisionMesh() const override {
       return source->GetCollisionMesh();
     }
 
-    size_t GetHash() const {
+    size_t GetHash() const override {
       return source->GetHash();
     }
 
-    short GetVersion() const {
+    short GetVersion() const override {
       return source->GetVersion();
     }
 
-    void Render(DrawState* state) const {
+    void Render(DrawState* state) const override {
       Bound3 const& bound = GetBound();
       Matrix const& world = Renderer_GetWorldMatrix();
       Matrix const& view = Renderer_GetViewMatrix();
@@ -54,7 +54,7 @@ namespace {
       (lod > 1 ? imposter : source)->Render(state);
     }
 
-    V3 Sample() const {
+    V3 Sample() const override {
       return source->Sample();
     }
   };

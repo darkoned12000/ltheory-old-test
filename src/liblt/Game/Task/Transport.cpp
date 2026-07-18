@@ -10,38 +10,38 @@ namespace {
     DERIVED_TYPE_EX(TaskTransport)
     POOLED_TYPE
 
-    TaskTransport() {}
+    TaskTransport() = default;
 
     /* TODO : Estimate of travel time. */
-    float GetDuration() const {
+    float GetDuration() const override {
       return Length(args.source->GetPos() - args.dest->GetPos());
     }
 
-    String GetName() const {
+    String GetName() const override {
       return "Transport";
     }
 
-    String GetNoun() const {
+    String GetNoun() const override {
       return "Transport";
     }
 
-    void GetInputs(Vector<ItemDelta>& inputs) const {
+    void GetInputs(Vector<ItemDelta>& inputs) const override {
       inputs.push(ItemDelta(args.item, args.source, 1));
     }
 
-    void GetOutputs(Vector<ItemDelta>& outputs) const {
+    void GetOutputs(Vector<ItemDelta>& outputs) const override {
       outputs.push(ItemDelta(args.item, args.dest, 1));
     }
 
-    Capability GetRateFactor() const {
+    Capability GetRateFactor() const override {
       return Capability_Motion(1);
     }
 
-    Capability GetScaleFactor() const {
+    Capability GetScaleFactor() const override {
       return Capability_Storage(1);
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       if (self->GetContainer() == args.source) {
         // Quantity quantity =
         //  (Quantity)Floor(self->GetFreeCapacity() / args.item->GetMass());

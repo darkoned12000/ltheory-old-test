@@ -55,20 +55,20 @@ AutoClassDerived(Wormhole, WormholeBaseT,
     Drawable.renderable = GetWormholeModel;
   }
 
-  void Dock(Object const& docker) {
+  void Dock(Object const& docker) override {
     Object const& dest = Navigable.nodes[0].dest;
     dest->GetContainer()->AddInterior(docker);
     docker->SetPos(
       dest->GetPos() - 1500.0f * Normalize(dest->GetPos()));
   }
 
-  Icon GetIcon() const {
+  Icon GetIcon() const override {
     Icon icon;
     ScriptFunction_Load("Icons:Wormhole")->Call(icon);
     return icon;
   }
 
-  Signature GetSignature() const {
+  Signature GetSignature() const override {
     return Signature(10.0f, 18.0f, 0.125f, 0.5f);
   }
 };

@@ -11,8 +11,8 @@
 struct CodeObjectT : public RefCounted {
   BASE_TYPE_EX(CodeObjectT)
 
-  CodeObjectT() {}
-  virtual ~CodeObjectT() {}
+  CodeObjectT() = default;
+  virtual ~CodeObjectT() = default;
 
   virtual String GetName() const = 0;
 

@@ -25,17 +25,17 @@ namespace {
     DERIVED_TYPE_EX(TaskProduce)
     POOLED_TYPE
 
-    TaskProduce() {}
+    TaskProduce() = default;
 
-    float GetDuration() const {
+    float GetDuration() const override {
       return ((AssemblyChip*)args.chip.t)->duration;
     }
 
-    Icon GetIcon() const {
+    Icon GetIcon() const override {
       return Icon_Task_Produce();
     }
 
-    void GetInputs(Vector<ItemDelta>& inputs) const {
+    void GetInputs(Vector<ItemDelta>& inputs) const override {
       AssemblyChip* chip = (AssemblyChip*)args.chip.t;
       inputs.push(ItemDelta(chip, nullptr, 1));
 
@@ -45,11 +45,11 @@ namespace {
           chip->requirements[i].quantity));
     }
 
-    String GetName() const {
+    String GetName() const override {
       return "Produce";
     }
 
-    String GetNoun() const {
+    String GetNoun() const override {
       return "Production Lab";
     }
 
@@ -58,15 +58,15 @@ namespace {
       outputs.push(ItemDelta(chip->item, nullptr, 1));
     }
 
-    Capability GetRateFactor() const {
+    Capability GetRateFactor() const override {
       return Capability_Production(1);
     }
 
-    void OnBegin(Object const& self, Data& data) {
+    void OnBegin(Object const& self, Data& data) override {
       data = TaskProduceInstance();
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       TaskProduceInstance& it = data.Convert<TaskProduceInstance>();
       Pointer<ObjectT> root = self->GetRoot();
       AssemblyChip* chip = (AssemblyChip*)args.chip.t;

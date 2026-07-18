@@ -9,7 +9,7 @@
 namespace LTE {
   struct String : public std::string {
     typedef NoBase BaseType;
-    String() {}
+    String() = default;
 
     String(std::string const& str) :
       std::string(str)
@@ -209,7 +209,7 @@ namespace LTE {
 struct Stringize {
   String string;
 
-  Stringize() {}
+  Stringize() = default;
 
   template <class T>
   Stringize(T const& t) {

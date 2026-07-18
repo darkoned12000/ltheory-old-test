@@ -10,13 +10,13 @@ struct Attribute_Metatype : public T {
   ATTRIBUTE_COMMON(metatype)
   Data metatype;
 
-  Attribute_Metatype() {}
+  Attribute_Metatype() = default;
 
-  Data const& GetMetatype() const {
+  Data const& GetMetatype() const override {
     return metatype;
   }
 
-  bool HasMetatype() const {
+  bool HasMetatype() const override {
     return true;
   }
 };

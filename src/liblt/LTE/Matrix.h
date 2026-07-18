@@ -12,7 +12,7 @@ struct MatrixT {
   T e[16];
 
   /* Constructors. */
-  MatrixT() {}
+  MatrixT() = default;
 
   MatrixT(
       T m11, T m12, T m13, T m14,

@@ -12,13 +12,13 @@
 AutoClass(ComponentHistory,
   Vector<Event>, elements)
 
-  ComponentHistory() {}
+  ComponentHistory() = default;
 
   LT_API void Run(ObjectT*, UpdateState&);
 };
 
 AutoComponent(History)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     History.Run(this, s);
     BaseT::OnUpdate(s);
   }

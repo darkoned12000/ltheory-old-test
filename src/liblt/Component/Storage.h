@@ -10,13 +10,13 @@ typedef Map<Object, Object> StorageMapT;
 AutoClass(ComponentStorage,
   StorageMapT, entries)
 
-  ComponentStorage() {}
+  ComponentStorage() = default;
 
   LT_API Object Get(Object const& owner);
 };
 
 AutoComponent(Storage)
-  Object GetStorageLocker(Object const& owner) {
+  Object GetStorageLocker(Object const& owner) override {
     return Storage.Get(owner);
   }
 };

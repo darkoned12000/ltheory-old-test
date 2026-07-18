@@ -12,7 +12,7 @@ namespace {
     uint depth;
     DERIVED_TYPE_EX(Texture3DImpl)
 
-    Texture3DImpl() {}
+    Texture3DImpl() = default;
     
     Texture3DImpl(
         uint width,
@@ -38,12 +38,12 @@ namespace {
         GL_PixelFormat::Red, GL_DataFormat::Float, nullptr);
     }
 
-    ~Texture3DImpl() {
+    ~Texture3DImpl() override {
       if (!Program_InStaticSection())
         GL_DeleteTexture(texture);
     }
 
-    void AddressBorder(float r, float g, float b, float a) {
+    void AddressBorder(float r, float g, float b, float a) override {
       float v[] = {r, g, b, a};
       GL_BindTexture(GL_TextureTargetBindable::T3D, texture);
       GL_TexWrapMode(
@@ -62,7 +62,7 @@ namespace {
       DEBUG_GL_ERRORS;
     }
 
-    void AddressClamp() {
+    void AddressClamp() override {
       GL_BindTexture(GL_TextureTargetBindable::T3D, texture);
       GL_TexWrapMode(
         GL_TextureTarget::T3D,
@@ -78,7 +78,7 @@ namespace {
         GL_TextureWrapMode::ClampToEdge);
     }
 
-    void AddressRepeat() {
+    void AddressRepeat() override {
       GL_BindTexture(GL_TextureTargetBindable::T3D, texture);
       GL_TexWrapMode(
         GL_TextureTarget::T3D,
@@ -94,35 +94,35 @@ namespace {
         GL_TextureWrapMode::Repeat);
     }
 
-    void Bind(uint textureUnit) const {
+    void Bind(uint textureUnit) const override {
       GL_ActiveTexture(textureUnit);
       GL_BindTexture(GL_TextureTargetBindable::T3D, texture);
     }
 
-    void GenerateMipmap() {
+    void GenerateMipmap() override {
       GL_BindTexture(GL_TextureTargetBindable::T3D, texture);
       GL_GenerateMipmap(GL_TextureTarget::T3D);
     }
 
-    uint GetWidth() const {
+    uint GetWidth() const override {
       return width;
     }
 
-    uint GetHeight() const {
+    uint GetHeight() const override {
       return height;
     }
 
-    uint GetDepth() const {
+    uint GetDepth() const override {
       return depth;
     }
 
-    void GetData(uchar* buffer, GL_PixelFormat::Enum format, uint lod) const {
+    void GetData(uchar* buffer, GL_PixelFormat::Enum format, uint lod) const override {
       GL_BindTexture(GL_TextureTargetBindable::T3D, texture);
       GL_GetTexImage(GL_TextureTarget::T3D, lod, format, GL_DataFormat::UnsignedByte,
                      buffer);
     }
 
-    void GetData(float* buffer, GL_PixelFormat::Enum format, uint lod) const {
+    void GetData(float* buffer, GL_PixelFormat::Enum format, uint lod) const override {
       GL_BindTexture(GL_TextureTargetBindable::T3D, texture);
       GL_GetTexImage(GL_TextureTarget::T3D, lod, format, GL_DataFormat::Float, buffer);
     }
@@ -132,19 +132,19 @@ namespace {
       uint width, uint height, uint depth,
       GL_PixelFormat::Enum pixelFormat,
       GL_DataFormat::Enum dataFormat,
-      void const* buffer)
+      void const* buffer) override
     {
       GL_BindTexture(GL_TextureTargetBindable::T3D, texture);
       GL_TexSubImage3D(GL_TextureTarget::T3D, 0, x, y, z, width, height, depth,
         pixelFormat, dataFormat, buffer);
     }
 
-    void SetMagFilter(GL_TextureFilter::Enum filter) {
+    void SetMagFilter(GL_TextureFilter::Enum filter) override {
       GL_BindTexture(GL_TextureTargetBindable::T3D, texture);
       GL_TexMagFilter(GL_TextureTarget::T3D, filter);
     }
 
-    void SetMinFilter(GL_TextureFilterMip::Enum filter) {
+    void SetMinFilter(GL_TextureFilterMip::Enum filter) override {
       GL_BindTexture(GL_TextureTargetBindable::T3D, texture);
       GL_TexMinFilter(GL_TextureTarget::T3D, filter);
     }

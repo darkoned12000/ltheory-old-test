@@ -32,30 +32,30 @@ namespace {
     DERIVED_TYPE_EX(TaskDestroy)
     POOLED_TYPE
 
-    TaskDestroy() {}
+    TaskDestroy() = default;
 
-    float GetAlignment() const {
+    float GetAlignment() const override {
       return -1;
     }
 
     /* TODO */
-    float GetDuration() const {
+    float GetDuration() const override {
       return 1.0f;
     }
 
-    Icon GetIcon() const {
+    Icon GetIcon() const override {
       return Icon_Crosshair();
     }
 
-    String GetName() const {
+    String GetName() const override {
       return "Destroy";
     }
 
-    String GetNoun() const {
+    String GetNoun() const override {
       return "Raider";
     }
 
-    void GetOutputs(Vector<ItemDelta>& outputs) const {
+    void GetOutputs(Vector<ItemDelta>& outputs) const override {
       outputs.push(ItemDelta(
         args.target->GetDataDamaged(),
         nullptr,
@@ -64,23 +64,23 @@ namespace {
       outputs.push(ItemDelta(args.target->GetDataDestroyed(), nullptr, 1));
     }
 
-    Capability GetRateFactor() const {
+    Capability GetRateFactor() const override {
       return Capability_Attack(1);
     }
 
-    Object GetTarget() const {
+    Object GetTarget() const override {
       return args.target;
     }
 
-    bool IsFinished(Object const& self, Data const& data) const {
+    bool IsFinished(Object const& self, Data const& data) const override {
       return !args.target->IsAlive();
     }
 
-    void OnBegin(Object const& self, Data& data) {
+    void OnBegin(Object const& self, Data& data) override {
       data = TaskDestroyInstance();
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       TaskDestroyInstance& it = data.Convert<TaskDestroyInstance>();
       it.t += dt;
 

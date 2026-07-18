@@ -9,17 +9,17 @@ namespace {
     float, radius)
     DERIVED_TYPE_EX(SDFSphere)
 
-    SDFSphere() {}
+    SDFSphere() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       return Length(p - center) - radius;
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return Bound3(center - V3(radius), center + V3(radius));
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return Stringize()
         | "(length(" | p | " - " | center | ") - " | radius | ")";
     }

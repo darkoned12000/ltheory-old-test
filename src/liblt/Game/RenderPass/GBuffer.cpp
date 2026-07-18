@@ -18,11 +18,11 @@ namespace {
       style(RenderStyle_Default(false))
       {}
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "GBuffer Pass";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       RenderStyle_Push(style);
       state->color[0]->Bind(0);
       state->color[1]->Bind(1);

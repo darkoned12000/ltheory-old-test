@@ -5,7 +5,7 @@
 
 namespace LTE {
   struct Diff {
-    virtual ~Diff() {}
+    virtual ~Diff() = default;
 
     virtual Array<uchar>* Inflate(Array<uchar> const& source) = 0;
   };

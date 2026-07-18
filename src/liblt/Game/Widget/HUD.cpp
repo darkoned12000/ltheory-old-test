@@ -59,7 +59,7 @@ namespace {
       life = FLT_MAX;
     }
 
-    void OnRun(ObjectT* self, float dt) {
+    void OnRun(ObjectT* self, float dt) override {
       lookNoise.Update(2.0f * dt);
       lookTarget.Update(kRigidity * dt);
       upTarget.Update(kRigidity * dt);
@@ -135,17 +135,17 @@ namespace {
     Pointer<ShipAffector> controller;
     DERIVED_TYPE_EX(WidgetHUD)
 
-    WidgetHUD() {}
+    WidgetHUD() = default;
 
-    ~WidgetHUD() {
+    ~WidgetHUD() override {
       controller->deleted = true;
     }
 
-    void GetName(Widget const&, String& out) {
+    void GetName(Widget const&, String& out) override {
       out = "HUD";
     }
 
-    void PostUpdate(Widget const&) {
+    void PostUpdate(Widget const&) override {
       if (controller)
         controller->thrust = 0;
 

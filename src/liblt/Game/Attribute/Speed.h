@@ -13,11 +13,11 @@ struct Attribute_Speed : public T {
     speed(0)
     {}
 
-  float const& GetSpeed() const {
+  float const& GetSpeed() const override {
     return speed;
   }
 
-  bool HasSpeed() const {
+  bool HasSpeed() const override {
     return true;
   }
 };

@@ -159,32 +159,32 @@ AutoClassDerived(Colony, ColonyBaseT,
   DERIVED_TYPE_EX(Colony)
   POOLED_TYPE
   
-  Colony() {}
+  Colony() = default;
 
   Colony(Object const& planet, Quantity const& population) :
     planet((Planet*)(ObjectT*)planet),
     population(population)
     {}
 
-  void BeginDrawInterior(DrawState* state) {
+  void BeginDrawInterior(DrawState* state) override {
     GetContainer()->BeginDrawInterior(state);
     DrawState_Push("fogDensity", 0.1f);
     // state->envMap.push(envMap());
     // state->envMapLF.push(envMapLF());
   }
 
-  void EndDrawInterior(DrawState* state) {
+  void EndDrawInterior(DrawState* state) override {
     // state->envMap.pop();
     // state->envMapLF.pop();
     DrawState_Pop("fogDensity");
     GetContainer()->EndDrawInterior(state);
   }
 
-  Signature GetSignature() const {
+  Signature GetSignature() const override {
     return Signature(100, 2, 0.25f, 0.75f);
   }
 
-  Widget GetWidget(Player const& self) {
+  Widget GetWidget(Player const& self) override {
     Widget widget;
     ScriptFunction_Load("Object/Widget/Colony:Create")
       ->Call(widget, self, (Object)this);
@@ -209,7 +209,7 @@ AutoClassDerived(Colony, ColonyBaseT,
     }
   }
 
-  void OnDrawInterior(DrawState* state) {
+  void OnDrawInterior(DrawState* state) override {
     if (!interior) {
       Mesh terrainMesh = Mesh_Plane(
         V3(-1, 0, -1),
@@ -249,7 +249,7 @@ AutoClassDerived(Colony, ColonyBaseT,
     interior->Render(state);
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
   }
 };

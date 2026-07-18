@@ -10,9 +10,9 @@ namespace {
     DERIVED_TYPE_EX(ExpressionConstant)
     POOLED_TYPE
     
-    ExpressionConstant() {}
+    ExpressionConstant() = default;
 
-    String Emit(Vector<String>& context) const {
+    String Emit(Vector<String>& context) const override {
 #define X(x)                                                                   \
       if (value.type == Type_Get<x>())                                         \
         return LTE::ToString(*(x const*)value.data);
@@ -21,15 +21,15 @@ namespace {
       return "<Constant>";
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       value.type->Assign(value.data, returnValue);
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return value.type;
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return true;
     }
   };

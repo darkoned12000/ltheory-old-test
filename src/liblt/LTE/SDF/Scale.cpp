@@ -9,18 +9,18 @@ namespace {
     V3, scale)
     DERIVED_TYPE_EX(SDFScale)
 
-    SDFScale() {}
+    SDFScale() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       return source->Evaluate(p / scale);
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       Bound3 bound = source->GetBound();
       return Bound3(bound.lower * scale, bound.upper * scale);
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return source->GetCode(Stringize() | "(" | p | " / " | scale | ")");
     }
   };

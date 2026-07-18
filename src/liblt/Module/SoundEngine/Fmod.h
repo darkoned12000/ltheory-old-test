@@ -4,7 +4,7 @@
 #include "Module/SoundEngine.h"
 
 struct SoundEvent {
-  virtual ~SoundEvent() {}
+  virtual ~SoundEvent() = default;
 
   virtual void SetParameter(int index, float value) = 0;
   virtual void Start() = 0;

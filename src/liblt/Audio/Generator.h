@@ -6,7 +6,7 @@
 
 namespace Audio {
   struct GeneratorT : public RefCounted {
-    virtual ~GeneratorT() {}
+    virtual ~GeneratorT() = default;
     virtual double Get(Note const& note, double t) const = 0;
   };
 }

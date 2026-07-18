@@ -13,25 +13,25 @@ AutoClassDerived(ScriptedJob, JobT,
   ScriptFunction, function,
   void*, returnValue)
 
-  ScriptedJob() {}
+  ScriptedJob() = default;
 
-  ~ScriptedJob() {
+  ~ScriptedJob() override {
     if (returnValue)
       function->returnType->Deallocate(returnValue);
   }
 
-  char const* GetName() const {
+  char const* GetName() const override {
     return &function->name.front();
   }
 
-  void OnBegin() {
+  void OnBegin() override {
     if (function->returnType->allocate) {
       debugprint;
       returnValue = function->returnType->Allocate();
     }
   }
 
-  void OnRun(uint units) {
+  void OnRun(uint units) override {
     function->VoidCall(returnValue, object);
   }
 };

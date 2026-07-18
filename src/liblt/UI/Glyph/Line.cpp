@@ -13,7 +13,7 @@ namespace {
     V2, uv,
     V4, p1dir,
     V4, originsize)
-    LineVertex() {}
+    LineVertex() = default;
   };
 
   template <class T>
@@ -41,25 +41,25 @@ namespace {
     DERIVED_TYPE_EX(Line)
     POOLED_TYPE
 
-    Line() {}
+    Line() = default;
 
-    Glyph Clone() const {
+    Glyph Clone() const override {
       return Glyph_Line(args);
     }
 
-    Shader GetShader() const {
+    Shader GetShader() const override {
       return Shader_Create("widget.jsl", "ui/line.jsl");
     }
 
-    Type GetVertexFormat() const {
+    Type GetVertexFormat() const override {
       return Type_Get<LineVertex>();
     }
 
-    void Submit(void* vvertices, GlyphState const& state) const {
+    void Submit(void* vvertices, GlyphState const& state) const override {
       SubmitVertices(args, vvertices, state);
     }
 
-    Glyph Transform(V2 const& offset, V2 const& scale) {
+    Glyph Transform(V2 const& offset, V2 const& scale) override {
       args.p1 = scale * args.p1 + offset;
       args.p2 = scale * args.p2 + offset;
       return this;
@@ -70,25 +70,25 @@ namespace {
     DERIVED_TYPE_EX(LineFade)
     POOLED_TYPE
 
-    LineFade() {}
+    LineFade() = default;
 
-    Glyph Clone() const {
+    Glyph Clone() const override {
       return Glyph_LineFade(args);
     }
 
-    Shader GetShader() const {
+    Shader GetShader() const override {
       return Shader_Create("widget.jsl", "ui/linefade.jsl");
     }
 
-    Type GetVertexFormat() const {
+    Type GetVertexFormat() const override {
       return Type_Get<LineVertex>();
     }
 
-    void Submit(void* vvertices, GlyphState const& state) const {
+    void Submit(void* vvertices, GlyphState const& state) const override {
       SubmitVertices(args, vvertices, state);
     }
 
-    Glyph Transform(V2 const& offset, V2 const& scale) {
+    Glyph Transform(V2 const& offset, V2 const& scale) override {
       args.p1 = scale * args.p1 + offset;
       args.p2 = scale * args.p2 + offset;
       return this;

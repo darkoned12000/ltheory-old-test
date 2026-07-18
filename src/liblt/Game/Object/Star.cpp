@@ -24,19 +24,19 @@ AutoClassDerived(Star, StarBaseT,
   DERIVED_TYPE_EX(Star)
   POOLED_TYPE
 
-  Star() {}
+  Star() = default;
 
-  Signature GetSignature() const {
+  Signature GetSignature() const override {
     return Signature(1e5f, Mix(12, 16, Saturate(color.z)), 0.25f, 1);
   }
 
-  void OnMessage(Data& m) {
+  void OnMessage(Data& m) override {
     BaseType::OnMessage(m);
     if (m.type == Type_Get<MessageGetColor>())
       m.Convert<MessageGetColor>().color = color;
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     if (!light)

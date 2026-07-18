@@ -71,18 +71,18 @@ namespace {
     DERIVED_TYPE_EX(LocationFile)
     POOLED_TYPE
 
-    LocationFile() {}
+    LocationFile() = default;
 
-    Location Clone() const {
+    Location Clone() const override {
       return new LocationFile(*this);
     }
 
-    bool Exists() const {
+    bool Exists() const override {
       std::ifstream stream(path.c_str(), std::ios::binary);
       return stream.good();
     }
 
-    AutoPtr< Array<uchar> > Read() const {
+    AutoPtr< Array<uchar> > Read() const override {
       std::ifstream stream(path.c_str(), std::ios::binary);
       if (!stream || !OS_IsFile(path)) {
         Log_Warning("Failed to open file <" + path + "> for reading");
@@ -102,11 +102,11 @@ namespace {
       return (new Array<uchar>)->set((uchar*)buf, size);
     }
 
-    String ToString() const {
+    String ToString() const override {
       return path;
     }
 
-    bool Write(Array<uchar> const& data) const {
+    bool Write(Array<uchar> const& data) const override {
       std::ofstream stream(path.c_str(), std::ios::binary);
       if (!stream) {
         OS_CreatePath(path.c_str());
@@ -149,30 +149,30 @@ namespace {
       memcpy(memory->data(), &str.front(), str.size());
     }
 
-    ~LocationMemory() {
+    ~LocationMemory() override {
       if (ownsMemory)
         delete memory;
     }
 
-    Location Clone() const {
+    Location Clone() const override {
       return new LocationMemory(*this);
     }
 
-    bool Exists() const {
+    bool Exists() const override {
       return true;
     }
 
-    AutoPtr< Array<uchar> > Read() const {
+    AutoPtr< Array<uchar> > Read() const override {
       Array<uchar>* arr = new Array<uchar>;
       *arr = *memory;
       return arr;
     }
 
-    String ToString() const {
+    String ToString() const override {
       return "[Memory]";
     }
 
-    bool Write(const Array<uchar>& data) const {
+    bool Write(const Array<uchar>& data) const override {
       *((LocationMemory*)this)->memory = data;
       return true;
     }
@@ -185,13 +185,13 @@ namespace {
     DERIVED_TYPE_EX(LocationResource)
     POOLED_TYPE
 
-    LocationResource() {}
+    LocationResource() = default;
 
-    Location Clone() const {
+    Location Clone() const override {
       return new LocationResource(*this);
     }
 
-    bool Exists() const {
+    bool Exists() const override {
       if (kUseArchive) {
         InitializeArchive();
         if (gArchive->Contains(name))
@@ -201,7 +201,7 @@ namespace {
       return GetResourceMap()->Exists(name);
     }
 
-    AutoPtr< Array<uchar> > Read() const {
+    AutoPtr< Array<uchar> > Read() const override {
       if (kUseArchive) {
         InitializeArchive();
         if (gArchive->Contains(name))
@@ -211,11 +211,11 @@ namespace {
       return LocationFile(GetResourceMap()->Get(name)).Read();
     }
 
-    String ToString() const {
+    String ToString() const override {
       return kResourcePath + name;
     }
 
-    bool Write(Array<uchar> const& data) const {
+    bool Write(Array<uchar> const& data) const override {
       if (kUseArchive) {
         InitializeArchive();
         if (gArchive->Contains(name))
@@ -234,22 +234,22 @@ namespace {
     DERIVED_TYPE_EX(LocationWeb)
     POOLED_TYPE
 
-    LocationWeb() {}
+    LocationWeb() = default;
 
-    Location Clone() const {
+    Location Clone() const override {
       return new LocationWeb(*this);
     }
 
-    bool Exists() const {
+    bool Exists() const override {
       return true;
     }
 
-    bool Write(Array<uchar> const& data) const {
+    bool Write(Array<uchar> const& data) const override {
       LTE_ASSERT(!data.size());
       return false;
     }
 
-    AutoPtr< Array<uchar> > Read() const {
+    AutoPtr< Array<uchar> > Read() const override {
       sf::Http http(host);
       sf::Http::Response response = http.sendRequest(sf::Http::Request(item));
       if (response.getStatus() != sf::Http::Response::Ok)
@@ -261,7 +261,7 @@ namespace {
       return arr;
     }
 
-    String ToString() const {
+    String ToString() const override {
       return host + "/" + item;
     }
   };

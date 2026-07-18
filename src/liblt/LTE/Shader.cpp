@@ -327,16 +327,16 @@ namespace {
   struct ShaderImpl : public ShaderT {
     ProgramObject program;
 
-    ~ShaderImpl() {
+    ~ShaderImpl() override {
       if (gActiveShader == this)
         gActiveShader = nullptr;
     }
 
-    void BindInput(size_t attribIndex, char const* name) {
+    void BindInput(size_t attribIndex, char const* name) override {
       program->BindInput(attribIndex, name);
     }
 
-    void BindOutput(size_t bufferIndex, char const* name) {
+    void BindOutput(size_t bufferIndex, char const* name) override {
       program->BindOutput(bufferIndex, name);
     }
 
@@ -345,7 +345,7 @@ namespace {
       Matrix const& view,
       Matrix const& proj,
       Matrix const& worldIT,
-      Matrix const& WVP)
+      Matrix const& WVP) override
     {
       if (program->mWorld >= 0)
         SetMatrix(program->mWorld, &world);
@@ -359,7 +359,7 @@ namespace {
         SetMatrix(program->mWVP, &WVP);
     }
 
-    bool Create(String const& vertCode, String const& fragCode) {
+    bool Create(String const& vertCode, String const& fragCode) override {
       ShaderObject vertex =
         ShaderObject_Create(vertCode, GL_ShaderType::Vertex);
       if (!vertex)
@@ -380,15 +380,15 @@ namespace {
       return index;
     }
 
-    int GetUniformLocation(char const* name) {
+    int GetUniformLocation(char const* name) override {
       return program->GetUniformLocation(name, true);
     }
 
-    int QueryUniformLocation(char const* name) {
+    int QueryUniformLocation(char const* name) override {
       return program->GetUniformLocation(name, false);
     }
 
-    void PrintLogs() const {
+    void PrintLogs() const override {
       std::cout
         << ">>> Vertex Shader:\n"
         << program->vertShader->GetLog() << "\n\n"
@@ -398,18 +398,18 @@ namespace {
         << program->GetLog() << "\n\n";
     }
 
-    void Relink() {
+    void Relink() override {
       program->Link();
     }
 
-    ShaderT& SetCubeMap(char const* name, CubeMap const& cubeMap) {
+    ShaderT& SetCubeMap(char const* name, CubeMap const& cubeMap) override {
       int varIndex = GetUniformLocation(name);
       if (varIndex < 0)
         return *this;
       return SetCubeMap(varIndex, cubeMap);
     }
 
-    ShaderT& SetCubeMap(int varIndex, CubeMap const& cubeMap) {
+    ShaderT& SetCubeMap(int varIndex, CubeMap const& cubeMap) override {
       Use();
       int unit = GetTextureUnit();
       GL_Uniform(varIndex, unit);
@@ -419,131 +419,131 @@ namespace {
       return *this;
     }
 
-    ShaderT& SetFloat(char const* name, float f) {
+    ShaderT& SetFloat(char const* name, float f) override {
       int varIndex = GetUniformLocation(name);
       if (varIndex < 0)
         return *this;
       return SetFloat(varIndex, f);
     }
 
-    ShaderT& SetFloat(int varIndex, float f) {
+    ShaderT& SetFloat(int varIndex, float f) override {
       Use();
       GL_Uniform(varIndex, f);
       return *this;
     }
 
-    ShaderT& SetFloatArray(char const* name, float const* data, size_t size) {
+    ShaderT& SetFloatArray(char const* name, float const* data, size_t size) override {
       int varIndex = GetUniformLocation(name);
       if (varIndex < 0)
         return *this;
       return SetFloatArray(varIndex, data, size);
     }
 
-    ShaderT& SetFloatArray(int varIndex, float const* data, size_t size) {
+    ShaderT& SetFloatArray(int varIndex, float const* data, size_t size) override {
       Use();
       GL_UniformArray1(varIndex, size, data);
       return *this;
     }
 
-    ShaderT& SetFloat2(char const* name, V2 const& v) {
+    ShaderT& SetFloat2(char const* name, V2 const& v) override {
       int varIndex = GetUniformLocation(name);
       if (varIndex < 0)
         return *this;
       return SetFloat2(varIndex, v);
     }
 
-    ShaderT& SetFloat2(int varIndex, V2 const& v) {
+    ShaderT& SetFloat2(int varIndex, V2 const& v) override {
       Use();
       GL_Uniform(varIndex, v.x, v.y);
       return *this;
     }
 
-    ShaderT& SetFloat3(char const* name, V3 const& v) {
+    ShaderT& SetFloat3(char const* name, V3 const& v) override {
       int varIndex = GetUniformLocation(name);
       if (varIndex < 0)
         return *this;
       return SetFloat3(varIndex, v);
     }
 
-    ShaderT& SetFloat3(int varIndex, V3 const& v) {
+    ShaderT& SetFloat3(int varIndex, V3 const& v) override {
       Use();
       GL_Uniform(varIndex, v.x, v.y, v.z);
       return *this;
     }
 
-    ShaderT& SetFloat4(char const* name, V4 const& v) {
+    ShaderT& SetFloat4(char const* name, V4 const& v) override {
       int varIndex = GetUniformLocation(name);
       if (varIndex < 0)
         return *this;
       return SetFloat4(varIndex, v);
     }
 
-    ShaderT& SetFloat4(int varIndex, V4 const& v) {
+    ShaderT& SetFloat4(int varIndex, V4 const& v) override {
       Use();
       GL_Uniform(varIndex, v.x, v.y, v.z, v.w);
       return *this;
     }
 
-    ShaderT& SetFloat3Array(char const* name, V3 const* data, size_t size) {
+    ShaderT& SetFloat3Array(char const* name, V3 const* data, size_t size) override {
       int varIndex = GetUniformLocation(name);
       if (varIndex < 0)
         return *this;
       return SetFloat3Array(varIndex, data, size);
     }
 
-    ShaderT& SetFloat3Array(int varIndex, V3 const* data, size_t size) {
+    ShaderT& SetFloat3Array(int varIndex, V3 const* data, size_t size) override {
       Use();
       GL_UniformArray3(varIndex, size, (float const*)data);
       return *this;
     }
 
-    ShaderT& SetFloat4Array(char const* name, V4 const* data, size_t size) {
+    ShaderT& SetFloat4Array(char const* name, V4 const* data, size_t size) override {
       int varIndex = GetUniformLocation(name);
       if (varIndex < 0)
         return *this;
       return SetFloat4Array(varIndex, data, size);
     }
 
-    ShaderT& SetFloat4Array(int varIndex, V4 const* data, size_t size) {
+    ShaderT& SetFloat4Array(int varIndex, V4 const* data, size_t size) override {
       Use();
       GL_UniformArray4(varIndex, size, (float const*)data);
       return *this;
     }
 
-    ShaderT& SetMatrix(char const* name, Matrix const* m) {
+    ShaderT& SetMatrix(char const* name, Matrix const* m) override {
       int varIndex = GetUniformLocation(name);
       if (varIndex < 0)
         return *this;
       return SetMatrix(varIndex, m);
     }
 
-    ShaderT& SetMatrix(int varIndex, Matrix const* m) {
+    ShaderT& SetMatrix(int varIndex, Matrix const* m) override {
       Use();
       GL_UniformMatrix4(varIndex, &(m->e[0]));
       return *this;
     }
 
-    ShaderT& SetInt(char const* name, int i) {
+    ShaderT& SetInt(char const* name, int i) override {
       int varIndex = GetUniformLocation(name);
       if (varIndex < 0)
         return *this;
       return SetInt(varIndex, i);
     }
 
-    ShaderT& SetInt(int varIndex, int i) {
+    ShaderT& SetInt(int varIndex, int i) override {
       Use();
       GL_Uniform(varIndex, i);
       return *this;
     }
 
-    ShaderT& SetTexture2D(char const* name, Texture2D const& t) {
+    ShaderT& SetTexture2D(char const* name, Texture2D const& t) override {
       int varIndex = GetUniformLocation(name);
       if (varIndex < 0)
         return *this;
       return SetTexture2D(varIndex, t);
     }
 
-    ShaderT& SetTexture2D(int varIndex, Texture2D const& t) {
+    ShaderT& SetTexture2D(int varIndex, Texture2D const& t) override {
       Use();
       int unit = GetTextureUnit();
       GL_Uniform(varIndex, unit);
@@ -557,14 +557,14 @@ namespace {
       return *this;
     }
 
-    ShaderT& SetTexture3D(char const* name, Texture3D const& t) {
+    ShaderT& SetTexture3D(char const* name, Texture3D const& t) override {
       int varIndex = GetUniformLocation(name);
       if (varIndex < 0)
         return *this;
       return SetTexture3D(varIndex, t);
     }
 
-    ShaderT& SetTexture3D(int varIndex, Texture3D const& t) {
+    ShaderT& SetTexture3D(int varIndex, Texture3D const& t) override {
       Use();
       int unit = GetTextureUnit();
       GL_Uniform(varIndex, unit);
@@ -578,7 +578,7 @@ namespace {
       return *this;
     }
 
-    void Use() {
+    void Use() override {
       if (gActiveProgram != program->id) {
         gActiveProgram = program->id;
         gActiveShader = this;

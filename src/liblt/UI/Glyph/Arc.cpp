@@ -12,28 +12,28 @@ namespace {
     V4, color,
     V4, uv_r_a,
     V2, rs_as)
-    ArcVertex() {}
+    ArcVertex() = default;
   };
 
   AutoClassDerived(Arc, GlyphT, Glyph_Arc_Args, args)
     DERIVED_TYPE_EX(Arc)
     POOLED_TYPE
 
-    Arc() {}
+    Arc() = default;
 
-    Glyph Clone() const {
+    Glyph Clone() const override {
       return Glyph_Arc(args);
     }
 
-    Shader GetShader() const {
+    Shader GetShader() const override {
       return Shader_Create("widget.jsl", "ui/arc.jsl");
     }
 
-    Type GetVertexFormat() const {
+    Type GetVertexFormat() const override {
       return Type_Get<ArcVertex>();
     }
 
-    void Submit(void* vvertices, GlyphState const& s) const {
+    void Submit(void* vvertices, GlyphState const& s) const override {
       ArcVertex* vertices = (ArcVertex*)vvertices;
 
       V2 ss = args.position * s.scale + s.center;
@@ -49,7 +49,7 @@ namespace {
       vertices[3] = ArcVertex(V3(ss + V2(-r,  r), 0), color, V4(0, 1, r, a), rs_as);
     }
 
-    Glyph Transform(V2 const& offset, V2 const& scale) {
+    Glyph Transform(V2 const& offset, V2 const& scale) override {
       args.position = scale * args.position + offset;
       args.radius *= scale.GetMin();
       args.radiusS *= scale.GetMin();

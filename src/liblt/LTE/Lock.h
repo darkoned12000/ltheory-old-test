@@ -4,7 +4,7 @@
 #include "Reference.h"
 
 struct LockT : public RefCounted {
-  virtual ~LockT() {}
+  virtual ~LockT() = default;
   virtual void Acquire() = 0;
   virtual void Release() = 0;
 };

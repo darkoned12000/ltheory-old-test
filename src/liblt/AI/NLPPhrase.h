@@ -19,7 +19,7 @@ struct NLPOutputState {
 };
 
 struct NLPToken {
-  virtual ~NLPToken() {}
+  virtual ~NLPToken() = default;
   virtual void ToString(NLPOutputState& state) const = 0;
 };
 

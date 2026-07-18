@@ -16,7 +16,7 @@ struct FunctionT : public RefCounted {
   Parameter const* params;
   Type returnType;
 
-  FunctionT() {}
+  FunctionT() = default;
 
   LT_API ~FunctionT();
 

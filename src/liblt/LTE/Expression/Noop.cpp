@@ -9,19 +9,19 @@ namespace {
     DERIVED_TYPE_EX(ExpressionNoop)
     POOLED_TYPE
 
-    ExpressionNoop() {}
+    ExpressionNoop() = default;
 
-    String Emit(Vector<String>& context) const {
+    String Emit(Vector<String>& context) const override {
       return "";
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {}
+    void Evaluate(void* returnValue, Environment& env) const override {}
 
-    Type GetType() const {
+    Type GetType() const override {
       return Type_Get<void>();
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return true;
     }
   };

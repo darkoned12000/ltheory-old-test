@@ -16,13 +16,13 @@ namespace {
     float, age)
     Shader shader;
 
-    CompositorBasic() {}
+    CompositorBasic() = default;
 
     DefineInitializer {
       shader = Shader_Create("identity.jsl", "ui/basic.jsl");
     }
 
-    void Composite(Texture2D const& layer, Mesh const& surface) {
+    void Composite(Texture2D const& layer, Mesh const& surface) override {
       RendererState s(BlendMode::Alpha, CullMode::Backface, false, false);
       (*shader)
         ("age", age)
@@ -36,7 +36,7 @@ namespace {
       surface->Draw();
     }
 
-    void Update() {
+    void Update() override {
       age += FrameTimer_Get();
     }
   };

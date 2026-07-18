@@ -8,13 +8,13 @@
 AutoClass(ComponentPilotable,
   Player, pilot)
 
-  ComponentPilotable() {}
+  ComponentPilotable() = default;
 
   LT_API void Run(ObjectT* self, UpdateState& state);
 };
 
 AutoComponent(Pilotable)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Pilotable.Run(this, s);
     BaseT::OnUpdate(s);
   }

@@ -19,7 +19,7 @@ namespace {
   AutoClass(TaskPirateInstance,
     Object, target)
 
-    TaskPirateInstance() {}
+    TaskPirateInstance() = default;
   };
 
   AutoClassDerived(TaskPirate, TaskT,
@@ -27,7 +27,7 @@ namespace {
     DERIVED_TYPE_EX(TaskPirate)
     POOLED_TYPE
 
-    TaskPirate() {}
+    TaskPirate() = default;
 
     bool CanAttack(Object const& self, Object const& target) const {
       return
@@ -38,24 +38,24 @@ namespace {
         !(target->GetOwner() && target->GetOwner()->IsHuman()); // TEMPCHANGE
     }
 
-    float GetAlignment() const {
+    float GetAlignment() const override {
       return -1;
     }
 
     /* TODO */
-    float GetDuration() const {
+    float GetDuration() const override {
       return 1;
     }
 
-    Icon GetIcon() const {
+    Icon GetIcon() const override {
       return Icon_Crosshair();
     }
 
-    String GetName() const {
+    String GetName() const override {
       return "Pirate";
     }
 
-    String GetNoun() const {
+    String GetNoun() const override {
       return "Raider";
     }
 
@@ -65,15 +65,15 @@ namespace {
         outputs.push(ItemDelta(resources->elements.entries[i].key, nullptr, 1));
     }
 
-    Capability GetRateFactor() const {
+    Capability GetRateFactor() const override {
       return Capability_Attack(1);
     }
 
-    void OnBegin(Object const& self, Data& data) {
+    void OnBegin(Object const& self, Data& data) override {
       data = TaskPirateInstance();
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       TaskPirateInstance& it = data.Convert<TaskPirateInstance>();
 
       if (it.target && CanAttack(self, it.target))

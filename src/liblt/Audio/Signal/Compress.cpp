@@ -13,7 +13,7 @@ namespace Audio {
         factor(factor)
         {}
 
-      double OnGet(GlobalData const& d) {
+      double OnGet(GlobalData const& d) override {
         double s = input->Get(d);
         return Sign(s) * (1.0 - Exp(-factor * Abs(s)));
       }

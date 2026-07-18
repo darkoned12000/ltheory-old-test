@@ -2,49 +2,49 @@
 
 namespace {
   struct SoundNullImpl : public SoundT {
-    void Delete() {}
+    void Delete() override {}
 
-    bool IsFinished() const {
+    bool IsFinished() const override {
       return true;
     }
 
-    bool IsLooped() const {
+    bool IsLooped() const override {
       return false;
     }
 
-    float GetDuration() const {
+    float GetDuration() const override {
       return 1;
     }
 
-    float GetPan() const {
+    float GetPan() const override {
       return 0;
     }
 
-    float GetPitch() const {
+    float GetPitch() const override {
       return 1;
     }
 
-    float GetVolume() const {
+    float GetVolume() const override {
       return 1;
     }
 
-    void SetCursor(float position) {}
-    void SetPan(float pan) {}
-    void SetPitch(float pitch) {}
-    void SetPlaying(bool playing) {}
-    void SetVolume(float volume) {}
+    void SetCursor(float position) override {}
+    void SetPan(float pan) override {}
+    void SetPitch(float pitch) override {}
+    void SetPlaying(bool playing) override {}
+    void SetVolume(float volume) override {}
   };
 
   struct SoundEngineNullImpl : public SoundEngine {
-    char const* GetName() const {
+    char const* GetName() const override {
       return "SoundEngine (NULL)";
     }
 
-    Sound Play(Array<float> const& buffer) {
+    Sound Play(Array<float> const& buffer) override {
       return new SoundNullImpl;
     }
 
-    Sound Play2D(String const& filename, float volume, bool looped) {
+    Sound Play2D(String const& filename, float volume, bool looped) override {
       return new SoundNullImpl;
     }
 
@@ -54,12 +54,12 @@ namespace {
       V3 const& v,
       float f,
       float distanceDiv,
-      bool looped)
+      bool looped) override
     {
       return new SoundNullImpl;
     }
 
-    void Update() {}
+    void Update() override {}
   };
 }
 

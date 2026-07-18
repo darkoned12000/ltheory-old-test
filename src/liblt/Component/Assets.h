@@ -10,7 +10,7 @@
 AutoClass(ComponentAssets,
   Vector<Object>, elements)
 
-  ComponentAssets() {}
+  ComponentAssets() = default;
   
   LT_API ~ComponentAssets();
 
@@ -19,15 +19,15 @@ AutoClass(ComponentAssets,
 };
 
 AutoComponent(Assets)
-  void AddAsset(Object const& asset) {
+  void AddAsset(Object const& asset) override {
     Assets.Add(this, asset);
   }
   
-  void RemoveAsset(Object const& asset) {
+  void RemoveAsset(Object const& asset) override {
     Assets.Remove(this, asset);
   }
 
-  Capability GetCapability() const {
+  Capability GetCapability() const override {
     Capability total = BaseT::GetCapability();
     for (size_t i = 0; i < Assets.elements.size(); ++i)
       total += Assets.elements[i]->GetCapability();

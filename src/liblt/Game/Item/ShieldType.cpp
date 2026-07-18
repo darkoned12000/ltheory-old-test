@@ -35,13 +35,13 @@ typedef
 AutoClassDerivedEmpty(ShieldType, ShieldTypeBase)
   DERIVED_TYPE_EX(ShieldType)
 
-  ShieldType() {}
+  ShieldType() = default;
 
-  SocketType GetSocketType() const {
+  SocketType GetSocketType() const override {
     return SocketType_Generator;
   }
 
-  Object Instantiate(ObjectT* parent) {
+  Object Instantiate(ObjectT* parent) override {
     return Object_Shield(this);
   }
 };

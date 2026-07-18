@@ -22,7 +22,7 @@ namespace {
     ShaderInstance shaderInstance;
     DERIVED_TYPE_EX(RenderPassPost)
 
-    RenderPassPost() {}
+    RenderPassPost() = default;
 
     RenderPassPost(String const& vertPath, String const& fragPath) :
       shaderPath(fragPath),
@@ -40,7 +40,7 @@ namespace {
       shaderInstance = ShaderInstance_Create(shader);
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return name.c_str();
     }
 
@@ -48,7 +48,7 @@ namespace {
       return shaderInstance;
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       shaderInstance->Begin();
       DrawState_Link(shader);
       (*shader)
@@ -68,7 +68,7 @@ namespace {
       strength(strength)
       {}
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       (*shader)("strength", strength);
       RenderPassPost::OnRender(state);
     }

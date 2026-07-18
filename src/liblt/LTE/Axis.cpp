@@ -18,15 +18,15 @@ namespace {
     DERIVED_TYPE_EX(AxisButton)
     POOLED_TYPE
 
-    AxisButton() {}
+    AxisButton() = default;
 
-    float GetRaw() const {
+    float GetRaw() const override {
       return invert
         ? (button->Down() ? 0 : 1)
         : (button->Down() ? 1 : 0);
     }
 
-    String ToString() const {
+    String ToString() const override {
       return button->ToString();
     }
   };
@@ -39,14 +39,14 @@ namespace {
     DERIVED_TYPE_EX(AxisJoystick)
     POOLED_TYPE
 
-    AxisJoystick() {}
+    AxisJoystick() = default;
 
-    float GetRaw() const {
+    float GetRaw() const override {
       Joystick* j = Joystick::Get(joyIndex);
       return j ? j->GetAxis(axis) : zeroValue;
     }
 
-    String ToString() const {
+    String ToString() const override {
       return Stringize() | "Joy " | joyIndex | " " | JoystickAxis_String[axis];
     }
   };
@@ -58,9 +58,9 @@ namespace {
     DERIVED_TYPE_EX(AxisMouse)
     POOLED_TYPE
 
-    AxisMouse() {}
+    AxisMouse() = default;
 
-    float GetRaw() const {
+    float GetRaw() const override {
       V2 pos = Mouse_GetPos();
       V2 size = Window_Get()->GetSize();
       float div = size.GetMin();
@@ -69,7 +69,7 @@ namespace {
         -1.f, 1.f);
     }
 
-    String ToString() const {
+    String ToString() const override {
       return vertical ? "Mouse X" : "Mouse Y";
     }
   };
@@ -82,16 +82,16 @@ namespace {
     DERIVED_TYPE_EX(AxisMouseDrag)
     POOLED_TYPE
 
-    AxisMouseDrag() {}
+    AxisMouseDrag() = default;
 
-    float GetRaw() const {
+    float GetRaw() const override {
       if (Mouse_Down(button) && Mouse_GetDownTime(button) > kDragTime)
         return Mouse_GetDP()[vertical ? 1 : 0] / 8.f;
       else
         return 0.;
     }
 
-    String ToString() const {
+    String ToString() const override {
       return vertical ? "Mouse Drag X" : "Mouse Drag Y";
     }
   };
@@ -105,13 +105,13 @@ namespace {
     DERIVED_TYPE_EX(AxisRange)
     POOLED_TYPE
 
-    AxisRange() {}
+    AxisRange() = default;
 
-    float GetRaw() const {
+    float GetRaw() const override {
       return Saturate((source->Get() - minValue) / (maxValue - minValue));
     }
 
-    String ToString() const {
+    String ToString() const override {
       return source->ToString();
     }
   };
@@ -124,13 +124,13 @@ namespace {
     DERIVED_TYPE_EX(AxisProduct)
     POOLED_TYPE
 
-    AxisProduct() {}
+    AxisProduct() = default;
 
-    float GetRaw() const {
+    float GetRaw() const override {
       return a->Get() * b->Get();
     }
 
-    String ToString() const {
+    String ToString() const override {
       return a->ToString() + " * " + b->ToString();
     }
   };
@@ -143,13 +143,13 @@ namespace {
     DERIVED_TYPE_EX(AxisSum)
     POOLED_TYPE
 
-    AxisSum() {}
+    AxisSum() = default;
 
-    float GetRaw() const {
+    float GetRaw() const override {
       return a->Get() + b->Get();
     }
 
-    String ToString() const {
+    String ToString() const override {
       return a->ToString() + " + " + b->ToString();
     }
   };
@@ -160,13 +160,13 @@ namespace {
     DERIVED_TYPE_EX(AxisMouseWheel)
     POOLED_TYPE
 
-    AxisMouseWheel() {}
+    AxisMouseWheel() = default;
 
-    float GetRaw() const {
+    float GetRaw() const override {
       return -kMouseWheelSensitivity * Mouse_GetScrollDelta();
     }
 
-    String ToString() const {
+    String ToString() const override {
       return "Mouse Wheel";
     }
   };

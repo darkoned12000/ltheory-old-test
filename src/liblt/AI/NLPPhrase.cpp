@@ -10,7 +10,7 @@ String NLPPhrase::ToString() const {
 
 AutoPtr<NLPToken> NLPTokenFullstop() {
   struct NLPTokenFullstopImpl : public NLPToken {
-    void ToString(NLPOutputState& state) const {
+    void ToString(NLPOutputState& state) const override {
       state.output += '.';
       state.newSentence = true;
       state.requiresSpace = true;
@@ -32,7 +32,7 @@ AutoPtr<NLPToken> NLPTokenNoun(const String& noun, bool proper) {
         this->noun.front() = (char)toupper(this->noun.front());
     }
 
-    void ToString(NLPOutputState& state) const {
+    void ToString(NLPOutputState& state) const override {
       if (state.requiresSpace == true)
         state.output += ' ';
       char first = (char)tolower(noun.front() );
@@ -56,7 +56,7 @@ AutoPtr<NLPToken> NLPTokenText(const String& text) {
       text(text)
       {}
 
-    void ToString(NLPOutputState& state) const {
+    void ToString(NLPOutputState& state) const override {
       String buf = text;
       if (state.requiresSpace == true)
         state.output += ' ';

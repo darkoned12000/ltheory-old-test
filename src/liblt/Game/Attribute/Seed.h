@@ -13,11 +13,11 @@ struct Attribute_Seed : public T {
     seed(0)
     {}
 
-  uint const& GetSeed() const {
+  uint const& GetSeed() const override {
     return seed;
   }
 
-  bool HasSeed() const {
+  bool HasSeed() const override {
     return true;
   }
 };

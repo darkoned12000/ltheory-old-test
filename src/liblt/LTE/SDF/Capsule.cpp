@@ -12,7 +12,7 @@ namespace {
     float, radius)
     DERIVED_TYPE_EX(SDFCapsule)
 
-    SDFCapsule() {}
+    SDFCapsule() = default;
 
     SDFCapsule(V3 const& p1, V3 const& p2, float radius) :
       o(p1),
@@ -23,18 +23,18 @@ namespace {
       nNorm = Normalize(n);
     }
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       V3 v = p - o;
       float proj = Clamp(Dot(v, nNorm), 0.f, length);
       return Length(v - nNorm * proj) - radius;
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       Bound3 box = Bound3::FromPoints(o, o + n);
       return Bound3(box.lower - V3(radius), box.upper + V3(radius));
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return Stringize()
         | "capsule(" | p | ", " | o | ", " | nNorm | ", " | length
         | ", " | radius | ")";

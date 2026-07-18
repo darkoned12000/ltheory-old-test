@@ -11,26 +11,26 @@ namespace LTE {
       DERIVED_TYPE_EX(ButtonKey)
       POOLED_TYPE
 
-      ButtonKey() {}
+      ButtonKey() = default;
 
-      bool Down() const {
+      bool Down() const override {
         return Keyboard_Down(key);
       }
 
-      float DownTime() const {
+      float DownTime() const override {
         NOT_IMPLEMENTED
         return 0;
       }
 
-      bool Pressed() const {
+      bool Pressed() const override {
         return Keyboard_Pressed(key);
       }
 
-      bool Released() const {
+      bool Released() const override {
         return Keyboard_Released(key);
       }
 
-      String ToString() const {
+      String ToString() const override {
         return Key_Name(key);
       }
     };

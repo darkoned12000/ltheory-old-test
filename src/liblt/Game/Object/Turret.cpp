@@ -41,19 +41,19 @@ AutoClassDerived(Turret, TurretBaseT,
   DERIVED_TYPE_EX(Turret)
   POOLED_TYPE
 
-  Turret() {}
+  Turret() = default;
 
-  bool CanCollide(ObjectT const* other) const {
+  bool CanCollide(ObjectT const* other) const override {
     return other->GetDamager();
   }
 
-  void OnMessage(Data& m) {
+  void OnMessage(Data& m) override {
     BaseType::OnMessage(m);
     if (m.type == Type_Get<MessageTargetPosition>())
       target = m.Convert<MessageTargetPosition>().position;
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     V3& look = Attachable.transform.look;

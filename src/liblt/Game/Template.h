@@ -11,7 +11,7 @@ AutoClassDerived(TemplateT, RefCounted,
   Vector<Item>, hardpoints,
   Vector<ItemQuantity>, cargo)
 
-  TemplateT() {}
+  TemplateT() = default;
 };
 
 #endif

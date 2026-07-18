@@ -9,17 +9,17 @@ namespace {
     V3, amount)
     DERIVED_TYPE_EX(SDFExpand)
 
-    SDFExpand() {}
+    SDFExpand() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       return source->Evaluate(p - Clamp(p, -amount, amount));
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return source->GetBound().GetExpanded(V3(1) + amount);
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return source->GetCode(Stringize() | "expand(" | p | ", " | amount | ")");
     }
   };
@@ -32,18 +32,18 @@ namespace {
     float, amount)
     DERIVED_TYPE_EX(SDFExpandRadial)
 
-    SDFExpandRadial() {}
+    SDFExpandRadial() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       NOT_IMPLEMENTED
       return 0;
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return source->GetBound().GetExpanded(1 + amount);
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return source->GetCode(Stringize()
         | "expandRadial(" | p | ", " | axis | ", " | amount | ")");
     }

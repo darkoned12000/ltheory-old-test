@@ -34,7 +34,7 @@ namespace LTE {
     typedef T ReturnType;
     typedef Vec SelfType;
 
-    Vec() {}
+    Vec() = default;
 
     Vec(T const& t) {
       for (int i = 0; i < N; ++i)

@@ -8,7 +8,7 @@ namespace {
   struct ResourceMapImpl : public ResourceMapT {
     Map<String, String> pathMap;
 
-    void AddDirectory(String const& path, String const& alias) {
+    void AddDirectory(String const& path, String const& alias) override {
       Vector<String> elements = OS_ListDir(path);
       for (size_t i = 0; i < elements.size(); ++i) {
         String const& element = elements[i];
@@ -23,15 +23,15 @@ namespace {
       }
     }
 
-    void AddFile(String const& path, String const& alias) {
+    void AddFile(String const& path, String const& alias) override {
       pathMap[alias] = path;
     }
 
-    bool Exists(String const& path) const {
+    bool Exists(String const& path) const override {
       return pathMap.contains(path);
     }
 
-    String Get(String const& path) const {
+    String Get(String const& path) const override {
       String const* result = pathMap.get(path);
       if (!result)
         dbg | "Bad lookup : " | path | endl;

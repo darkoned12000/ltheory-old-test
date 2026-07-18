@@ -35,14 +35,14 @@ AutoClassEmpty(ComponentQueryable)
 };
 
 AutoComponent(Queryable)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Queryable.Run(this, s);
     BaseT::OnUpdate(s);
   }
 
   void QueryInterior(
     Bound3D const& box,
-    Vector<ObjectT*>& objects)
+    Vector<ObjectT*>& objects) override
   {
     return Queryable.QueryBox(this, box, objects);
   }
@@ -54,7 +54,7 @@ AutoComponent(Queryable)
     V3* normalOut,
     bool accel,
     bool (*check)(ObjectT const*, void*),
-    void* aux)
+    void* aux) override
   {
     return Queryable.QueryRay(this, ray, t, tMax, normalOut, accel, check, aux);
   }

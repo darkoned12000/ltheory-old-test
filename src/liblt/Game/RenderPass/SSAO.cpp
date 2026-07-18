@@ -45,11 +45,11 @@ namespace {
         GL_TextureFormat::RGBA8, noiseValues.data());
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "SSAO";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       Texture2D const& ssaoBuffer = state->color[2];
 
       Matrix vp = Renderer_GetProjMatrix() * Renderer_GetViewMatrix();

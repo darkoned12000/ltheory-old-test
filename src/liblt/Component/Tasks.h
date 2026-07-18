@@ -12,38 +12,38 @@ AutoClass(ComponentTasks,
   Vector<TaskInstance>, elements,
   Project, project)
 
-  ComponentTasks() {}
+  ComponentTasks() = default;
 
   LT_API void Clear(ObjectT* self);
   LT_API void Run(ObjectT* self, UpdateState& state);
 };
 
 AutoComponent(Tasks)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Tasks.Run(this, s);
     BaseT::OnUpdate(s);
   }
 
-  void ClearTasks() {
+  void ClearTasks() override {
     Tasks.elements.clear();
   }
 
-  TaskInstance const* GetCurrentTask() const {
+  TaskInstance const* GetCurrentTask() const override {
     return Tasks.elements.size() ? &Tasks.elements.back() : nullptr;
   }
 
-  void OnDeath() {
+  void OnDeath() override {
     Tasks.Clear(this);
     BaseT::OnDeath();
   }
 
-  void OnMessage(Data& message) {
+  void OnMessage(Data& message) override {
     if (Tasks.elements.size())
       Tasks.elements.back().OnMessage(this, message);
     BaseT::OnMessage(message);
   }
 
-  void PushTask(Task const& t) {
+  void PushTask(Task const& t) override {
     Tasks.elements.push(TaskInstance(t));
   }
 };

@@ -4,7 +4,7 @@
 #include "Reference.h"
 
 struct ModuleT : public RefCounted {
-  virtual ~ModuleT() {}
+  virtual ~ModuleT() = default;
 
   virtual char const* GetName() const = 0;
   virtual void Update() = 0;

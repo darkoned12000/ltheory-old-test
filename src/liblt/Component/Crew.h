@@ -9,7 +9,7 @@
 AutoClass(ComponentCrew,
   Vector<Item>, elements)
 
-  ComponentCrew() {}
+  ComponentCrew() = default;
 };
 
 AutoComponent(Crew)

@@ -36,7 +36,7 @@ struct Affector {
 AutoClass(ComponentAffectable,
   Vector<AutoPtr<Affector> >, affectors)
 
-  ComponentAffectable() {}
+  ComponentAffectable() = default;
 
   void Add(Affector* a) {
     affectors << a;
@@ -55,7 +55,7 @@ AutoClass(ComponentAffectable,
 };
 
 AutoComponent(Affectable)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Affectable.Run(this, s);
     BaseT::OnUpdate(s);
   }

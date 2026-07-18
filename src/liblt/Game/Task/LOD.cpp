@@ -21,49 +21,49 @@ namespace {
     DERIVED_TYPE_EX(TaskLOD)
     POOLED_TYPE
 
-    TaskLOD() {}
+    TaskLOD() = default;
 
-    float GetAlignment() const {
+    float GetAlignment() const override {
       return args.task->GetAlignment();
     }
 
-    float GetDuration() const {
+    float GetDuration() const override {
       return args.task->GetDuration();
     }
 
-    String GetName() const {
+    String GetName() const override {
       return "LOD Task";
     }
 
-    void GetInputs(Vector<ItemDelta>& inputs) const {
+    void GetInputs(Vector<ItemDelta>& inputs) const override {
       args.task->GetInputs(inputs);
     }
 
-    void GetOutputs(Vector<ItemDelta>& outputs) const {
+    void GetOutputs(Vector<ItemDelta>& outputs) const override {
       args.task->GetOutputs(outputs);
     }
 
-    Capability GetRateFactor() const {
+    Capability GetRateFactor() const override {
       return args.task->GetRateFactor();
     }
 
-    Capability GetRequirements() const {
+    Capability GetRequirements() const override {
       return args.task->GetRequirements();
     }
 
-    Capability GetScaleFactor() const {
+    Capability GetScaleFactor() const override {
       return args.task->GetScaleFactor();
     }
 
-    Object GetTarget() const {
+    Object GetTarget() const override {
       return args.task->GetTarget();
     }
 
-    void OnBegin(Object const& self, Data& data) {
+    void OnBegin(Object const& self, Data& data) override {
       data = TaskLODInstance();
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       TaskLODInstance& it = data.Convert<TaskLODInstance>();
 
       it.timeToCompletion -= dt;

@@ -9,7 +9,7 @@ struct Attribute_Sound : public T {
   ATTRIBUTE_COMMON(sound)
   String sound;
 
-  String GetSound() const {
+  String GetSound() const override {
     return sound;
   }
 

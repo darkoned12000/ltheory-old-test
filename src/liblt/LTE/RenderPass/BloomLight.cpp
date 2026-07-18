@@ -13,7 +13,7 @@ namespace {
     int radius;
     DERIVED_TYPE_EX(BloomLight)
 
-    BloomLight() {}
+    BloomLight() = default;
 
     BloomLight(int radius) :
       shaderBlur(Shader_Create("identity.jsl", "post/blurlight.jsl")),
@@ -22,11 +22,11 @@ namespace {
       radius(radius)
       {}
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Bloom Light";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       uint dsFactor = state->primary->GetWidth() / state->smallColor[0]->GetWidth();
 
       DrawState_Link(shaderThresh);

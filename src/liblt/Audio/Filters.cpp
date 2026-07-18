@@ -16,7 +16,7 @@ namespace Audio {
         b(b)
         {}
 
-      double OnGet(GlobalData const& d) {
+      double OnGet(GlobalData const& d) override {
         return a->Get(d) * b->Get(d);
       }
     };
@@ -38,7 +38,7 @@ namespace Audio {
         mixB(mixB)
         {}
 
-      double OnGet(GlobalData const& d) {
+      double OnGet(GlobalData const& d) override {
         return mixA * a->Get(d) + mixB * b->Get(d);
       }
     };

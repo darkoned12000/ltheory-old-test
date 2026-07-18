@@ -7,7 +7,7 @@ namespace {
     DERIVED_TYPE_EX(EventMined)
     POOLED_TYPE
 
-    EventMined() {}
+    EventMined() = default;
   };
 }
 

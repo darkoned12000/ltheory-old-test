@@ -16,13 +16,13 @@ namespace {
     DERIVED_TYPE_EX(ExpressionAccess)
     POOLED_TYPE
 
-    ExpressionAccess() {}
+    ExpressionAccess() = default;
 
-    String Emit(Vector<String>& scope) const {
+    String Emit(Vector<String>& scope) const override {
       return name;
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       void* lv = location->GetLValue(env);
       if (lv)
         subType->Assign((char const*)lv + offset, returnValue);
@@ -34,21 +34,21 @@ namespace {
       }
     }
 
-    void* GetLValue(Environment& env) const {
+    void* GetLValue(Environment& env) const override {
       void* lv = location->GetLValue(env);
       return lv ? (char*)lv + offset : nullptr;
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return subType;
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       /* TODO. */
       return false;
     }
 
-    bool IsLValue() const {
+    bool IsLValue() const override {
       return location->IsLValue();
     }
   };

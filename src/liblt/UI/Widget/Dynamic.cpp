@@ -16,9 +16,9 @@ namespace {
     DERIVED_TYPE_EX(WidgetDynamic)
     POOLED_TYPE
 
-    WidgetDynamic() {}
+    WidgetDynamic() = default;
 
-    void PreUpdate(Widget const& self) {
+    void PreUpdate(Widget const& self) override {
       for (size_t i = 0; i < self->children.size(); ++i)
         self->children[i]->visited = false;
 

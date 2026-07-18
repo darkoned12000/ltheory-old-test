@@ -6,7 +6,7 @@
 #include "LTE/String.h"
 
 struct MusicEngine : public ModuleT {
-  virtual ~MusicEngine() {}
+  ~MusicEngine() override = default;
 
   virtual MusicEngine* SetTension(GenericFloat const& tension) = 0;
   virtual MusicEngine* SetVolume(GenericFloat const& volume) = 0;

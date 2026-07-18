@@ -20,7 +20,7 @@ AutoClass(Trade,
   Quantity, volume,
   Quantity, price)
 
-  Trade() {}
+  Trade() = default;
 };
 
 AutoClass(MarketEMA,
@@ -93,24 +93,24 @@ AutoClass(ComponentMarket,
 };
 
 AutoComponent(Market)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Market.Run(this, s);
     BaseT::OnUpdate(s);
   }
 
-  void AddMarketAsk(Order const& order) {
+  void AddMarketAsk(Order const& order) override {
     Market.AddAsk(this, order);
   }
 
-  void AddMarketBid(Order const& order) {
+  void AddMarketBid(Order const& order) override {
     Market.AddBid(this, order);
   }
 
-  void RemoveMarketAsk(Order const& order) {
+  void RemoveMarketAsk(Order const& order) override {
     Market.RemoveAsk(this, order);
   }
 
-  void RemoveMarketBid(Order const& order) {
+  void RemoveMarketBid(Order const& order) override {
     Market.RemoveBid(this, order);
   }
 };

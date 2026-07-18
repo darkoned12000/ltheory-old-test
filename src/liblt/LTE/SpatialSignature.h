@@ -7,7 +7,7 @@ namespace LTE {
   struct SpatialSignature {
     typedef bool (*AddFn)(Bound3 const& box, void* aux);
 
-    virtual ~SpatialSignature() {}
+    virtual ~SpatialSignature() = default;
 
     virtual void Add(void* object, Bound3 const& box, AddFn callback, void* aux) = 0;
     virtual void Add(void* object, Bound3 const& box) = 0;

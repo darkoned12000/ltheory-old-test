@@ -35,18 +35,18 @@ AutoClassDerivedEmpty(TurretType, TurretTypeBase)
     sockets[0] = Socket(Transform(), SocketType_Turret, JointType::AxisX);
   }
 
-  Renderable const& GetRenderable() const {
+  Renderable const& GetRenderable() const override {
     static Renderable renderable;
     if (!renderable)
       ScriptFunction_Load("Item/TurretType:Generate")->Call(renderable);
     return renderable;
   }
 
-  Array<Socket> const* GetSockets() const {
+  Array<Socket> const* GetSockets() const override {
     return &sockets;
   }
 
-  Object Instantiate(ObjectT* parent = 0) {
+  Object Instantiate(ObjectT* parent = 0) override {
     return Object_Turret(this);
   }
 };

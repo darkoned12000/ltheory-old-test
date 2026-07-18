@@ -7,7 +7,7 @@
 #include "V4.h"
 
 struct RNGT : public RefCounted {
-  virtual ~RNGT() {}
+  virtual ~RNGT() = default;
 
   /* [0, 2^32 - 1] */
   virtual unsigned int GetInt() = 0;

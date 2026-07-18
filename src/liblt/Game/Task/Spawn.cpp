@@ -11,17 +11,17 @@ namespace {
     DERIVED_TYPE_EX(TaskSpawn)
     POOLED_TYPE
 
-    TaskSpawn() {}
+    TaskSpawn() = default;
 
-    float GetDuration() const {
+    float GetDuration() const override {
       return args.rate;
     }
 
-    String GetName() const {
+    String GetName() const override {
       return "Spawn";
     }
 
-    String GetNoun() const {
+    String GetNoun() const override {
       return "Spawner";
     }
 
@@ -29,7 +29,7 @@ namespace {
       outputs.push(ItemDelta(args.item, nullptr, 1));
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       /* TODO */
 #if 0
       while (args.rate * RandExp() < dt)

@@ -7,7 +7,7 @@
 
 struct PhysicsEngine : public ModuleT {
   LT_API PhysicsEngine();
-  LT_API virtual ~PhysicsEngine();
+  LT_API ~PhysicsEngine() override;
 
   LT_API void Push();
   LT_API void Pop();

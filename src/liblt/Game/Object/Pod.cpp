@@ -52,15 +52,15 @@ AutoClassDerived(Pod, PodBaseT,
     Drawable.renderable = GetPodModel;
   }
 
-  virtual bool CanCollide(ObjectT const* other) const {
+  bool CanCollide(ObjectT const* other) const override {
     return other->GetCargo();
   }
 
-  virtual void OnCollide(
+  void OnCollide(
     ObjectT* self,
     ObjectT* other,
     Position const& selfLocation,
-    Position const& otherLocation)
+    Position const& otherLocation) override
   {
     Pointer<ComponentCargo> myInv = self->GetCargo();
     while (myInv->elements.size()) {

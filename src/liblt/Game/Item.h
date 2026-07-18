@@ -95,7 +95,7 @@ struct ItemT : public RefCounted {
 AutoClass(ItemQuantity,
   Item, item,
   Quantity, quantity)
-  ItemQuantity() {}
+  ItemQuantity() = default;
 };
 
 #endif

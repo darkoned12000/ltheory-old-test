@@ -9,28 +9,28 @@ namespace {
     V3, p,
     V4, color,
     V4, uvsize)
-    BoxVertex() {}
+    BoxVertex() = default;
   };
 
   AutoClassDerived(Box, GlyphT, Glyph_Box_Args, args)
     DERIVED_TYPE_EX(Box)
     POOLED_TYPE
 
-    Box() {}
+    Box() = default;
 
-    Glyph Clone() const {
+    Glyph Clone() const override {
       return Glyph_Box(args);
     }
 
-    Shader GetShader() const {
+    Shader GetShader() const override {
       return Shader_Create("widget.jsl", "ui/box.jsl");
     }
 
-    Type GetVertexFormat() const {
+    Type GetVertexFormat() const override {
       return Type_Get<BoxVertex>();
     }
 
-    void Submit(void* vvertices, GlyphState const& s) const {
+    void Submit(void* vvertices, GlyphState const& s) const override {
       BoxVertex* vertices = (BoxVertex*)vvertices;
 
       V2 ss = args.position * s.scale + s.center;
@@ -48,7 +48,7 @@ namespace {
         V3(ss + V2(-size.x,  size.y), 0), color, V4(0, 1, size.x, size.y));
     }
 
-    Glyph Transform(V2 const& offset, V2 const& scale) {
+    Glyph Transform(V2 const& offset, V2 const& scale) override {
       args.position = scale * args.position + offset;
       args.size *= scale;
       return this;

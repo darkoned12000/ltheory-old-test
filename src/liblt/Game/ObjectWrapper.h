@@ -8,7 +8,7 @@ struct ObjectWrapper : public BaseT {};
 
 template <int ObjectTypeEnum>
 struct ObjectWrapperTail : public ObjectT {
-  ObjectType GetType() const {
+  ObjectType GetType() const override {
     return (ObjectType)ObjectTypeEnum;
   }
 };

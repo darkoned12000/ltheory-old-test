@@ -21,9 +21,9 @@ namespace {
     DERIVED_TYPE_EX(TaskCustom)
     POOLED_TYPE
 
-    TaskCustom() {}
+    TaskCustom() = default;
 
-    Icon GetIcon() const {
+    Icon GetIcon() const override {
       if (!getIcon)
         return TaskT::GetIcon();
 
@@ -32,7 +32,7 @@ namespace {
       return icon;
     }
 
-    String GetName() const {
+    String GetName() const override {
       if (!getName)
         return "Custom Task";
 
@@ -41,17 +41,17 @@ namespace {
       return name;
     }
 
-    void OnBegin(Object const& self, Data& data) {
+    void OnBegin(Object const& self, Data& data) override {
       if (begin)
         begin->VoidCall(0, instance, self, (DataRef)data);
     }
 
-    void OnEnd(Object const& self, Data& data) {
+    void OnEnd(Object const& self, Data& data) override {
       if (end)
         end->VoidCall(0, instance, self, (DataRef)data);
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) {
+    void OnUpdate(Object const& self, float dt, Data& data) override {
       if (update)
         update->VoidCall(0, instance, self, (DataRef)data);
     }

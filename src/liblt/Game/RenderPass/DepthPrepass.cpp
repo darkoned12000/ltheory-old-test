@@ -27,7 +27,7 @@ namespace {
       state = ShaderInstance_Create(prepassShader);
     }
 
-    void OnBegin() {
+    void OnBegin() override {
       Renderer_PushBlendMode(BlendMode::Disabled);
       Renderer_PushZBuffer(true);
       Renderer_PushZWritable(true);
@@ -35,13 +35,13 @@ namespace {
       currentShader = nullptr;
     }
 
-    void OnEnd() {
+    void OnEnd() override {
       Renderer_PopBlendMode();
       Renderer_PopZBuffer();
       Renderer_PopZWritable();
     }
 
-    void Render(Geometry const& geometry) {
+    void Render(Geometry const& geometry) override {
       if (willRender) {
         currentShader->Begin();
         geometry->Draw();
@@ -49,7 +49,7 @@ namespace {
       }
     }
 
-    void SetShader(ShaderInstanceT* shader) {
+    void SetShader(ShaderInstanceT* shader) override {
       if (currentShader == shader)
         return;
 
@@ -63,11 +63,11 @@ namespace {
         currentShader->GetShader()->SetInt("prepass", 1);
     }
 
-    void SetTransform(Transform const& transform) {
+    void SetTransform(Transform const& transform) override {
       Renderer_SetWorldTransform(transform);
     }
 
-    bool WillRender() const {
+    bool WillRender() const override {
       return willRender;
     }
   };
@@ -81,11 +81,11 @@ namespace {
       style(new DepthPrepassStyle)
       {}
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Depth Prepass";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       if (!buffer ||
           buffer->GetWidth() != state->primary->GetWidth() ||
           buffer->GetHeight() != state->primary->GetHeight())

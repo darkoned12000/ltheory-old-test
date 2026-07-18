@@ -10,13 +10,13 @@ AutoClass(ComponentScriptElement,
   ScriptFunction, receive,
   ScriptFunction, update)
 
-  ComponentScriptElement() {}
+  ComponentScriptElement() = default;
 };
 
 AutoClass(ComponentScriptable,
   Vector<ComponentScriptElement>, elements)
 
-  ComponentScriptable() {}
+  ComponentScriptable() = default;
 
   void OnUpdate(ObjectT* self) {
     Object selfRef = self;
@@ -34,12 +34,12 @@ AutoClass(ComponentScriptable,
 };
 
 AutoComponent(Scriptable)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Scriptable.OnUpdate(this);
     BaseT::OnUpdate(s);
   }
 
-  void AddScript(Data const& object) {
+  void AddScript(Data const& object) override {
     ScriptType type = object.type->GetAux().Convert<ScriptType>();
     ScriptFunction receive = type->GetFunction("Receive");
     ScriptFunction update = type->GetFunction("Update");
@@ -49,7 +49,7 @@ AutoComponent(Scriptable)
     Scriptable.elements.push(ComponentScriptElement(object, receive, update));
   }
 
-  void OnMessage(Data& message) {
+  void OnMessage(Data& message) override {
     for (size_t i = 0; i < Scriptable.elements.size(); ++i) {
       ComponentScriptElement& element = Scriptable.elements[i];
       if (element.receive)

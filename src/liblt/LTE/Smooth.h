@@ -9,7 +9,7 @@ AutoClass(Smooth,
   T, value,
   T, target)
 
-  Smooth() {}
+  Smooth() = default;
 
   Smooth(T const& value) :
     value(value),

@@ -23,26 +23,26 @@ AutoClass(ComponentIntegrity,
 };
 
 AutoComponent(Integrity)
-  void SetSupertype(Item const& type) {
+  void SetSupertype(Item const& type) override {
     LTE_ASSERT(type->GetIntegrity() > 0);
     Integrity.health = Integrity.maxHealth = type->GetIntegrity();
 
     BaseT::SetSupertype(type);
   }
 
-  ItemT* GetDataDamaged() const {
+  ItemT* GetDataDamaged() const override {
     return Integrity.GetDataDamaged(this);
   }
 
-  ItemT* GetDataDestroyed() const {
+  ItemT* GetDataDestroyed() const override {
     return Integrity.GetDataDestroyed(this);
   }
 
-  Health GetHealth() const {
+  Health GetHealth() const override {
     return BaseT::GetHealth() + Integrity.health;
   }
 
-  Health GetMaxHealth() const {
+  Health GetMaxHealth() const override {
     return BaseT::GetMaxHealth() + Integrity.maxHealth;
   }
 };

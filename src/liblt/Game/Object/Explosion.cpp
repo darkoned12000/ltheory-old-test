@@ -42,11 +42,11 @@ AutoClassDerived(Explosion, ExplosionBaseT,
       self(self)
       {}
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return Bound3(V3(-1), V3(1));
     }
 
-    void Render(DrawState* state) const {
+    void Render(DrawState* state) const override {
       if (self->age < 0)
         return;
 
@@ -106,7 +106,7 @@ AutoClassDerived(Explosion, ExplosionBaseT,
     return Sqrt(Saturate(1.f - age / duration));
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     age += state.dt;

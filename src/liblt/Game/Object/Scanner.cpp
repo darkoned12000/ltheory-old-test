@@ -25,7 +25,7 @@ AutoClassDerivedEmpty(Scanner, ScannerBaseT)
   DERIVED_TYPE_EX(Scanner)
   POOLED_TYPE
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     /* CRITICAL : Disabled scanners. */
@@ -75,7 +75,7 @@ DefineFunction(Object_Scanner) {
 
 AutoClass(ScannerOutput,
   Array<float>, bands)
-  ScannerOutput() {}
+  ScannerOutput() = default;
 
   ScannerOutput(size_t size) {
     bands.resize(size, 0.0f);

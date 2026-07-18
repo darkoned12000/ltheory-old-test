@@ -4,7 +4,7 @@
 #include "Reference.h"
 
 struct RenderStyleT : public RefCounted {
-  virtual ~RenderStyleT() {}
+  virtual ~RenderStyleT() = default;
 
   virtual void OnBegin() = 0;
   virtual void OnEnd() = 0;

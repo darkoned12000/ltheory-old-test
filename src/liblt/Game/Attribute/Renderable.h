@@ -10,11 +10,11 @@ struct Attribute_Renderable : public T {
   ATTRIBUTE_COMMON(renderable)
   Renderable renderable;
 
-  Renderable const& GetRenderable() const {
+  Renderable const& GetRenderable() const override {
     return renderable;
   }
 
-  bool HasRenderable() const {
+  bool HasRenderable() const override {
     return true;
   }
 };

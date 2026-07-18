@@ -13,7 +13,7 @@ struct Attribute_Uses : public T {
     uses(0)
     {}
 
-  Quantity GetUses() const {
+  Quantity GetUses() const override {
     return uses;
   }
 

@@ -14,7 +14,7 @@ namespace {
     Expression, statement,
     Type, type)
 
-    SwitchCase() {}
+    SwitchCase() = default;
   };
 
   AutoClassDerived(ExpressionSwitch, ExpressionT,
@@ -24,7 +24,7 @@ namespace {
     DERIVED_TYPE_EX(ExpressionSwitch)
     POOLED_TYPE
 
-    ExpressionSwitch() {}
+    ExpressionSwitch() = default;
 
     ExpressionSwitch(
         Vector<Expression> const& expressions,
@@ -39,7 +39,7 @@ namespace {
       returnType = GetType();
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       bool pred;
       for (size_t i = 0; i < cases.size(); ++i) {
         SwitchCase const& thisCase = cases[i];
@@ -60,7 +60,7 @@ namespace {
         defaultExpression->Evaluate(returnValue, env);
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       if (!defaultExpression)
         return Type_Get<void>();
 
@@ -73,7 +73,7 @@ namespace {
         ? type : Type_Get<void>();
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       if (defaultExpression && !defaultExpression->IsConstant(env))
         return false;
       for (size_t i = 0; i < cases.size(); ++i)

@@ -82,14 +82,14 @@ namespace {
       this->guid = nextGUID++;
     }
 
-    ~Texture2DImpl() {
+    ~Texture2DImpl() override {
       /* Deleting a texture that is bound to the framebuffer is an error. */
       LTE_ASSERT(attachmentIndex == -1);
       if (!Program_InStaticSection())
         GL_DeleteTexture(glBuffer);
     }
 
-    void Bind(uint bufferIndex) {
+    void Bind(uint bufferIndex) override {
       if (attachmentIndex >= 0)
         Unbind();
       attachmentIndex = bufferIndex;
@@ -97,14 +97,14 @@ namespace {
       Renderer_PushViewport(0, 0, width, height);
     }
 
-    void Unbind() {
+    void Unbind() override {
       LTE_ASSERT(attachmentIndex >= 0);
       Renderer_PopViewport();
       Renderer_PopColorBuffer(attachmentIndex);
       attachmentIndex = -1;
     }
 
-    void BindInput(uint unitIndex) const {
+    void BindInput(uint unitIndex) const override {
       GL_ActiveTexture(unitIndex);
       GL_BindTexture(GL_TextureTargetBindable::T2D, glBuffer);
       GL_ActiveTexture(0);
@@ -132,39 +132,39 @@ namespace {
       glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest);
     }
 
-    void GenerateMipmap() {
+    void GenerateMipmap() override {
       GL_BindTexture(GL_TextureTargetBindable::T2D, glBuffer);
       GL_GenerateMipmap(GL_TextureTarget::T2D);
     }
 
-    void GetData(void* buffer) const {
+    void GetData(void* buffer) const override {
       GL_BindTexture(GL_TextureTargetBindable::T2D, glBuffer);
       GL_GetTexImage(GL_TextureTarget::T2D, 0,
                      GL_TextureFormat::PixelFormat(format),
                      GL_TextureFormat::DataFormat(format), buffer);
     }
 
-    GL_Texture GetGLData() const {
+    GL_Texture GetGLData() const override {
       return glBuffer;
     }
 
-    GL_TextureFormat::Enum GetFormat() const {
+    GL_TextureFormat::Enum GetFormat() const override {
       return format;
     }
 
-    size_t GetMemory() const {
+    size_t GetMemory() const override {
       return GL_TextureFormat::Size(format) * width * height;
     }
 
-    uint GetHeight() const {
+    uint GetHeight() const override {
       return height;
     }
 
-    uint GetWidth() const {
+    uint GetWidth() const override {
       return width;
     }
 
-    void SaveTo(String const& path, bool flip) {
+    void SaveTo(String const& path, bool flip) override {
       Array<uchar> imageData(4 * GetWidth() * GetHeight());
       GL_BindTexture(GL_TextureTargetBindable::T2D, glBuffer);
       GL_GetTexImage(
@@ -195,7 +195,7 @@ namespace {
       uint y,
       uint w,
       uint h,
-      void const* buffer)
+      void const* buffer) override
     {
       SetData(
         x, y, w, h,
@@ -210,7 +210,7 @@ namespace {
       uint h,
       GL_PixelFormat::Enum pixelFormat,
       GL_DataFormat::Enum dataFormat,
-      void const* buffer)
+      void const* buffer) override
     {
       BindInput(0);
       GL_TexSubImage2D(
@@ -218,7 +218,7 @@ namespace {
         pixelFormat, dataFormat, buffer);
     }
 
-    void SetLodBias(float bias) {
+    void SetLodBias(float bias) override {
       BindInput(0);
       GL_TexParameter(
         GL_TextureTarget::T2D,
@@ -226,12 +226,12 @@ namespace {
         bias);
     }
 
-    void SetMagFilter(GL_TextureFilter::Enum filter) {
+    void SetMagFilter(GL_TextureFilter::Enum filter) override {
       BindInput(0);
       GL_TexMagFilter(GL_TextureTarget::T2D, filter);
     }
 
-    void SetMaxLod(int maxLod) {
+    void SetMaxLod(int maxLod) override {
       BindInput(0);
       GL_TexParameter(
         GL_TextureTarget::T2D,
@@ -239,12 +239,12 @@ namespace {
         maxLod);
     }
 
-    void SetMinFilter(GL_TextureFilterMip::Enum filter) {
+    void SetMinFilter(GL_TextureFilterMip::Enum filter) override {
       BindInput(0);
       GL_TexMinFilter(GL_TextureTarget::T2D, filter);
     }
 
-    void SetMinLod(int minLod) {
+    void SetMinLod(int minLod) override {
       BindInput(0);
       GL_TexParameter(
         GL_TextureTarget::T2D,
@@ -252,7 +252,7 @@ namespace {
         minLod);
     }
 
-    void SetWrapMode(GL_TextureWrapMode::Enum mode) {
+    void SetWrapMode(GL_TextureWrapMode::Enum mode) override {
       BindInput(0);
       GL_TexWrapMode(GL_TextureTarget::T2D, GL_TextureCoordinate::S, mode);
       GL_TexWrapMode(GL_TextureTarget::T2D, GL_TextureCoordinate::T, mode);

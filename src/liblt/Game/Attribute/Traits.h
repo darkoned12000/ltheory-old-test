@@ -10,7 +10,7 @@ struct Attribute_Traits : public T {
   ATTRIBUTE_COMMON(traits)
   Traits traits;
 
-  Attribute_Traits() {}
+  Attribute_Traits() = default;
 
   Traits const& GetTraits() const {
     return traits;

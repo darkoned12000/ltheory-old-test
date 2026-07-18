@@ -16,7 +16,7 @@ namespace {
     V3, scale,
     V3, rotation,
     float, bevel)
-    Plate() {}
+    Plate() = default;
   };
 
   AutoClassDerived(PlateMeshImpl, PlateMeshT,
@@ -27,25 +27,25 @@ namespace {
     uint, quality)
     DERIVED_TYPE_EX(PlateMeshImpl)
 
-    PlateMeshImpl() {}
+    PlateMeshImpl() = default;
 
     void Add(
       V3 const& center,
       V3 const& scale,
       V3 const& rotation,
-      float bevel)
+      float bevel) override
     {
       plates.push(Plate(center, scale, rotation, bevel));
     }
 
-    void Add(Warp const& warp) {
+    void Add(Warp const& warp) override {
       warps.push(warp);
     }
 
     void Add(
       PlateMesh const& pm,
       V3 const& offset = 0,
-      V3 const& scale = 1)
+      V3 const& scale = 1) override
     {
       children.push(pm);
       childTransforms.push(
@@ -53,7 +53,7 @@ namespace {
         Matrix::Scale(scale));
     }
 
-    Mesh GetMesh() const {
+    Mesh GetMesh() const override {
       Mesh self = Mesh_Create();
 
       for (size_t i = 0; i < plates.size(); ++i) {
@@ -80,21 +80,21 @@ namespace {
       return self;
     }
 
-    void ReflectX() {
+    void ReflectX() override {
       for (size_t i = 0; i < plates.size(); ++i) {
         plates[i].center.x *= -1;
         plates[i].rotation.z *= -1;
       }
     }
 
-    void ReflectY() {
+    void ReflectY() override {
       for (size_t i = 0; i < plates.size(); ++i) {
         plates[i].center.y *= -1;
         plates[i].rotation.y *= -1;
       }
     }
 
-    void ReflectZ() {
+    void ReflectZ() override {
       for (size_t i = 0; i < plates.size(); ++i) {
         plates[i].center.z *= -1;
         plates[i].rotation.x *= -1;

@@ -16,7 +16,7 @@ namespace LTE {
       totalUnits(0)
       {}
 
-    virtual ~JobT() {}
+    virtual ~JobT() = default;
     
     virtual bool CanRun() const {
       return true;

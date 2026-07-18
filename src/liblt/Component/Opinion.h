@@ -29,11 +29,11 @@ AutoClass(ComponentOpinions,
 };
 
 AutoComponent(Opinions)
-  float GetOpinion(Object const& o) const {
+  float GetOpinion(Object const& o) const override {
     return Opinions.Get(o->GetID());
   }
 
-  void ModOpinion(Object const& o, float amount) {
+  void ModOpinion(Object const& o, float amount) override {
     Opinions.Mod(o->GetID(), amount);
   }
 };

@@ -11,7 +11,7 @@ ItemType const& Item_GetType() {
 
 template <int ItemTypeEnum>
 struct ItemWrapper : public ItemT {
-  ItemType const& GetType() const {
+  ItemType const& GetType() const override {
     return Item_GetType<ItemTypeEnum>();
   }
 };

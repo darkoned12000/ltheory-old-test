@@ -10,11 +10,11 @@ struct Attribute_Capability : public T {
   ATTRIBUTE_COMMON(capability)
   Capability capability;
 
-  Capability const& GetCapability() const {
+  Capability const& GetCapability() const override {
     return capability;
   }
 
-  bool HasCapability() const {
+  bool HasCapability() const override {
     return true;
   }
 };

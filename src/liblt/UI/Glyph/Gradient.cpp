@@ -10,28 +10,28 @@ namespace {
     V4, color1,
     V4, color2,
     V4, uvsize)
-    GradientVertex() {}
+    GradientVertex() = default;
   };
 
   AutoClassDerived(Gradient, GlyphT, Glyph_Gradient_Args, args)
     DERIVED_TYPE_EX(Gradient)
     POOLED_TYPE
 
-    Gradient() {}
+    Gradient() = default;
 
-    Glyph Clone() const {
+    Glyph Clone() const override {
       return Glyph_Gradient(args);
     }
 
-    Shader GetShader() const {
+    Shader GetShader() const override {
       return Shader_Create("widget.jsl", "ui/gradient.jsl");
     }
 
-    Type GetVertexFormat() const {
+    Type GetVertexFormat() const override {
       return Type_Get<GradientVertex>();
     }
 
-    void Submit(void* vvertices, GlyphState const& s) const {
+    void Submit(void* vvertices, GlyphState const& s) const override {
       GradientVertex* vertices = (GradientVertex*)vvertices;
 
       V2 ss = args.position * s.scale + s.center;
@@ -51,7 +51,7 @@ namespace {
         V3(ss + V2(0, size.y), 0), color1, color2, V4(0, 1, size.x, size.y));
     }
 
-    Glyph Transform(V2 const& offset, V2 const& scale) {
+    Glyph Transform(V2 const& offset, V2 const& scale) override {
       args.position = scale * args.position + offset;
       args.size *= scale;
       return this;

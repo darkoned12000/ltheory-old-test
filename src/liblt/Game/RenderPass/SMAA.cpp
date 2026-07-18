@@ -51,11 +51,11 @@ namespace {
       searchTex->SetWrapMode(GL_TextureWrapMode::ClampToEdge);
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "SMAA";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       DrawState_Link(edgePass);
       (*edgePass)
         ("texture", state->primary);

@@ -11,18 +11,18 @@ namespace {
     float, lac)
     DERIVED_TYPE_EX(FractalWorley)
 
-    FractalWorley() {}
+    FractalWorley() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       NOT_IMPLEMENTED
       return 1;
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return Bound3(-FLT_MAX, FLT_MAX);
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return Stringize()
         | "fcnoise(" | p | ", " | seed | ", "
         | octaves | ", " | lac | ")";
@@ -37,18 +37,18 @@ namespace {
     float, lac)
     DERIVED_TYPE_EX(FractalPerlin)
 
-    FractalPerlin() {}
+    FractalPerlin() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       NOT_IMPLEMENTED
       return 1;
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return Bound3(-FLT_MAX, FLT_MAX);
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return Stringize()
         | "fsnoise(" | p | " + " | center | ", " | octaves | ", " | lac | ")";
     }

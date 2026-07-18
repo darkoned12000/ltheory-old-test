@@ -74,13 +74,13 @@ AutoClassDerived(PowerGenerator, PowerGeneratorBaseT,
     }
   }
 
-  void OnMessage(Data& m) {
+  void OnMessage(Data& m) override {
     BaseType::OnMessage(m);
     if (m.type == Type_Get<MessageBoost>())
       boost = true;
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     const float chargeRate = 2.00f;

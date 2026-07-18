@@ -23,7 +23,7 @@ namespace {
   AutoClass(LightData,
     V3, center,
     Color, color)
-    LightData() {}
+    LightData() = default;
   };
 
   bool LightCompare(LightData const& a, LightData const& b) {
@@ -62,11 +62,11 @@ namespace {
       centersBuffer.clear();
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Local Lighting";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       RendererZBuffer zBuffer(false);
 
       Texture2D const& lightBuffer = state->color[2];

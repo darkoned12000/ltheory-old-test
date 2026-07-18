@@ -31,7 +31,7 @@ namespace {
     DERIVED_TYPE_EX(WidgetLayer)
     POOLED_TYPE
 
-    WidgetLayer() {}
+    WidgetLayer() = default;
 
     V2 Project(Widget const& self, V2 const& pos) {
       V2 ndc = Clamp(2.0f * (pos / self->size) - V2(1), V2(-1), V2(1));
@@ -42,7 +42,7 @@ namespace {
         : V2(-100000);
     }
 
-    void PreDraw(Widget const& self) {
+    void PreDraw(Widget const& self) override {
       uint bufferWidth = (uint)(resolution * self->size.x);
       uint bufferHeight = (uint)(resolution * self->size.y);
       if (!buffer ||
@@ -72,11 +72,11 @@ namespace {
       Renderer_SetProjMatrix(newProj);
     }
 
-    void PreUpdate(Widget const& self) {
+    void PreUpdate(Widget const& self) override {
       Cursor_Push(Project(self, Cursor_Get()), Project(self, Cursor_GetLast()));
     }
 
-    void PostDraw(Widget const& self) {
+    void PostDraw(Widget const& self) override {
       WidgetRenderer_Flush();
       buffer->Unbind();
       Viewport_Pop();
@@ -88,11 +88,11 @@ namespace {
       compositor->Composite(buffer, surface);
     }
 
-    void PostPosition(Widget const& self) {
+    void PostPosition(Widget const& self) override {
       self->size = self->maxSize;
     }
 
-    void PostUpdate(Widget const& self) {
+    void PostUpdate(Widget const& self) override {
       compositor->Update();
       Cursor_Pop();
     }

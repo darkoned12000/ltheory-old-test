@@ -27,24 +27,24 @@ AutoClassDerived(MeshT, GeometryT,
     version(0)
     {}
 
-  LT_API ~MeshT();
+  LT_API ~MeshT() override;
 
   /* Geometry. */
-  LT_API void Draw() const;
+  LT_API void Draw() const override;
 
-  LT_API Bound3 GetBound() const;
+  LT_API Bound3 GetBound() const override;
 
-  LT_API Mesh GetCollisionMesh() const;
+  LT_API Mesh GetCollisionMesh() const override;
 
-  LT_API short GetVersion() const;
+  LT_API short GetVersion() const override;
 
   LT_API bool Intersects(
     Ray const& r,
     float* tOut = nullptr,
     V3* normalOut = nullptr,
-    V2* uvOut = nullptr) const;
+    V2* uvOut = nullptr) const override;
 
-  LT_API V3 Sample() const;
+  LT_API V3 Sample() const override;
 
   /* Vertex Manipulation. */
   LT_API Mesh AddMesh(Mesh const&);

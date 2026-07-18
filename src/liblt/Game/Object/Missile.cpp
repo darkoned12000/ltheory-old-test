@@ -41,7 +41,7 @@ AutoClassDerived(Missile, MissileBaseT,
   DERIVED_TYPE_EX(Missile)
   POOLED_TYPE
 
-  Missile() {}
+  Missile() = default;
 
   Missile(Object_Missile_ArgRefs const& args) :
     target(args.target),
@@ -52,7 +52,7 @@ AutoClassDerived(Missile, MissileBaseT,
     Motion.velocity = args.velocity;
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     if (!trail) {

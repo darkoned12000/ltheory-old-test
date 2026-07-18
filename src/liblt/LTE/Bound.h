@@ -15,7 +15,7 @@ AutoClass(BoundT,
   typedef MatrixT<typename PointT::MetricType> MatrixType;
   typedef typename PointT::MetricType MetricType;
 
-  BoundT() {}
+  BoundT() = default;
 
   BoundT(PointT const& singlePoint) :
     lower(singlePoint),

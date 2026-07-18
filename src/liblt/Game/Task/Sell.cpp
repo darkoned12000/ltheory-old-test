@@ -52,29 +52,29 @@ namespace {
     DERIVED_TYPE_EX(TaskSell)
     POOLED_TYPE
 
-    TaskSell() {}
+    TaskSell() = default;
 
-    String GetName() const {
+    String GetName() const override {
       return args.task->GetName() + " -> Sell " + args.item->GetName();
     }
 
-    String GetNoun() const {
+    String GetNoun() const override {
       return args.task->GetNoun();
     }
 
-    Capability GetRateFactor() const {
+    Capability GetRateFactor() const override {
       return Capability_Motion(1);
     }
 
-    Object GetTarget() const {
+    Object GetTarget() const override {
       return args.target;
     }
 
-    void GetInputs(Vector<ItemDelta>& inputs) const {
+    void GetInputs(Vector<ItemDelta>& inputs) const override {
       args.task->GetInputs(inputs);
     }
 
-    void GetOutputs(Vector<ItemDelta>& outputs) const {
+    void GetOutputs(Vector<ItemDelta>& outputs) const override {
       args.task->GetOutputs(outputs);
       /* TODO : Feels...weird. */
       for (int i = 0; i < (int)outputs.size(); ++i) {
@@ -85,17 +85,17 @@ namespace {
       }
     }
 
-    Quantity GetValue() const {
+    Quantity GetValue() const override {
       return args.task->GetValue() + args.quantity * GetSellPrice(args.target, args.item);
     }
 
-    void OnBegin(Object const& self, Data& data) {
+    void OnBegin(Object const& self, Data& data) override {
       data = TaskSellInstance();
       TaskSellInstance& it = data.Convert<TaskSellInstance>();
       it.task = TaskInstance(args.task);
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       TaskSellInstance& it = data.Convert<TaskSellInstance>();
 
       Player const& owner = self->GetOwner();
@@ -137,7 +137,7 @@ namespace {
       }
     }
 
-    void OnEnd(Object const& self, Data& data) {
+    void OnEnd(Object const& self, Data& data) override {
       TaskSellInstance& it = data.Convert<TaskSellInstance>();
       if (it.order && it.order->node)
         it.order->node->RemoveMarketAsk(it.order);

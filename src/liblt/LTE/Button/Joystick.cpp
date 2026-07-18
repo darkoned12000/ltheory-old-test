@@ -12,29 +12,29 @@ namespace LTE {
       DERIVED_TYPE_EX(ButtonJoystick)
       POOLED_TYPE
 
-      ButtonJoystick() {}
+      ButtonJoystick() = default;
 
-      bool Down() const {
+      bool Down() const override {
         Joystick* j = Joystick::Get(joyIndex);
         return j ? j->Down(buttonIndex) : false;
       }
 
-      float DownTime() const {
+      float DownTime() const override {
         Joystick* j = Joystick::Get(joyIndex);
         return j ? j->DownTime(buttonIndex) : FLT_MAX;
       }
 
-      bool Pressed() const {
+      bool Pressed() const override {
         Joystick* j = Joystick::Get(joyIndex);
         return j ? j->Pressed(buttonIndex) : false;
       }
 
-      bool Released() const {
+      bool Released() const override {
         Joystick* j = Joystick::Get(joyIndex);
         return j ? j->Released(buttonIndex) : false;
       }
 
-      String ToString() const {
+      String ToString() const override {
         return Stringize() | "Joystick " | joyIndex | " - " | buttonIndex;
       }
     };

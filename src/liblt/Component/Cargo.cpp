@@ -35,7 +35,7 @@ AutoClass(CargoIterator,
   CargoIter, iterator,
   Object, object)
 
-  CargoIterator() {}
+  CargoIterator() = default;
 };
 
 FreeFunction(CargoIterator, Object_GetCargo,

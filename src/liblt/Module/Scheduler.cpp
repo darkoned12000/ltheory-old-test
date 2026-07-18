@@ -26,7 +26,7 @@ namespace {
   AutoClass(ThreadedJob,
     Job, job,
     Thread, thread)
-    ThreadedJob() {}
+    ThreadedJob() = default;
   };
 
   struct SchedulerImpl : public Scheduler {
@@ -37,19 +37,19 @@ namespace {
 
     SchedulerImpl() : memoryInUse(0) {}
 
-    ~SchedulerImpl() {
+    ~SchedulerImpl() override {
       for (size_t i = 0; i < runningThreads.size(); ++i)
         runningThreads[i].thread->Terminate();
     }
 
-    void Add(Job const& job, bool threaded) {
+    void Add(Job const& job, bool threaded) override {
       if (threaded && kEnableThreading)
         threadedJobs << ThreadedJob(job, nullptr);
       else
         serialJobs << job;
     }
 
-    void Flush() {
+    void Flush() override {
       if (kEnableFlushing)
         while (HasJobs())
           Update();
@@ -71,15 +71,15 @@ namespace {
       return bestJob;
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Scheduler";
     }
 
-    bool HasThreadedJobs() const {
+    bool HasThreadedJobs() const override {
       return threadedJobs.size() > 0 || runningThreads.size() > 0;
     }
 
-    bool HasSerialJobs() const {
+    bool HasSerialJobs() const override {
       return serialJobs.size() > 0;
     }
 
@@ -111,7 +111,7 @@ namespace {
       }
     }
 
-    void Update() {
+    void Update() override {
       ManageThreads();
 
       for (int i = 0; i < (int)serialJobs.size(); ++i) {

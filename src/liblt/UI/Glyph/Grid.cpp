@@ -10,28 +10,28 @@ namespace {
     V4, color,
     V4, uvSize,
     V4, offsetScale)
-    GridVertex() {}
+    GridVertex() = default;
   };
 
   AutoClassDerived(Grid, GlyphT, Glyph_Grid_Args, args)
     DERIVED_TYPE_EX(Grid)
     POOLED_TYPE
 
-    Grid() {}
+    Grid() = default;
 
-    Glyph Clone() const {
+    Glyph Clone() const override {
       return Glyph_Grid(args);
     }
 
-    Shader GetShader() const {
+    Shader GetShader() const override {
       return Shader_Create("widget.jsl", "ui/grid.jsl");
     }
 
-    Type GetVertexFormat() const {
+    Type GetVertexFormat() const override {
       return Type_Get<GridVertex>();
     }
 
-    void Submit(void* vvertices, GlyphState const& s) const {
+    void Submit(void* vvertices, GlyphState const& s) const override {
       GridVertex* vertices = (GridVertex*)vvertices;
 
       V2 ss1 = args.p1 * s.scale + s.center;
@@ -47,7 +47,7 @@ namespace {
       vertices[3] = GridVertex(V3(ss1 + size * V2(0, 1), 0), color, V4(0, 1, size.x, size.y), os);
     }
 
-    Glyph Transform(V2 const& offset, V2 const& scale) {
+    Glyph Transform(V2 const& offset, V2 const& scale) override {
       args.p1 = scale * args.p1 + offset;
       args.p2 = scale * args.p2 + offset;
       return this;

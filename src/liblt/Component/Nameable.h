@@ -15,22 +15,22 @@ AutoClass(ComponentNameable,
 };
 
 AutoComponent(Nameable)
-  void SetSupertype(Item const& type) {
+  void SetSupertype(Item const& type) override {
     if (type->GetName().size())
       Nameable.name = type->GetName();
 
     BaseT::SetSupertype(type);
   }
 
-  String GetName() const {
+  String GetName() const override {
     return Nameable.name;
   }
 
-  void SetName(String const& name) {
+  void SetName(String const& name) override {
     Nameable.name = name;
   }
 
-  String ToString() const {
+  String ToString() const override {
     return Nameable.name;
   }
 };

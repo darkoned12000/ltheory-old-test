@@ -10,17 +10,17 @@ namespace {
     float, rMax)
     DERIVED_TYPE_EX(SDFRadial)
 
-    SDFRadial() {}
+    SDFRadial() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       return Length(p) - Mix(rMin, rMax, source->Evaluate(p));
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return Bound3(V3(-rMax), V3(rMax));
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return Stringize()
         | "(length(" | p | ") - mix(" | rMin | ", " | rMax | ", "
         | source->GetCode(p) | "))";

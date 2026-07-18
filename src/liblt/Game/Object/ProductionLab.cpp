@@ -24,7 +24,7 @@ AutoClassDerivedEmpty(ProductionLab, ProductionLabBaseT)
   DERIVED_TYPE_EX(ProductionLab)
   POOLED_TYPE
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     if (!sound)

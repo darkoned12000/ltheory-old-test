@@ -9,9 +9,9 @@ namespace {
     DERIVED_TYPE_EX(EventDamage)
     POOLED_TYPE
 
-    EventDamage() {}
+    EventDamage() = default;
 
-    String ToString() const {
+    String ToString() const override {
       return Stringize()
         | args.source->GetName() | " dealt  "
         | args.damage | " damage to "

@@ -13,15 +13,15 @@ AutoClass(ComponentAccount,
 };
 
 AutoComponent(Account)
-  void AddCredits(Quantity count) {
+  void AddCredits(Quantity count) override {
     Account.credits += count;
   }
 
-  Quantity GetCredits() const {
+  Quantity GetCredits() const override {
     return Account.credits;
   }
 
-  bool RemoveCredits(Quantity count) {
+  bool RemoveCredits(Quantity count) override {
     if (Account.credits < count)
       return false;
     Account.credits -= count;

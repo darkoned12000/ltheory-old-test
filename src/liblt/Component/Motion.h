@@ -35,12 +35,12 @@ AutoClass(ComponentMotion,
 };
 
 AutoComponent(Motion)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Motion.Run(this, s);
     BaseT::OnUpdate(s);
   }
 
-  void SetSupertype(Item const& type) {
+  void SetSupertype(Item const& type) override {
     LTE_ASSERT(type->GetMass() > 0);
     Motion.mass = type->GetMass();
     Motion.inertia = type->GetInertia();
@@ -48,39 +48,39 @@ AutoComponent(Motion)
     BaseT::SetSupertype(type);
   }
 
-  void ApplyForce(V3 const& force) {
+  void ApplyForce(V3 const& force) override {
     Motion.force += force;
   }
 
-  void ApplyTorque(V3 const& torque) {
+  void ApplyTorque(V3 const& torque) override {
     Motion.torque += torque;
   }
 
-  V3 GetAngularVelocity() const {
+  V3 GetAngularVelocity() const override {
     return Motion.velocityA;
   }
 
-  Mass GetMass() const {
+  Mass GetMass() const override {
     return Motion.mass;
   }
 
-  float GetSpeed() const {
+  float GetSpeed() const override {
     return Motion.speed;
   }
 
-  V3 GetVelocity() const {
+  V3 GetVelocity() const override {
     return Motion.velocity;
   }
 
-  V3 GetVelocityA() const {
+  V3 GetVelocityA() const override {
     return Motion.velocityA;
   }
 
-  float GetTopSpeed() const {
+  float GetTopSpeed() const override {
     return this->GetMaxThrust() / (kLinearDrag * Motion.mass);
   }
 
-  bool IsMovable() const {
+  bool IsMovable() const override {
     return true;
   }
 };

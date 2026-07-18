@@ -12,13 +12,13 @@ namespace {
     Renderable, two)
     DERIVED_TYPE_EX(RenderableUnion)
 
-    RenderableUnion() {}
+    RenderableUnion() = default;
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return one->GetBound().GetUnion(two->GetBound());
     }
 
-    Mesh GetCollisionMesh() const {
+    Mesh GetCollisionMesh() const override {
       Mesh m1 = one->GetCollisionMesh();
       Mesh m2 = two->GetCollisionMesh();
       if (m1 && m2)
@@ -29,7 +29,7 @@ namespace {
         return m2;
     }
 
-    size_t GetHash() const {
+    size_t GetHash() const override {
       size_t h1 = one->GetHash();
       size_t h2 = two->GetHash();
       if (h1 && h2)
@@ -40,14 +40,14 @@ namespace {
         return h2;
     }
 
-    short GetVersion() const {
+    short GetVersion() const override {
       return one->GetVersion() + two->GetVersion();
     }
 
     bool Intersects(
       Ray const& r,
       float* tOut = nullptr,
-      V3* normalOut = nullptr) const
+      V3* normalOut = nullptr) const override
     {
       float t1 = FLT_MAX;
       V3 n1;
@@ -74,12 +74,12 @@ namespace {
       }
     }
 
-    void Render(DrawState* state) const {
+    void Render(DrawState* state) const override {
       one->Render(state);
       two->Render(state);
     }
 
-    V3 Sample() const {
+    V3 Sample() const override {
       return Rand() < 0.5f ? one->Sample() : two->Sample();
     }
   };

@@ -7,7 +7,7 @@
 #include "String.h"
 
 struct ShaderT : public RefCounted {
-  virtual ~ShaderT() {}
+  virtual ~ShaderT() = default;
 
   virtual bool Create(String const& vsCode, String const& fsCode) = 0;
 

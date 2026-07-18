@@ -37,7 +37,7 @@ AutoClassDerived(Region, RegionBaseT,
   DERIVED_TYPE_EX(Region)
   POOLED_TYPE
 
-  Region() {}
+  Region() = default;
 };
 
 DERIVED_IMPLEMENT(Region)

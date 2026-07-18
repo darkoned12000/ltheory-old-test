@@ -183,7 +183,7 @@ struct ListNPT :
   public RefCounted,
   public VectorNP
 {
-  ListNPT() {}
+  ListNPT() = default;
 
   ListNPT(Type const& type) :
     VectorNP(type)

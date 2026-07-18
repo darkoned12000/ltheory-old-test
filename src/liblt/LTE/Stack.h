@@ -8,7 +8,7 @@ template <class T, int MaxElements = 100>
 struct Stack {
   std::vector<T> elements;
 
-  Stack() {}
+  Stack() = default;
   Stack(const T& elem) {
     elements.push_back(elem);
   }

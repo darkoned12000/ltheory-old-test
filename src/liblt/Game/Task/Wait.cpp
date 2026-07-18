@@ -11,25 +11,25 @@ namespace {
     DERIVED_TYPE_EX(TaskWait)
     POOLED_TYPE
 
-    TaskWait() {}
+    TaskWait() = default;
 
-    float GetDuration() const {
+    float GetDuration() const override {
       return args.duration;
     }
 
-    String GetName() const {
+    String GetName() const override {
       return "Wait";
     }
 
-    bool IsFinished(Object const& self, Data const& data) const {
+    bool IsFinished(Object const& self, Data const& data) const override {
       return data.Convert<float>() >= args.duration;
     }
 
-    void OnBegin(Object const& self, Data& data) {
+    void OnBegin(Object const& self, Data& data) override {
       data = 0.0f;
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       data.Convert<float>() += dt;
     }
   };

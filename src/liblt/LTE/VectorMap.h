@@ -8,7 +8,7 @@ struct VectorMapEntry {
   KeyT key;
   ValueT value;
 
-  VectorMapEntry() {}
+  VectorMapEntry() = default;
   VectorMapEntry(KeyT const& key) :
     key(key),
     value(ValueT())

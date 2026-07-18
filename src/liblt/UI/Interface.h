@@ -6,7 +6,7 @@
 #include "LTE/RenderPass.h"
 
 struct InterfaceT : public RefCounted {
-  virtual ~InterfaceT() {}
+  virtual ~InterfaceT() = default;
 
   virtual void Add(Widget const& widget) = 0;
   virtual void Clear() = 0;

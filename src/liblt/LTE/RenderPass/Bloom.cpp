@@ -14,7 +14,7 @@ namespace {
     float variance;
     DERIVED_TYPE_EX(Bloom)
 
-    Bloom() {}
+    Bloom() = default;
 
     Bloom(
         int radius,
@@ -26,11 +26,11 @@ namespace {
       variance(variance)
       {}
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Bloom";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       int dsFactor = state->primary->GetWidth() / state->smallColor[0]->GetWidth();
 
       DrawState_Link(shaderThresh);

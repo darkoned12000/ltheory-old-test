@@ -34,9 +34,9 @@ AutoClassDerived(ObjectCustom, CustomBaseT,
   ScriptFunction, onUpdate)
   DERIVED_TYPE_EX(ObjectCustom)
 
-  ObjectCustom() {}
+  ObjectCustom() = default;
 
-  Widget GetWidget(Player const& self) {
+  Widget GetWidget(Player const& self) override {
     if (getWidget) {
       Widget widget;
       getWidget->VoidCall(&widget, instance, (Object)this, self);
@@ -46,19 +46,19 @@ AutoClassDerived(ObjectCustom, CustomBaseT,
     return BaseType::GetWidget(self);
   }
 
-  void OnCreate() {
+  void OnCreate() override {
     BaseType::OnCreate();
     if (onCreate)
       onCreate->VoidCall(0, instance, (Object)this);
   }
 
-  void OnDestroy() {
+  void OnDestroy() override {
     BaseType::OnDestroy();
     if (onDestroy)
       onDestroy->VoidCall(0, instance, (Object)this);
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
     if (onUpdate)
       onUpdate->VoidCall(0, instance, (Object)this);

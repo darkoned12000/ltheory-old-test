@@ -25,7 +25,7 @@ namespace {
     Pointer<SettingsNode>, head,
     Pointer<SettingsNode>, next)
 
-    SettingsNode() {}
+    SettingsNode() = default;
 
     SettingsNode(String const& name) :
       name(name)
@@ -89,9 +89,9 @@ namespace {
     DERIVED_TYPE_EX(WidgetSettings)
     POOLED_TYPE
 
-    WidgetSettings() {}
+    WidgetSettings() = default;
 
-    void CreateChildren(Widget const&, Vector<Widget>& widgets) {
+    void CreateChildren(Widget const&, Vector<Widget>& widgets) override {
       for (SettingsNode* i = node->head; i; i = i->next) {
         if (i->head)
           widgets.push(Widget_Create1(new WidgetSettings(i)));
@@ -103,11 +103,11 @@ namespace {
       }
     }
 
-    void GetHash(Widget const&, HashT& out) {
+    void GetHash(Widget const&, HashT& out) override {
       out = Hash(node);
     }
 
-    void GetName(Widget const&, String& out) {
+    void GetName(Widget const&, String& out) override {
       out = node->name;
     }
   };

@@ -10,7 +10,7 @@
 AutoClassDerived(IconT, RefCounted,
   Vector<Glyph>, glyphs)
   
-  IconT() {}
+  IconT() = default;
 
   Icon Add(Glyph const& glyph) {
     glyphs.push(glyph);

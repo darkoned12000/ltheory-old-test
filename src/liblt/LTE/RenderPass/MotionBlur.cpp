@@ -15,11 +15,11 @@ namespace {
       shader(Shader_Create("identity.jsl", "post/motionblur.jsl"))
       {}
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Motion Blur";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       float speed = Length(DrawState_Get("camVelocity").Convert<V3>());
       if (speed < 100.0f)
         return;

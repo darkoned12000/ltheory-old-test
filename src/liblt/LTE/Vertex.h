@@ -11,7 +11,7 @@ AutoClass(Vertex,
   float, u,
   float, v)
 
-  Vertex() {}
+  Vertex() = default;
 
   V2 UV() const {
     return V2(u, v);

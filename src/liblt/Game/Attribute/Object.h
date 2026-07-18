@@ -9,13 +9,13 @@ struct Attribute_Object : public T {
   ATTRIBUTE_COMMON(object)
   Object object;
 
-  Attribute_Object() {}
+  Attribute_Object() = default;
 
-  Object const& GetObject() const {
+  Object const& GetObject() const override {
     return object;
   }
 
-  bool HasObject() const {
+  bool HasObject() const override {
     return true;
   }
 };

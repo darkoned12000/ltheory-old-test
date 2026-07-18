@@ -14,7 +14,7 @@ DefineFunction(Object_AddHistory) {
 AutoClass(HistoryIterator,
   Object, object,
   uint, index)
-  HistoryIterator() {}
+  HistoryIterator() = default;
 };
 
 FreeFunction(HistoryIterator, Object_GetHistory,

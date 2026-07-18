@@ -11,7 +11,7 @@ namespace Audio {
     uint duration;
     float velocity;
 
-    Note() {}
+    Note() = default;
 
     Note(uint time, double frequency, uint duration, float velocity = 1) :
       on(time),

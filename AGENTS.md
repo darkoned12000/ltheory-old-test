@@ -423,6 +423,188 @@ small C++).**
 
 ---
 
+## 8c. Engine Modernization (assessment + roadmap)
+
+A code-survey of `src/liblt` (~72k LOC) was done to answer "how modern is the
+C++ / LTSL / graphics / audio, and what's worth improving?" The verdict: the
+engine is in **better shape than its age implies** — it's already C++17,
+`nullptr`-dominant, exceptions-off by design, and uses programmable shaders (not
+fixed-function). The high-value work is graphics (GLSL) and a few correctness /
+tooling passes, NOT a ground-up rewrite. **None of §8c is implemented yet.**
+
+### 8c.1 State of the code (facts from the survey)
+
+- **C++ standard:** C++17 (`CMakeLists.txt:200-201`), `-fno-exceptions`
+  (`:198`), `-msse -msse2 -Wall -Wextra`, `-Werror` scoped to project targets.
+- **Memory:** ~585 raw `new`/`delete` in `src/liblt`, but most flow through the
+  engine's own intrusive refcount `Reference<T>` (`LTE/Reference.h:28-185`, 311
+  uses) — effectively their `shared_ptr`. Also `Pointer<T>` (observer) and
+  `AutoPtr.h` (distinct from `std::auto_ptr`). **Do NOT** swap `Reference<T>`
+  for `std::shared_ptr` — it is load-bearing for reflection/serialization.
+- **Idioms:** `nullptr` already dominant (378 vs 41 `NULL`); `typedef` 539 vs
+  `using` 7; **~1094 C-style casts** in LTE; deliberate `*(T const*)0`
+  type-introspection idioms (`Type.h:373`, `Vec.h:25`, `Common.h:272`
+  `offset_of`) — these are UB by modern rules but intentional. No `register`,
+  no `std::auto_ptr` in engine (only 1 in vendored SFML, already patched).
+- **Containers:** `Vector.h` is a thin wrapper over `std::vector`; `Array.h`,
+  `Map.h`, `VectorMap.h`, `Pool.h` are custom (serializable via `MapFields`).
+- **Reflection:** macro system — `AutoClass`/`AutoClassDerived` (`AutoClass.h:45-63`,
+  arities 0..32 via `AutoClass_Generated.h`), `FIELDS`/`MAPFIELD` (`Common.h:285,340`),
+  `AUTOMATIC_REFLECTION_PARAMETRIC1/2` (`Type.h:52-113`), `METADATA`/`REGISTER_TYPE`.
+- **LTSL:** a **tree-walking interpreter** (each AST node has a virtual
+  `Evaluate(void*, Environment&)`, `Expression.h:23`) — **no bytecode / VM /
+  JIT.** Pipeline: tokenize → `LTSL_ApplyRewrites` (`.` access + infix operator
+  precedence, `LTSL.cpp:4-82`) → `Expression_Compile` → AST of 25 node types in
+  `LTE/Expression/` (2,854 LOC). C++ functions are bound via the
+  `Function_Generated.h` macro family (`FreeFunctionN`/`MemberFunctionN`/
+  `VoidFreeFunctionN`, ~894 bind sites). Known limits: **no `return` keyword**
+  (returns last expression), benign `switch -- case ... did not compile` logs
+  (`Switch.cpp:122-128`, only fire on skipped branches — not fatal).
+- **Graphics:** GLEW + **OpenGL 2.1 minimum** (`Renderer.cpp:162-210`,
+  `glewExperimental=GL_TRUE`, asserts ~40 GL entry points). Programmable
+  pipeline: FBOs, MRT (`glDrawBuffers`), VBOs, manual attribute slots
+  (`vertex_position`=0, `_normal`=1, `_uv`=2, `_color`=3, `Shader.cpp:214-221`).
+  Fixed-function is **vestigial** — the only real immediate-mode use is a debug
+  quad outline (`Renderer.cpp:508-516`); `glMatrixMode`/`glTexCoord` exist only
+  as unused wrappers in `GL.h`.
+- **GLSL:** **all `.jsl` shaders are force-prefixed with `#version 120`**
+  (`Shader.cpp:23`) and use GLSL 1.20 syntax (`attribute`/`varying`,
+  `gl_FragData`). A custom preprocessor `JSLPreprocess` (`Shader.cpp:47-91`)
+  handles `#include` and an `#output` directive mapping outputs to
+  `gl_FragData[i]`. 169+ shaders under `resource/shader/`.
+- **Audio:** FMOD 4.44 "ex" (low-level) API (`Module/SoundEngine/Fmod.cpp`,
+  529 LOC; binary blobs in `extbin/linux64`). **Already abstracted** behind a
+  pure-virtual `SoundEngine` interface (`SoundEngine.h:25-43`) with `Fmod` and
+  `Null` implementations selected by `GetSoundEngine()`. Call sites go through
+  `Sound_Play2D`/`Sound_Play3D` wrappers — so a new backend can be added
+  **without touching call sites.**
+- **SFML:** vendored **2.6.2** (`ext/SFML/include/SFML/Config.hpp:32-34`),
+  built static + PIC.
+
+### 8c.2 Prioritized modernization plan (impact vs. risk)
+
+Ordered best-ROI first. Each is independent unless noted.
+
+1. **Tooling foundation (low risk, enables the rest).** *(Step 1 — landed.)*
+   - [x] Added `.clang-format` (tuned to the house style: 2-space indent, K&R
+     attached braces, `T* t` pointer alignment, 90-col, `SortIncludes: false`
+     so hand-grouped includes aren't reordered) so a format run yields a
+     **minimal** diff.
+   - [x] Added `.clang-tidy` scoped to SAFE checks only (`modernize-use-nullptr`,
+     `-use-using`, `-use-override`, `-use-bool-literals`, `-redundant-void-arg`,
+     `-use-equals-default/delete`, a few `readability-*`, `google-readability-casting`).
+     Deliberately **excludes** ownership rewrites (`modernize-make-*`,
+     `cppcoreguidelines-owning-memory`) to protect `Reference<T>` (§8c.3).
+   - [x] `compile_commands.json` export enabled via a hidden `base` preset in
+     `CMakePresets.json` (`CMAKE_EXPORT_COMPILE_COMMANDS: ON`, inherited by all
+     presets). A root symlink `compile_commands.json -> build/...` is created for
+     tooling; it is gitignored.
+   - **Requires** `clang-format` + `clang-tidy` installed
+     (`sudo apt install clang-format clang-tidy`). Toolchain used so far:
+     **clang-format 21.1.8 / clang-tidy 21.1.8** (Debian LLVM).
+   - **clang-format verdict:** the tuned `.clang-format` matches the existing
+     house style very closely — a dry-run over `src/liblt/LTE` produces ~0 diff
+     lines. So `clang-format` is currently a **style-guard only** (run
+     `--dry-run --Werror` in CI), not a reformat pass. The only thing it flags
+     is legacy `> >` spacing (harmless; left as-is since `SpacesInAngles` is off).
+   - **clang-tidy applied (Step 1, landed).** The SAFE checks
+     (`modernize-use-override`, `-use-bool-literals`, `-redundant-void-arg`,
+     `-use-equals-default`, `-use-equals-delete`,
+     `readability-redundant-member-init/-control-flow`) were applied **in place**
+     across all of `src/liblt` + `src/launch` via per-subsystem
+     `run-clang-tidy -p build -fix` runs, followed by a full rebuild after each.
+     Result: 371 files changed (~1700 insertions) — `override` annotations,
+     `= default`/`= delete` trivial special members, `true`/`false` for bools,
+     dropped redundant `(void)`. Build is clean.
+   - **Lessons / cautions from applying it (important):**
+     - **NEVER run `run-clang-tidy -fix` over the whole repo in one shot.** It
+       applied `override` **4×** to macro-generated methods in
+       `ObjectWrapper.h`/`ItemWrapper.h`/`Traits.h` (a known clang-tidy bug with
+       heavy macro/CRTP code), and added `override` to **non-virtual** methods in
+       `Game/Attribute/Traits.h` (its CRTP base virt detection misfires). Fix by
+       applying **one subsystem dir at a time** and `grep`ing for
+       `override override` + rebuilding (the compiler flags
+       `marked 'override', but does not override` reliably).
+     - **`.clang-tidy` deliberately excludes `modernize-use-nullptr`.** In this
+       codebase `0` is overloaded as BOTH null-pointer and integer-zero; auto-
+       fixing would wrongly turn int-`0` ctor args (e.g. `name(0)`) into
+       `nullptr`. Leave `nullptr` migration to careful hand review.
+     - **Excludes `modernize-use-using` (1335 typedefs) and
+       `google-readability-casting` (2155 C-style casts).** The casts include the
+       intentional `*(T const*)0` introspection idioms; bulk-replacing them is
+       churn/risk with little payoff. Defer (see plan item #3 for the targeted
+       `*(T const*)0` kill).
+   - Usage (report-only, then fix one subsystem at a time):
+     ```
+     clang-format --dry-run --Werror src/liblt/LTE/Xxx.cpp   # check style drift
+     clang-format -i src/liblt/LTE/Xxx.cpp                    # apply format
+     run-clang-tidy -p build src/liblt/LTE                    # report only
+     run-clang-tidy -p build -fix src/liblt/LTE/Xxx.cpp       # apply fixes (1 dir!)
+     ```
+   - **Deferred clang-tidy checks (NOT applied yet — document for later):** These
+     were deliberately excluded from `.clang-tidy` (and thus from the Step 1
+     in-place pass) because auto-fixing them is risky or noisy in this codebase:
+     - **`modernize-use-nullptr`** (~272 findings): `0` is overloaded as BOTH
+       null-pointer AND integer-zero (e.g. `name(0)`, `address(0)` are int
+       args). Auto-fixing would wrongly turn int `0` into `nullptr`. Needs
+       **careful hand review** — apply only where it's genuinely a pointer, not
+       an integer. Leave for a later pass.
+     - **`modernize-use-using`** (~1335 findings; `typedef`→`using`): safe but a
+       large, low-value diff. Deferred; can be done mechanically later if wanted.
+     - **`google-readability-casting`** (~2155 findings; C-style casts): many are
+       the intentional `*(T const*)0` introspection idioms (plan #3) and legit
+       engine casts. Bulk-replacing is churn/risk with little payoff. Deferred.
+     - **`readability-braces-around-statements`** (~1830 findings): purely
+       cosmetic; would produce a massive noisy diff. Deferred.
+   - [ ] TODO (deferred, riskier): `NULL`→`nullptr` by hand review,
+     `typedef`→`using` (large diff), and the targeted `*(T const*)0` UB kill
+     (plan #3). **Never** run clang-format/tidy on `ext/SFML/` or `include/`
+     (vendored).
+2. **GLSL `#version 120` → `330 core` + core GL context (highest payoff).**
+   - The `.jsl` preprocessor already abstracts includes/outputs, so most edits
+     are mechanical: change `kVersionDirective` (`Shader.cpp:23`), map
+     `attribute`→`in` / `varying`→`in|out` / `gl_FragData[i]`→explicit
+     `out` decls in `JSLPreprocess`, and request a 3.3 core context via
+     `sf::ContextSettings`. Keep the `Shader(vertex, fragment)` API stable so
+     LTSL scripts don't break (see §5). Unlocks modern GPU features; removes the
+     deprecated GLSL path. **Do this before any SFML 3.x work** (they pair).
+3. **Kill the `*(T const*)0` UB idioms (correctness).**
+   - Replace with `std::declval`-style helpers / `offsetof` where valid. Touch
+     `Type.h:373`, `Vec.h:25`, `Common.h:272`. Small, surgical.
+4. **LTSL quality-of-life (low effort, high value).**
+   - Add a real `return` keyword (new AST node + parser rule; backward
+     compatible since last-expression still works). Silence/clarify the benign
+     `switch` compile logs (`Switch.cpp:122-128`). Finish the grammar / dispatch
+     / type-system notes in `docs/ltsl-docs.md`.
+5. **Add `SoundEngine_OpenAL` (path off the FMOD blob).**
+   - New implementation behind the existing `SoundEngine` interface using SFML
+     audio (`sf::Sound`/`sf::Music`/`sf::Listener`, already linked). Covers
+     2D/3D playback; the gap is FMOD's event/project system
+     (`SoundEvent`/`LoadProject` in `Fmod.h`) — audit whether the game uses it.
+     Select via `GetSoundEngine()` (add a build/config toggle).
+6. **SFML 2.6.2 → 3.x + GLEW → glad (do together, after #2).**
+   - SFML 3 is C++11-min with renames (`sf::Window`/`sf::RenderWindow`, audio
+     module, `sf::Keyboard` enum names — see §8 Libraries). Pairs naturally with
+     the core-profile context bump. glad (header-only) removes GLEW's runtime
+     init quirks (`glewExperimental`).
+7. **Deprecated SFML 2.6 key aliases** in `Keyboard.cpp` (see §8 Libraries) —
+   folds into #6.
+8. **(Optional / large) LTSL bytecode VM.**
+   - Only if scripting becomes a measured perf bottleneck (unlikely for
+     gameplay logic). Would replace the tree-walking `Evaluate` with a compiled
+     opcode stream. Big rewrite; defer until profiling justifies it.
+
+### 8c.3 Explicit non-goals / cautions
+- **Keep `-fno-exceptions`.** The entire engine assumes no exceptions; do not
+  introduce try/catch/throw.
+- **Keep `Reference<T>` / the reflection macros.** They are the backbone of
+  serialization + scripting; "modernizing" them to std types is churn without
+  benefit and high breakage risk.
+- **Keep the `Shader(vertex, fragment)` LTSL API and `.jsl` layout stable** when
+  modernizing GLSL, so scripts and the 169 shaders migrate mechanically.
+
+---
+
 ## 9. Licensing & Contributor Headers (IMPORTANT)
 
 This fork uses a **dual license** (see `NOTICE`, `LICENSE.UNLICENSE`,

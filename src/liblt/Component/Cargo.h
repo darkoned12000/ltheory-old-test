@@ -30,29 +30,29 @@ AutoClass(ComponentCargo,
 };
 
 AutoComponent(Cargo)
-  void SetSupertype(Item const& type) {
+  void SetSupertype(Item const& type) override {
     Cargo.capacity = type->GetCapability().Storage;
 
     BaseT::SetSupertype(type);
   }
 
-  bool AddItem(Item const& item, Quantity count, bool force = false) {
+  bool AddItem(Item const& item, Quantity count, bool force = false) override {
     return item->GetStorageType() == StorageType_Cargo
       ? Cargo.Add(item, count, force)
       : BaseT::AddItem(item, count, force);
   }
 
-  Quantity GetItemCount(Item const& item) const {
+  Quantity GetItemCount(Item const& item) const override {
     return item->GetStorageType() == StorageType_Cargo
       ? Cargo.GetCount(item)
       : BaseT::GetItemCount(item);
   }
  
-  Mass GetUsedCapacity() const {
+  Mass GetUsedCapacity() const override {
     return Cargo.currentMass;
   }
 
-  Quantity GetValue() const {
+  Quantity GetValue() const override {
     Quantity total = BaseT::GetValue();
     for (CargoIterC it = Cargo.elements.begin();
          it != Cargo.elements.end(); ++it)

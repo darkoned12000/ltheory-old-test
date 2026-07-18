@@ -34,11 +34,11 @@ struct Attribute_Mass : public T {
     mass(0)
     {}
 
-  Mass const& GetMass() const {
+  Mass const& GetMass() const override {
     return mass;
   }
 
-  bool HasMass() const {
+  bool HasMass() const override {
     return true;
   }
 };

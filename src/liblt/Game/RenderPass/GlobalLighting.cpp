@@ -15,11 +15,11 @@ namespace {
       shader(Shader_Create("worldray.jsl", "light/global.jsl"))
       {}
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Global Lighting Pass";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       Texture2D const& lightBuffer = state->color[2];
       // Texture2D lightBuffer = state->smallColor[0];
 

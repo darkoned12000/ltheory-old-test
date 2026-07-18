@@ -16,7 +16,7 @@ namespace LTE {
     public FunctionTraits<T>,
     public RefCounted
   {
-    virtual ~FunctionInterface() {}
+    virtual ~FunctionInterface() = default;
 
     virtual char const* GetName() const {
       return "unknown_function";
@@ -31,7 +31,7 @@ namespace LTE {
     public FunctionTraits<T>,
     public RefCounted
   {
-    virtual ~FunctionInterface() {}
+    virtual ~FunctionInterface() = default;
 
     virtual size_t GetHash() const {
       return 0;
@@ -56,11 +56,11 @@ namespace LTE {
       t(t)
       {}
 
-    size_t GetHash() const {
+    size_t GetHash() const override {
       return Hash(t);
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
 #ifdef __PRETTY_FUNCTION__
       return __PRETTY_FUNCTION__;
 #else
@@ -68,7 +68,7 @@ namespace LTE {
 #endif
     }
 
-    ReturnType operator()() const {
+    ReturnType operator()() const override {
       return t();
     }
   };
@@ -132,7 +132,7 @@ namespace LTE {
 
     Reference<FunctionInterface<T, ArgT> > fn;
 
-    GenericBase() {}
+    GenericBase() = default;
 
     GenericBase(FunctionInterface<T, ArgT>* fn) :
       fn(fn)
@@ -160,7 +160,7 @@ namespace LTE {
 
   template <class T, class ArgT = void>
   struct Generic : public GenericBase<T, ArgT> {
-    Generic() {}
+    Generic() = default;
 
     Generic(int voidPtr) {}
 
@@ -193,7 +193,7 @@ namespace LTE {
 
   template <class T>
   struct Generic<T, void> : public GenericBase<T, void> {
-    Generic() {}
+    Generic() = default;
 
     Generic(T const& value) :
       GenericBase<T, void>(Function0Arg(Value(value)))
@@ -224,7 +224,7 @@ namespace LTE {
 
   template <>
   struct Generic<void, void> : public GenericBase<void, void> {
-    Generic() {}
+    Generic() = default;
 
     Generic(FunctionInterface<void, void>* fn) :
       GenericBase<void, void>(fn)
@@ -235,9 +235,9 @@ namespace LTE {
       GenericBase<void, void>(Function0Arg(wrapper))
       {}
 
-    Generic(Generic const& other) :
-      GenericBase<void, void>(other)
-      {}
+    Generic(Generic const& other) 
+      
+      = default;
 
     void operator()() const {
       return (*this->fn)();

@@ -181,7 +181,7 @@ namespace {
           source->vertices[source->indices[i + 2]].p);
     }
 
-    size_t GetMemoryUsage() const {
+    size_t GetMemoryUsage() const override {
       size_t memory = sizeof(*this);
       memory += vertices.memory();
       memory += boxes.size();
@@ -201,7 +201,7 @@ namespace {
       CollisionMesh const& m,
       Matrix const& myWorld,
       Matrix const& otherWorld,
-      V3* contactNormal) const
+      V3* contactNormal) const override
     {
       CollisionMeshImpl const& other = *(CollisionMeshImpl const*)m.t;
 
@@ -260,7 +260,7 @@ namespace {
       Matrix const& myWorld,
       float tMax,
       float& tOut,
-      V3* normalOut) const
+      V3* normalOut) const override
     {
       RayIntersectionData id(myWorld.Inverse().TransformRay(ray),
                              tMax, vertices, boxes, normalOut);

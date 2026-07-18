@@ -9,7 +9,7 @@
 AutoClass(ComponentOrders,
   Vector<Order>, elements)
 
-  ComponentOrders() {}
+  ComponentOrders() = default;
 
   void Run(ObjectT* self, UpdateState& state) {
     for (int i = 0; i < (int)elements.size(); ++i) {
@@ -22,7 +22,7 @@ AutoClass(ComponentOrders,
 };
 
 AutoComponent(Orders)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Orders.Run(this, s);
     BaseT::OnUpdate(s);
   }

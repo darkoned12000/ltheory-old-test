@@ -10,18 +10,18 @@ namespace {
     float, thickness)
     DERIVED_TYPE_EX(SDFShell)
 
-    SDFShell() {}
+    SDFShell() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       return Abs(Length(p - center) - radius) - thickness;
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return Bound3(center - V3(radius + thickness),
                   center + V3(radius + thickness));
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return Stringize()
         | "shell(" | p | ", " | center | ", " | radius | ", " | thickness | ")";
     }

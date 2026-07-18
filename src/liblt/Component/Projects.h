@@ -9,7 +9,7 @@
 AutoClass(ComponentProjects,
   Vector<Project>, elements)
 
-  ComponentProjects() {}
+  ComponentProjects() = default;
   
   void Run(ObjectT* self, UpdateState& state) {
     for (size_t i = 0; i < elements.size(); ++i)
@@ -18,7 +18,7 @@ AutoClass(ComponentProjects,
 };
 
 AutoComponent(Projects)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Projects.Run(this, s);
     BaseT::OnUpdate(s);
   }

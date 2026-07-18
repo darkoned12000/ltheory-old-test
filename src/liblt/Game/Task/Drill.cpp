@@ -15,31 +15,31 @@ namespace {
     DERIVED_TYPE_EX(TaskDrill)
     POOLED_TYPE
 
-    TaskDrill() {}
+    TaskDrill() = default;
 
-    float GetDuration() const {
+    float GetDuration() const override {
       return 1.0f;
     }
 
-    String GetName() const {
+    String GetName() const override {
       return "Drill";
     }
 
-    String GetNoun() const {
+    String GetNoun() const override {
       return "Drilling Rig";
     }
 
-    void GetOutputs(Vector<ItemDelta>& outputs) const {
+    void GetOutputs(Vector<ItemDelta>& outputs) const override {
       Pointer<ComponentResources> resources = args.target->GetResources();
       for (size_t i = 0; i < resources->elements.size(); ++i)
         outputs.push(ItemDelta(resources->elements.entries[i].key, nullptr, 1));
     }
 
-    Capability GetRateFactor() const {
+    Capability GetRateFactor() const override {
       return Capability_Transference(1);
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       if (RandExp() < dt)
         self->AddItem(args.target->GetResources()->elements.sample(Rand()), 1);
     }

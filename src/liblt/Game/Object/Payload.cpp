@@ -31,7 +31,7 @@ AutoClassDerived(Payload, PayloadBaseT,
   DERIVED_TYPE_EX(Payload)
   POOLED_TYPE
   
-  Payload() {}
+  Payload() = default;
 
   Payload(
       Item const& payload,
@@ -42,7 +42,7 @@ AutoClassDerived(Payload, PayloadBaseT,
     thrust(thrust)
     {}
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     Motion.force += thrust;
@@ -70,7 +70,7 @@ AutoClassDerived(Payload, PayloadBaseT,
     }
   }
 
-  bool CanCollide(ObjectT const* o) const {
+  bool CanCollide(ObjectT const* o) const override {
     return o->GetRoot() != source;
   }
 };

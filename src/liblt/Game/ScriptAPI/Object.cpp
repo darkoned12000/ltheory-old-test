@@ -199,7 +199,7 @@ namespace Parent {
   AutoClass(ObjectChildIterator,
     Object, object,
     Object, child)
-    ObjectChildIterator() {}
+    ObjectChildIterator() = default;
   };
 
   FreeFunction(ObjectChildIterator, Object_GetChildren,

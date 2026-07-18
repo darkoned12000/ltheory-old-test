@@ -14,29 +14,29 @@ namespace {
     DERIVED_TYPE_EX(ExpressionReference)
     POOLED_TYPE
 
-    ExpressionReference() {}
+    ExpressionReference() = default;
 
-    String Emit(Vector<String>& context) const {
+    String Emit(Vector<String>& context) const override {
       return name;
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       type->Assign(env.registers[env.base + index], returnValue);
     }
 
-    void* GetLValue(Environment& env) const {
+    void* GetLValue(Environment& env) const override {
       return env.registers[env.base + index];
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return type;
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return env.Get(name).constant;
     }
 
-    bool IsLValue() const {
+    bool IsLValue() const override {
       return true;
     }
   };

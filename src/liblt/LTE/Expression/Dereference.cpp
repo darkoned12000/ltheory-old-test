@@ -14,14 +14,14 @@ namespace {
     DERIVED_TYPE_EX(ExpressionDereference)
     POOLED_TYPE
 
-    ExpressionDereference() {}
+    ExpressionDereference() = default;
 
-    String Emit(Vector<String>& scope) const {
+    String Emit(Vector<String>& scope) const override {
       String label = location->Emit(scope);
       return "(*" + label + ")";
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       void* lv = location->GetLValue(env);
       if (lv) {
         pointeeType->Assign(*(void**)lv, returnValue);
@@ -33,20 +33,20 @@ namespace {
       }
     }
 
-    void* GetLValue(Environment& env) const {
+    void* GetLValue(Environment& env) const override {
       void* lv = location->GetLValue(env);
       return lv ?  *(void**)lv : nullptr;
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return pointeeType;
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return false;
     }
 
-    bool IsLValue() const {
+    bool IsLValue() const override {
       return location->IsLValue();
     }
   };
@@ -57,39 +57,39 @@ namespace {
     DERIVED_TYPE_EX(ExpressionDereferencePointer)
     POOLED_TYPE
 
-    ExpressionDereferencePointer() {}
+    ExpressionDereferencePointer() = default;
 
     ExpressionDereferencePointer(Expression const& location) :
       location(location),
       type(location->GetType()->GetPointeeType())
       {}
 
-    String Emit(Vector<String>& scope) const {
+    String Emit(Vector<String>& scope) const override {
       String label = location->Emit(scope);
       return "(*" + label + ")";
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       void* value;
       location->Evaluate(&value, env);
       type->Assign(value, returnValue);
     }
 
-    void* GetLValue(Environment& env) const {
+    void* GetLValue(Environment& env) const override {
       void* value;
       location->Evaluate(&value, env);
       return value;
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return type;
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return false;
     }
 
-    bool IsLValue() const {
+    bool IsLValue() const override {
       return true;
     }
   };

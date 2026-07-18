@@ -26,22 +26,22 @@ namespace {
 
     InterfaceImpl(String const& name) : name(name) {}
 
-    ~InterfaceImpl() {
+    ~InterfaceImpl() override {
       Clear();
     }
 
-    void Add(Widget const& widget) {
+    void Add(Widget const& widget) override {
       widgets.push(widget);
       widget->Create();
     }
 
-    void Clear() {
+    void Clear() override {
       for (size_t i = 0; i < widgets.size(); ++i)
         widgets[i]->Clear();
       widgets.clear();
     }
 
-    void Draw() {
+    void Draw() override {
       SFRAME("InterfaceDraw");
       V2 windowSize = Window_Get()->GetSize();
       Cursor_Push(Mouse_GetPosImmediate(), Mouse_GetPosLast());
@@ -54,7 +54,7 @@ namespace {
       Cursor_Pop();
     }
 
-    void Update() {
+    void Update() override {
       SFRAME("InterfaceUpdate");
       V2 windowSize = Window_Get()->GetSize();
       Cursor_Push(Mouse_GetPosImmediate(), Mouse_GetPosLast());
@@ -89,18 +89,18 @@ namespace {
     Shader compositor;
     DERIVED_TYPE_EX(RenderPassInterface)
 
-    RenderPassInterface() {}
+    RenderPassInterface() = default;
 
     RenderPassInterface(Interface const& interface) :
       interface(interface),
       compositor(Shader_Create("identity.jsl", "ui/composite.jsl"))
       {}
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Interface";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       /* Draw interface to tertiary buffer. */ {
         state->tertiary->Bind(0);
         Renderer_Clear(0);

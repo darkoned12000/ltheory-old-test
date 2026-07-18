@@ -17,7 +17,7 @@ AutoClass(ComponentExplodable,
 };
 
 AutoComponent(Explodable)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Explodable.Run(this, s);
     BaseT::OnUpdate(s);
   }

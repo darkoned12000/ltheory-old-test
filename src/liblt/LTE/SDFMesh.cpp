@@ -57,7 +57,7 @@ namespace {
   struct SDFMeshLevel {
     Mesh mesh;
     SV3 res;
-    SDFMeshLevel() {}
+    SDFMeshLevel() = default;
     SDFMeshLevel(SV3 const& res) :
       res(res)
       {}
@@ -82,7 +82,7 @@ namespace {
 
     DERIVED_TYPE_EX(SDFMesh)
 
-    SDFMesh() {}
+    SDFMesh() = default;
  
     DefineInitializer {
       StaticInitialize();
@@ -103,7 +103,7 @@ namespace {
       return levels[index].mesh;
     }
 
-    void Draw() const {
+    void Draw() const override {
       Mutable(this)->Load();
 
       Matrix const& world = Renderer_GetWorldMatrix();
@@ -124,16 +124,16 @@ namespace {
       currentMesh->Draw();
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return bound;
     }
 
-    Mesh GetCollisionMesh() const {
+    Mesh GetCollisionMesh() const override {
       Mesh const& m = collisionLevel.mesh;
       return m ? m->Clone() : nullptr;
     }
 
-    short GetVersion() const {
+    short GetVersion() const override {
       short versionSum = 0;
       for (size_t i = 0; i < levels.size(); ++i)
         versionSum = (short)(versionSum + (levels[i].mesh ? levels[i].mesh->GetVersion() : 0));
@@ -144,7 +144,7 @@ namespace {
       Ray const& ray,
       float* tOut,
       V3* normalOut,
-      V2* uvOut) const
+      V2* uvOut) const override
     {
       float near, far;
       if (!bound.Intersects(ray.origin, V3(1) / ray.direction, near, far))
@@ -217,7 +217,7 @@ namespace {
       fieldTexture = nullptr;
     }
 
-    V3 Sample() const {
+    V3 Sample() const override {
       Mesh m = GetMesh(0);
       return m ? m->Sample() : 0;
     }
@@ -238,33 +238,33 @@ namespace {
       buffer(res.x * res.y)
       {}
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "SDFMesh::Field Texture";
     }
 
-    uint GetMemoryUsage() const {
+    uint GetMemoryUsage() const override {
       return 16 * res.GetProduct();
     }
 
-    float GetPriority() const {
+    float GetPriority() const override {
       return 1;
     }
 
-    bool IsFinished() const {
+    bool IsFinished() const override {
       return z >= res.z;
     }
 
-    void OnBegin() {
+    void OnBegin() override {
       output = Texture3D_Create(res.x, res.y, res.z, GL_TextureFormat::R32F);
       output->AddressBorder(1, 0, 0, 0);
       fieldSlice = Texture_Create(res.x, res.y, GL_TextureFormat::R32F);
     }
 
-    void OnEnd() {
+    void OnEnd() override {
       parent->fieldTexture = output;
     }
 
-    void OnRun(uint jobSize) {
+    void OnRun(uint jobSize) override {
       RendererBlendMode blendMode(BlendMode::Disabled);
       RendererZBuffer zBuffer(false);
       V3 range = parent->bound.GetSideLengths();
@@ -306,23 +306,23 @@ namespace {
         parent(parent)
         {}
 
-      char const* GetName() const {
+      char const* GetName() const override {
         return "SDFMesh::Polygonize";
       }
 
-      uint GetMemoryUsage() const {
+      uint GetMemoryUsage() const override {
         return 2 * parent->level.res.GetProduct() * sizeof(Vertex);
       }
 
-      bool IsFinished() const {
+      bool IsFinished() const override {
         return output;
       }
 
-      void OnEnd() {
+      void OnEnd() override {
         parent->output = output;
       }
 
-      void OnRun(uint size) {
+      void OnRun(uint size) override {
         output = Mesh_Volume(parent->grid, parent->p->bound);
 
         if (parent->p->eliminateFloaters) {
@@ -343,35 +343,35 @@ namespace {
       z(0)
       {}
 
-    bool CanRun() const {
+    bool CanRun() const override {
       return p->fieldTexture != nullptr && z < level.res.z;
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "SDFMesh::LOD Level";
     }
 
-    uint GetMemoryUsage() const {
+    uint GetMemoryUsage() const override {
       return 16 * level.res.GetProduct();
     }
 
-    float GetPriority() const {
+    float GetPriority() const override {
       return Exp(-Pow((float)level.res.GetProduct(), 1.0f / 3.0f));
     }
 
-    bool IsFinished() const {
+    bool IsFinished() const override {
       return output;
     }
 
-    void OnBegin() {
+    void OnBegin() override {
       slice = Texture_Create(level.res.x, level.res.y, GL_TextureFormat::R32F);
     }
 
-    void OnEnd() {
+    void OnEnd() override {
       level.mesh = output;
     }
 
-    void OnRun(uint jobSize) {
+    void OnRun(uint jobSize) override {
       if (z >= level.res.z)
         return;
 
@@ -427,27 +427,27 @@ namespace {
       x(0)
       {}
     
-    bool CanRun() const {
+    bool CanRun() const override {
       return level.mesh != nullptr;
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "SDFMesh::Occlusion";
     }
 
-    uint GetMemoryUsage() const {
+    uint GetMemoryUsage() const override {
       return 16 * level.res.GetProduct();
     }
 
-    float GetPriority() const {
+    float GetPriority() const override {
       return 0;
     }
 
-    bool IsFinished() const {
+    bool IsFinished() const override {
       return x >= dim;
     }
 
-    void OnBegin() {
+    void OnBegin() override {
       Mesh const& input = level.mesh;
       float radius = p->occlusionRadiusMult * kBaseOcclusionRadius;
       samples = (uint)Ceil(Sqrt((float)kOcclusionSamples));
@@ -488,7 +488,7 @@ namespace {
       occlusionTexture = Texture_Create(dim, dim, GL_TextureFormat::R32F);
     }
 
-    void OnEnd() {
+    void OnEnd() override {
       Mesh const& input = level.mesh;
       Array<float> occlusionBuffer(dim * dim);
       occlusionTexture->GetData(occlusionBuffer.data());
@@ -498,7 +498,7 @@ namespace {
       input->version++;
     }
 
-    void OnRun(uint jobSize) {
+    void OnRun(uint jobSize) override {
       jobSize = Min(jobSize, dim - x);
       V3 extent = p->bound.GetSideLengths();
       (*gOcclusionShader)

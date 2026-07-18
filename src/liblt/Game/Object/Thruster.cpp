@@ -87,7 +87,7 @@ AutoClassDerived(Thruster, ThrusterBaseT,
       self(self)
       {}
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       Bound3 bound = self->Supertyped.type->GetRenderable()->GetBound();
       bound.AddPoint(V3(-1, -1, kTrailLengthMult));
       bound.AddPoint(V3( 1, -1, kTrailLengthMult));
@@ -96,7 +96,7 @@ AutoClassDerived(Thruster, ThrusterBaseT,
       return bound;
     }
 
-    void Render(DrawState* state) const {
+    void Render(DrawState* state) const override {
       self->Supertyped.type->GetRenderable()->Render(state);
 
       float opacity = self->activation;
@@ -126,7 +126,7 @@ AutoClassDerived(Thruster, ThrusterBaseT,
 
   /* For performance, only check collisions with things that can damage the
    * thruster. All others are ignored. */
-  bool CanCollide(ObjectT const* other) const {
+  bool CanCollide(ObjectT const* other) const override {
     return other->GetDamager();
   }
 
@@ -134,7 +134,7 @@ AutoClassDerived(Thruster, ThrusterBaseT,
     return Supertyped.type->GetPowerDrain();
   }
 
-  float GetPowerFraction() const {
+  float GetPowerFraction() const override {
     return Pluggable.powerIn / GetBasePower();
   }
 
@@ -146,7 +146,7 @@ AutoClassDerived(Thruster, ThrusterBaseT,
     return Saturate(2.0f * (GetPowerFraction() - 1.0f));
   }
 
-  void OnMessage(Data& m) {
+  void OnMessage(Data& m) override {
     BaseType::OnMessage(m);
     if (m.type == Type_Get<MessageCruise>())
       cruise = 1.0f;
@@ -160,7 +160,7 @@ AutoClassDerived(Thruster, ThrusterBaseT,
       Thrust(m.Convert<MessageThrustLinear>().direction);
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     Pluggable.powerRequest = GetBasePower() * (1.0f + 100.0f * cruise);

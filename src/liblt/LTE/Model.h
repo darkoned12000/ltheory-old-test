@@ -10,13 +10,13 @@ struct ModelT : public RenderableT {
   short version;
 
   LT_API ModelT();
-  LT_API ~ModelT();
+  LT_API ~ModelT() override;
 
-  size_t GetHash() const {
+  size_t GetHash() const override {
     return (size_t)this;
   }
 
-  short GetVersion() const {
+  short GetVersion() const override {
     return version;
   }
 
@@ -27,20 +27,20 @@ struct ModelT : public RenderableT {
 
   LT_API Model Add(Model const& model);
 
-  LT_API void Render(DrawState* state) const;
+  LT_API void Render(DrawState* state) const override;
   
   LT_API void RenderPiece(size_t piece, DrawState* state) const;
 
-  LT_API Bound3 GetBound() const;
+  LT_API Bound3 GetBound() const override;
   
-  LT_API Mesh GetCollisionMesh() const;
+  LT_API Mesh GetCollisionMesh() const override;
 
   LT_API bool Intersects(
     Ray const& r,
     float* tOut = nullptr,
-    V3* normalOut = nullptr) const;
+    V3* normalOut = nullptr) const override;
   
-  LT_API V3 Sample() const;
+  LT_API V3 Sample() const override;
 
   /* NOTE : Need to call UpdateVersion every time you change one of the internal
             rebderables once it is already added to the model! Model cannot

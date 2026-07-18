@@ -71,46 +71,46 @@ namespace {
       // sf::Mouse::setPosition(p, impl);
     }
 
-    void Close() {
+    void Close() override {
       impl.close();
     }
 
-    void Display() {
+    void Display() override {
       impl.display();
     }
 
-    void* GetImplData() {
+    void* GetImplData() override {
       return &impl;
     }
 
-    V2U GetSize() const {
+    V2U GetSize() const override {
       return size;
     }
 
-    bool HasFocus() const {
+    bool HasFocus() const override {
       return hasFocus;
     }
 
-    bool IsOpen() const {
+    bool IsOpen() const override {
       return impl.isOpen();
     }
 
-    void SetCaptureMouse(bool captureMouse) {
+    void SetCaptureMouse(bool captureMouse) override {
       this->captureMouse = captureMouse;
     }
 
-    void SetCursorVisible(bool visible) {
+    void SetCursorVisible(bool visible) override {
       impl.setMouseCursorVisible(visible);
     }
 
-    void SetFullscreen() {
+    void SetFullscreen() override {
       impl.create(sf::VideoMode(size.x, size.y, bpp), title, sf::Style::Fullscreen);
       viewport->size.x = (float)impl.getSize().x;
       viewport->size.y = (float)impl.getSize().y;
       impl.setMouseCursorVisible(false);
     }
 
-    void SetIcon(Texture2D const& icon) {
+    void SetIcon(Texture2D const& icon) override {
       Array<uchar> buf(icon->GetMemory());
       icon->GetData(buf.data());
       impl.setIcon(
@@ -119,15 +119,15 @@ namespace {
         (sf::Uint8 const*)buf.data());
     }
 
-    void SetPosition(V2I const& p) {
+    void SetPosition(V2I const& p) override {
       impl.setPosition(sf::Vector2i(p.x, p.y));
     }
 
-    void SetSync(bool sync) {
+    void SetSync(bool sync) override {
       impl.setVerticalSyncEnabled(sync);
     }
 
-    void Update() {
+    void Update() override {
       sf::Event e;
       while (impl.pollEvent(e)) {
         if (e.type == sf::Event::Resized) {

@@ -33,7 +33,7 @@ struct Launcher : public Program {
     Renderer_Initialize();
   }
 
-  void OnInitialize() {
+  void OnInitialize() override {
     Launch();
   }
 
@@ -76,7 +76,7 @@ struct Launcher : public Program {
       deleted = true;
   }
 
-  void OnUpdate() {
+  void OnUpdate() override {
     if (Keyboard_Pressed(Key_F1))
       SaveScreenshot();
     if (Keyboard_Pressed(Key_F2))

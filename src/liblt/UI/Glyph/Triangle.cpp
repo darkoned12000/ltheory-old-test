@@ -12,28 +12,28 @@ namespace {
     V4, p1p2,
     V4, color,
     V4, uvp3)
-    TriangleVertex() {}
+    TriangleVertex() = default;
   };
 
   AutoClassDerived(Triangle, GlyphT, Glyph_Triangle_Args, args)
     DERIVED_TYPE_EX(Triangle)
     POOLED_TYPE
 
-    Triangle() {}
+    Triangle() = default;
 
-    Glyph Clone() const {
+    Glyph Clone() const override {
       return Glyph_Triangle(args);
     }
 
-    Shader GetShader() const {
+    Shader GetShader() const override {
       return Shader_Create("widget.jsl", "ui/triangle.jsl");
     }
 
-    Type GetVertexFormat() const {
+    Type GetVertexFormat() const override {
       return Type_Get<TriangleVertex>();
     }
 
-    void Submit(void* vvertices, GlyphState const& s) const {
+    void Submit(void* vvertices, GlyphState const& s) const override {
       TriangleVertex* vertices = (TriangleVertex*)vvertices;
 
       V2 p1 = args.p1 * s.scale + s.center;
@@ -55,7 +55,7 @@ namespace {
         V3(ss1 + V2(0, size.y), 0), V4(p1.x, p1.y, p2.x, p2.y), color, V4(0, 1, p3.x, p3.y));
     }
 
-    Glyph Transform(V2 const& offset, V2 const& scale) {
+    Glyph Transform(V2 const& offset, V2 const& scale) override {
       args.p1 = scale * args.p1 + offset;
       args.p2 = scale * args.p2 + offset;
       args.p3 = scale * args.p3 + offset;

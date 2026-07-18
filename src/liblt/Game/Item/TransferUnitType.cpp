@@ -37,11 +37,11 @@ typedef
 AutoClassDerivedEmpty(TransferUnitType, TransferUnitTypeBase)
   DERIVED_TYPE_EX(TransferUnitType)
 
-  SocketType GetSocketType() const {
+  SocketType GetSocketType() const override {
     return SocketType_Turret;
   }
 
-  Object Instantiate(ObjectT* parent) {
+  Object Instantiate(ObjectT* parent) override {
     Object turret = Item_TurretType(1, kPi)->Instantiate();
     turret->Plug(Object_TransferUnit(this));
     return turret;

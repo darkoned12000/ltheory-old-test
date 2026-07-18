@@ -46,25 +46,25 @@ namespace {
     DERIVED_TYPE_EX(TaskBuy)
     POOLED_TYPE
 
-    TaskBuy() {}
+    TaskBuy() = default;
 
-    String GetName() const {
+    String GetName() const override {
       return "Buy " + args.item->GetName() + " -> " + args.task->GetName();
     }
 
-    String GetNoun() const {
+    String GetNoun() const override {
       return args.task->GetNoun();
     }
 
-    Capability GetRateFactor() const {
+    Capability GetRateFactor() const override {
       return Capability_Motion(1);
     }
 
-    Object GetTarget() const {
+    Object GetTarget() const override {
       return args.target;
     }
 
-    void GetInputs(Vector<ItemDelta>& inputs) const {
+    void GetInputs(Vector<ItemDelta>& inputs) const override {
       args.task->GetInputs(inputs);
       /* TODO : Feels...weird. */
       for (int i = 0; i < (int)inputs.size(); ++i) {
@@ -75,21 +75,21 @@ namespace {
       }
     }
 
-    void GetOutputs(Vector<ItemDelta>& outputs) const {
+    void GetOutputs(Vector<ItemDelta>& outputs) const override {
       args.task->GetOutputs(outputs);
     }
 
-    Quantity GetValue() const {
+    Quantity GetValue() const override {
       return args.task->GetValue() - args.quantity * GetBuyPrice(args.target, args.item);
     }
 
-    void OnBegin(Object const& self, Data& data) {
+    void OnBegin(Object const& self, Data& data) override {
       data = TaskBuyInstance();
       TaskBuyInstance& it = data.Convert<TaskBuyInstance>();
       it.task = TaskInstance(args.task);
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       TaskBuyInstance& it = data.Convert<TaskBuyInstance>();
 
       if (it.state == TaskBuyState::Buying) {

@@ -5,7 +5,7 @@
 #include "V2.h"
 
 struct WindowT : public RefCounted {
-  virtual ~WindowT() {}
+  virtual ~WindowT() = default;
 
   float GetAspect() const {
     V2U size = GetSize();

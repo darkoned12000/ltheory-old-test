@@ -82,23 +82,23 @@ AutoClassDerived(Shield, ShieldBaseT,
       self(self)
       {}
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return self->mesh ? self->mesh->GetBound() : Bound3(0);
     }
 
-    Mesh GetCollisionMesh() const {
+    Mesh GetCollisionMesh() const override {
       return self->mesh ? self->mesh->Clone() : nullptr;
     }
 
-    size_t GetHash() const {
+    size_t GetHash() const override {
       return (size_t)self->mesh;
     }
 
-    short GetVersion() const {
+    short GetVersion() const override {
       return self->mesh ? self->mesh->GetVersion() : (short)-1;
     }
 
-    void Render(DrawState* state) const {
+    void Render(DrawState* state) const override {
       if (!self->mesh)
         return;
 
@@ -126,7 +126,7 @@ AutoClassDerived(Shield, ShieldBaseT,
       }
     }
 
-    V3 Sample() const {
+    V3 Sample() const override {
       return self->mesh ? self->mesh->Sample() : V3(0);
     }
   };
@@ -141,11 +141,11 @@ AutoClassDerived(Shield, ShieldBaseT,
     hitPosition.resize(kMaxHits, 0);
   }
 
-  float GetCooldown() const {
+  float GetCooldown() const override {
     return recharge;
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     /* Keep the shield's relative orientation fixed. */
@@ -184,7 +184,7 @@ AutoClassDerived(Shield, ShieldBaseT,
     SetScale(parent->GetScale());
   }
 
-  bool CanCollide(ObjectT const* other) const {
+  bool CanCollide(ObjectT const* other) const override {
     ComponentDamager const* d = other->GetDamager();
     if (!d)
       return false;
@@ -197,7 +197,7 @@ AutoClassDerived(Shield, ShieldBaseT,
     ObjectT* self,
     ObjectT* other,
     Position const& pSelf,
-    Position const& pOther)
+    Position const& pOther) override
   {
     if (hitAge.size() >= kMaxHits) {
       hitAge.erase(hitAge.begin());

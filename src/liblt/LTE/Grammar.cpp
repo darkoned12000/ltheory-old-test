@@ -30,14 +30,14 @@ namespace LTE {
   struct GrammarRuleImpl : public GrammarRule {
     Vector< AutoPtr<GrammarPhrase> > entries;
 
-    GrammarRule* Add(GrammarPhrase* phrase) {
+    GrammarRule* Add(GrammarPhrase* phrase) override {
       entries.push(phrase);
       return this;
     }
 
     GrammarPhrase* Select(
       Vector<String> const& tags,
-      RNG const& rg) const
+      RNG const& rg) const override
     {
       float totalWeight = 0;
       Vector<uint> choices;
@@ -67,7 +67,7 @@ namespace LTE {
   struct GrammarImpl : public Grammar {
     VectorMap< String, AutoPtr<GrammarRule> > rules;
 
-    Grammar* Add(GrammarRule* rule, String const& name) {
+    Grammar* Add(GrammarRule* rule, String const& name) override {
       rules[name] = rule;
       if (((GrammarRuleImpl*)rule)->entries.empty())
         Log_Warning("Empty grammar rule <" + name + ">");
@@ -77,7 +77,7 @@ namespace LTE {
     String Generate(
       RNG const& rg,
       String const& token,
-      String const& tags)
+      String const& tags) override
     {
       Vector<String> tagVector;
       String_Split(tagVector, tags, ',');

@@ -8,7 +8,7 @@ struct SpatialPartition {
   typedef bool (*AddFn)(Bound3 const& box, void* aux);
   typedef bool (*QueryFn)(void* object, void* aux);
 
-  virtual ~SpatialPartition() {}
+  virtual ~SpatialPartition() = default;
 
   virtual void Add(
     void* object,

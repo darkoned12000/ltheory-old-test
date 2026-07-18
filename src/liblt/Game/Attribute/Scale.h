@@ -13,11 +13,11 @@ struct Attribute_Scale : public T {
     scale(0)
     {}
 
-  float const& GetScale() const {
+  float const& GetScale() const override {
     return scale;
   }
 
-  bool HasScale() const {
+  bool HasScale() const override {
     return true;
   }
 };

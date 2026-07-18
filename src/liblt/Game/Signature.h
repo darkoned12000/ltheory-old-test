@@ -19,7 +19,7 @@ AutoClass(Signature,
   float, variance,
   float, power)
 
-  Signature() {}
+  Signature() = default;
 };
 
 #endif

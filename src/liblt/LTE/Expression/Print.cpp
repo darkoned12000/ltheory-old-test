@@ -17,7 +17,7 @@ namespace {
     DERIVED_TYPE_EX(ExpressionPrint)
     POOLED_TYPE
 
-    ExpressionPrint() {}
+    ExpressionPrint() = default;
 
     ExpressionPrint(Vector<Expression> const& expressions) {
       this->expressions.resize(expressions.size());
@@ -28,7 +28,7 @@ namespace {
       }
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       for (size_t i = 0; i < expressions.size(); ++i) {
         void* lv = expressions[i]->GetLValue(env);
         if (lv)
@@ -43,11 +43,11 @@ namespace {
       std::cout << std::endl;
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return Type_Get<void>();
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return false;
     }
   };

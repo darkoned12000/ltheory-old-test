@@ -20,7 +20,7 @@ struct Vector : public NullBase<Vector<T> > {
 
   std::vector<T> v;
 
-  Vector() {}
+  Vector() = default;
 
   Vector(std::vector<T> const& v) :
     v(v)

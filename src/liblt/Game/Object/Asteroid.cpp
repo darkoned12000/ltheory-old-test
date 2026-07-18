@@ -63,7 +63,7 @@ AutoClassDerivedEmpty(AsteroidRich, AsteroidRichBaseT)
       Renderable_Asteroid(Seeded.seed);
   }
 
-  Signature GetSignature() const {
+  Signature GetSignature() const override {
     return Signature(1.0f, 6.0f, 0.5f, 2.0f);
   }
 };

@@ -13,7 +13,7 @@ AutoClass(RayT,
 
   typedef typename DirT::ReturnType LengthT;
 
-  RayT() {}
+  RayT() = default;
 
   template <class P2, class D2>
   RayT(RayT<P2, D2> const& other) :

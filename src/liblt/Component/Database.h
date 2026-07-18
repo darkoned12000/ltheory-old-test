@@ -13,7 +13,7 @@ typedef DatabaseMapT::const_iterator DatabaseIterC;
 AutoClass(ComponentDatabase,
   DatabaseMapT, elements)
 
-  ComponentDatabase() {}
+  ComponentDatabase() = default;
 
   ~ComponentDatabase() {
     // CRITICAL
@@ -36,7 +36,7 @@ AutoClass(ComponentDatabase,
 };
 
 AutoComponent(Database)
-  bool AddItem(Item const& item, Quantity count, bool force = false) {
+  bool AddItem(Item const& item, Quantity count, bool force = false) override {
     if (item->GetStorageType() == StorageType_Database) {
       Database.Mod(item, count);
       return true;
@@ -44,7 +44,7 @@ AutoComponent(Database)
       return BaseT::AddItem(item, count, force);
   }
 
-  Quantity GetItemCount(Item const& item) const {
+  Quantity GetItemCount(Item const& item) const override {
     return item->GetStorageType() == StorageType_Database
       ? Database.GetCount(item)
       : BaseT::GetItemCount(item);

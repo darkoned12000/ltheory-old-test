@@ -5,7 +5,7 @@
 
 namespace LTE {
   struct Joystick {
-    virtual ~Joystick() {}
+    virtual ~Joystick() = default;
 
     LT_API static Joystick* Get(unsigned int index);
     LT_API static uint GetButtonCount();

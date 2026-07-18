@@ -23,7 +23,7 @@ namespace LTE {
   };
 
   struct GrammarRule {
-    virtual ~GrammarRule() {}
+    virtual ~GrammarRule() = default;
 
     virtual GrammarRule* Add(GrammarPhrase* phrase) = 0;
 
@@ -33,7 +33,7 @@ namespace LTE {
   };
 
   struct Grammar {
-    virtual ~Grammar() {}
+    virtual ~Grammar() = default;
 
     virtual Grammar* Add(GrammarRule* rule, String const& name) = 0;
 

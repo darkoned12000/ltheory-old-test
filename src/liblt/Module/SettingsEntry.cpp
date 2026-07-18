@@ -13,9 +13,9 @@ namespace {
 
     DERIVED_TYPE_EX(SettingsAxis)
 
-    SettingsAxis() {}
+    SettingsAxis() = default;
 
-    void GetValue(void* buffer) {
+    void GetValue(void* buffer) override {
       if (!function)
         function = ConstantPointer(&value);
       *((GenericAxis*)buffer) = function;
@@ -31,9 +31,9 @@ namespace {
 
     DERIVED_TYPE_EX(SettingsBool)
 
-    SettingsBool() {}
+    SettingsBool() = default;
 
-    void GetValue(void* buffer) {
+    void GetValue(void* buffer) override {
       if (!function)
         function = ConstantPointer(&value);
       *((GenericBool*)buffer) = function;
@@ -49,9 +49,9 @@ namespace {
 
     DERIVED_TYPE_EX(SettingsButton)
 
-    SettingsButton() {}
+    SettingsButton() = default;
 
-    void GetValue(void* buffer) {
+    void GetValue(void* buffer) override {
       if (!function)
         function = value;
       *((GenericButton*)buffer) = function;
@@ -67,9 +67,9 @@ namespace {
 
     DERIVED_TYPE_EX(SettingsColor)
 
-    SettingsColor() {}
+    SettingsColor() = default;
 
-    void GetValue(void* buffer) {
+    void GetValue(void* buffer) override {
       if (!function)
         function = ConstantPointer(&value);
       *((GenericColor*)buffer) = function;
@@ -87,9 +87,9 @@ namespace {
 
     DERIVED_TYPE_EX(SettingsFloat)
 
-    SettingsFloat() {}
+    SettingsFloat() = default;
 
-    void GetValue(void* buffer) {
+    void GetValue(void* buffer) override {
       if (!function)
         function = ConstantPointer(&value);
       *((GenericFloat*)buffer) = function;

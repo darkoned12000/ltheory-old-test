@@ -6,11 +6,11 @@ namespace {
   struct LockImpl : public LockT {
     sf::Mutex mutex;
 
-    void Acquire() {
+    void Acquire() override {
       mutex.lock();
     }
 
-    void Release() {
+    void Release() override {
       mutex.unlock();
     }
   };

@@ -8,7 +8,7 @@
 AutoClass(ComponentResources,
   Distribution<Item>, elements)
 
-  ComponentResources() {}
+  ComponentResources() = default;
 };
 
 AutoComponent(Resources)

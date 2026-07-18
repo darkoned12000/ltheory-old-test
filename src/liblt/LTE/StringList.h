@@ -34,25 +34,25 @@ AutoClassDerived(StringListAtom, StringListT,
   DERIVED_TYPE_EX(StringListAtom)
   POOLED_TYPE
 
-  StringListAtom() {}
+  StringListAtom() = default;
 
-  StringList Clone() const {
+  StringList Clone() const override {
     return new StringListAtom(*this);
   }
 
-  size_t GetSize() const {
+  size_t GetSize() const override {
     return 1;
   }
 
-  String GetString() const {
+  String GetString() const override {
     return value;
   }
 
-  String GetValue() const {
+  String GetValue() const override {
     return value;
   }
 
-  bool IsAtom() const {
+  bool IsAtom() const override {
     return true;
   }
 };
@@ -62,21 +62,21 @@ AutoClassDerived(StringListList, StringListT,
   DERIVED_TYPE_EX(StringListList)
   POOLED_TYPE
   
-  StringListList() {}
+  StringListList() = default;
 
-  StringList Clone() const {
+  StringList Clone() const override {
     return new StringListList(*this);
   }
 
-  StringList Get(size_t index) const {
+  StringList Get(size_t index) const override {
     return elements[index];
   }
 
-  size_t GetSize() const {
+  size_t GetSize() const override {
     return elements.size();
   }
 
-  String GetString() const {
+  String GetString() const override {
     String str = "(";
     for (size_t i = 0; i < elements.size(); ++i) {
       if (i)
@@ -87,7 +87,7 @@ AutoClassDerived(StringListList, StringListT,
     return str + ")";
   }
   
-  bool IsAtom() const {
+  bool IsAtom() const override {
     return false;
   }
 };

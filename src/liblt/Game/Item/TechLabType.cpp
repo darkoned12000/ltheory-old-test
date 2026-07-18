@@ -28,11 +28,11 @@ typedef
 AutoClassDerivedEmpty(TechLabType, TechLabTypeBase)
   DERIVED_TYPE_EX(TechLabType)
 
-  SocketType GetSocketType() const {
+  SocketType GetSocketType() const override {
     return SocketType_Interior;
   }
 
-  Object Instantiate(ObjectT* parent) {
+  Object Instantiate(ObjectT* parent) override {
     return Object_TechLab(this);
   }
 };

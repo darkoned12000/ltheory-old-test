@@ -8,8 +8,8 @@
 typedef Reference<struct FontT> Font;
 
 struct FontT : public RefCounted {
-  FontT() {}
-  virtual ~FontT() {}
+  FontT() = default;
+  virtual ~FontT() = default;
 
   virtual void Draw(
     String const& text,

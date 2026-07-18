@@ -9,17 +9,17 @@ namespace {
     V4 value;
     DERIVED_TYPE_EX(Clear)
 
-    Clear() {}
+    Clear() = default;
 
     Clear(V4 const& value) :
       value(value)
       {}
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Clear";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       Renderer_ResetCounters();
       state->primary->Bind(0);
       Renderer_Clear(value);
@@ -36,11 +36,11 @@ namespace {
   struct ClearDepth : public RenderPassT {
     DERIVED_TYPE_EX(ClearDepth)
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Clear Depth";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       state->primary->Bind(0);
       Renderer_ClearDepth();
       state->primary->Unbind();

@@ -12,7 +12,7 @@ namespace {
     Expression, expression,
     Type, type,
     bool, isLValue)
-    ArgData() {}
+    ArgData() = default;
 
     ArgData(Expression const& expression) :
       expression(expression),
@@ -28,7 +28,7 @@ namespace {
     DERIVED_TYPE_EX(ExpressionDynamicDispatch)
     POOLED_TYPE
 
-    ExpressionDynamicDispatch() {}
+    ExpressionDynamicDispatch() = default;
 
     ExpressionDynamicDispatch(
         String const& name,
@@ -42,7 +42,7 @@ namespace {
         this->args[i] = ArgData(args[i]);
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       Data objectData;
       object->Evaluate(&objectData, env);
 
@@ -118,11 +118,11 @@ namespace {
       env.base = prevBase;
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return Type_Get<void>();
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return false;
     }
   };

@@ -25,7 +25,7 @@ AutoClass(ComponentDockable,
 };
 
 AutoComponent(Dockable)
-  void SetSupertype(Item const& type) {
+  void SetSupertype(Item const& type) override {
     if (type->GetDocks()) {
       Dockable.ports = *type->GetDocks();
       Dockable.hangars = Dockable.ports; // TODO
@@ -35,15 +35,15 @@ AutoComponent(Dockable)
     BaseT::SetSupertype(type);
   }
 
-  bool CanDock(Object const& docker) {
+  bool CanDock(Object const& docker) override {
     return Dockable.CanDock(this, docker);
   }
 
-  void Dock(Object const& docker) {
+  void Dock(Object const& docker) override {
     Dockable.Dock(this, docker);
   }
 
-  void Undock(Object const& docker) {
+  void Undock(Object const& docker) override {
     Dockable.Undock(this, docker);
   }
 };

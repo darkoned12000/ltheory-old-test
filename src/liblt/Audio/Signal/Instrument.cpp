@@ -22,7 +22,7 @@ namespace Audio {
         pattern(pattern)
         {}
 
-      double OnGet(GlobalData const& d) {
+      double OnGet(GlobalData const& d) override {
         double sum = 0;
         for (size_t i = 0; i < pattern.size(); ++i) {
           const Note& note = pattern[i];

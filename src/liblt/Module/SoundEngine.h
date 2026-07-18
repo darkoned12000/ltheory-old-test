@@ -10,7 +10,7 @@
 
 struct SoundEngine : public ModuleT {
   LT_API SoundEngine();
-  LT_API virtual ~SoundEngine();
+  LT_API ~SoundEngine() override;
 
   LT_API void Pop();
   LT_API void Push();

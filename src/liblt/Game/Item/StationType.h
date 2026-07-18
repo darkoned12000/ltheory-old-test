@@ -34,7 +34,7 @@ AutoClassDerivedEmpty(StationType, StationTypeBase)
   DERIVED_TYPE_EX(StationType)
   Renderable interiorModel;
 
-  LT_API Object Instantiate(ObjectT* parent = 0);
+  LT_API Object Instantiate(ObjectT* parent = 0) override;
 };
 
 #endif

@@ -23,20 +23,20 @@ namespace {
       willRender(true)
       {}
 
-    void OnBegin() {
+    void OnBegin() override {
       Renderer_PushBlendMode(blended ? BlendMode::Alpha : BlendMode::Disabled);
       Renderer_PushZBuffer(true);
       Renderer_PushZWritable(!blended);
       willRender = true;
     }
 
-    void OnEnd() {
+    void OnEnd() override {
       Renderer_PopBlendMode();
       Renderer_PopZBuffer();
       Renderer_PopZWritable();
     }
 
-    void Render(Geometry const& geometry) {
+    void Render(Geometry const& geometry) override {
       if (willRender) {
         currentShader->Begin();
         geometry->Draw();
@@ -44,7 +44,7 @@ namespace {
       }
     }
 
-    void SetShader(ShaderInstanceT* shader) {
+    void SetShader(ShaderInstanceT* shader) override {
       bool hasBlending = shader->HasBlending();
       if ((hasBlending && blended) || (!hasBlending && !blended)) {
         willRender = true;
@@ -58,11 +58,11 @@ namespace {
       }
     }
 
-    void SetTransform(Transform const& transform) {
+    void SetTransform(Transform const& transform) override {
       Renderer_SetWorldTransform(transform);
     }
 
-    bool WillRender() const {
+    bool WillRender() const override {
       return willRender;
     }
   };

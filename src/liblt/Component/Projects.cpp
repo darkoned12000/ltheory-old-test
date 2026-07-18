@@ -5,7 +5,7 @@
 AutoClass(ProjectsIterator,
   Object, object,
   uint, index)
-  ProjectsIterator() {}
+  ProjectsIterator() = default;
 };
 
 FreeFunction(ProjectsIterator, Object_GetProjects,

@@ -8,13 +8,13 @@ namespace {
     Data, lower,
     Data, upper)
     DERIVED_TYPE_EX(MissionConstraintRange)
-    MissionConstraintRange() {}
+    MissionConstraintRange() = default;
 
-    double Evaluate(Item const& data) const {
+    double Evaluate(Item const& data) const override {
       return 1.0;
     }
 
-    String GetDescription() const {
+    String GetDescription() const override {
       return "";
     }
   };
@@ -23,13 +23,13 @@ namespace {
     ItemProperty, property,
     Data, value)
     DERIVED_TYPE_EX(MissionConstraintRange)
-    MissionConstraintEquality() {}
+    MissionConstraintEquality() = default;
 
-    double Evaluate(Item const& data) const {
+    double Evaluate(Item const& data) const override {
       return 1.0;
     }
 
-    String GetDescription() const {
+    String GetDescription() const override {
       return Stringize() | property->GetName() | " is " | (*(Object*)value.data)->GetName();
     }
   };

@@ -5,7 +5,7 @@
 
 namespace LTE {
   struct Patch {
-    virtual ~Patch() {}
+    virtual ~Patch() = default;
 
     virtual void Add(Location const& target, Location const& patchFile) = 0;
     virtual bool Apply() const = 0;

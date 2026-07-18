@@ -43,35 +43,35 @@ AutoClass(ComponentOrientation,
 };
 
 AutoComponent(Orientation)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Orientation.Run(this, s);
     BaseT::OnUpdate(s);
   }
 
-  void SetSupertype(Item const& type) {
+  void SetSupertype(Item const& type) override {
     if (type->GetScale() > 0)
       SetScale(V3(type->GetScale()));
 
     BaseT::SetSupertype(type);
   }
 
-  void SetLook(V3 const& look) {
+  void SetLook(V3 const& look) override {
     Orientation.GetTransformW().look = look;
   }
 
-  void SetUp(V3 const& up) {
+  void SetUp(V3 const& up) override {
     Orientation.GetTransformW().up = up;
   }
 
-  void SetPos(Position const& p) {
+  void SetPos(Position const& p) override {
     Orientation.GetTransformW().pos = p;
   }
 
-  void SetScale(V3 const& scale) {
+  void SetScale(V3 const& scale) override {
     Orientation.GetTransformW().scale = scale;
   }
 
-  Transform const& GetTransform() const {
+  Transform const& GetTransform() const override {
     return Orientation.GetTransform();
   }
 };

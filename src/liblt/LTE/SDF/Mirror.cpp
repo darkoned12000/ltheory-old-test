@@ -10,9 +10,9 @@ namespace {
     V3, normal)
     DERIVED_TYPE_EX(SDFMirror)
 
-    SDFMirror() {}
+    SDFMirror() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       return source->Evaluate(HalfMirrorPoint(p));
     }
 
@@ -24,7 +24,7 @@ namespace {
       return p + 2.0f * Dot(origin - p, normal) * normal;
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       Bound3 sourceBound = source->GetBound();
       Bound3 newBound(sourceBound);
       newBound.AddPoint(MirrorPoint(sourceBound.lower));
@@ -32,7 +32,7 @@ namespace {
       return newBound;
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return source->GetCode(Stringize()
         | "(" | p | " + 2.0*max(dot(" | origin | " - " | p | ", "
         | normal | "), 0.)*" | normal | ")");
@@ -50,7 +50,7 @@ namespace {
     float, angleSize)
     DERIVED_TYPE_EX(SDFMirrorRadial)
 
-    SDFMirrorRadial() {}
+    SDFMirrorRadial() = default;
 
     SDFMirrorRadial(
         SDF const& source,
@@ -65,7 +65,7 @@ namespace {
       OrthoBasis(normal, e1, e2);
     }
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       V3 pos = p - origin;
       float x = Dot(pos, e1);
       float y = Dot(pos, e2);
@@ -77,7 +77,7 @@ namespace {
                               z * e3 + origin);
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       Bound3 sourceBound = source->GetBound();
 
       float radius = 0;
@@ -90,7 +90,7 @@ namespace {
                   origin + V3(radius));
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return source->GetCode(Stringize()
         | "mirrorRadial(" | p | ", " | origin | ", "
         | e1 | ", " | e2 | ", " | e3 | ", " | angleSize | ")");

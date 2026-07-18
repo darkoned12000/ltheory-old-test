@@ -116,7 +116,7 @@ AutoClassDerivedEmpty(Zone, ZoneBaseT)
     }
   }
 
-  void OnDraw(DrawState* state) {
+  void OnDraw(DrawState* state) override {
     BaseType::OnDraw(state);
     for (size_t i = 0; i < kFieldLevels; ++i)
       field[i]->Update(this, state->view->transform.pos);

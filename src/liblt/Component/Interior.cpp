@@ -92,7 +92,7 @@ namespace {
   AutoClass(InteriorIterator,
     Object, object,
     size_t, index)
-    InteriorIterator() {}
+    InteriorIterator() = default;
   };
 
   VoidFreeFunction(Object_AddInterior,

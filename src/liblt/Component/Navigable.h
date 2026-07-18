@@ -9,13 +9,13 @@
 AutoClass(NavigableNode,
   Object, dest,
   float, cost)
-  NavigableNode() {}
+  NavigableNode() = default;
 };
 
 AutoClass(ComponentNavigable,
   Vector<NavigableNode>, nodes)
 
-  ComponentNavigable() {}
+  ComponentNavigable() = default;
 
   bool ConnectsTo(Object const& target) const {
     for (size_t i = 0; i < nodes.size(); ++i)

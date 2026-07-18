@@ -23,9 +23,9 @@ AutoClassDerived(WorkerEngineer, WorkerBase,
   Item, nextLevel)
   DERIVED_TYPE_EX(WorkerEngineer)
 
-  WorkerEngineer() {}
+  WorkerEngineer() = default;
 
-  uint GetSkillEngineering() const {
+  uint GetSkillEngineering() const override {
     return level;
   }
 };
@@ -35,7 +35,7 @@ AutoClassDerived(WorkerMiner, WorkerBase,
   Item, nextLevel)
   DERIVED_TYPE_EX(WorkerMiner)
 
-  WorkerMiner() {}
+  WorkerMiner() = default;
 
   uint GetSkillMiner() const {
     return level;
@@ -47,9 +47,9 @@ AutoClassDerived(WorkerPilot, WorkerBase,
   Item, nextLevel)
   DERIVED_TYPE_EX(WorkerPilot)
 
-  WorkerPilot() {}
+  WorkerPilot() = default;
 
-  uint GetSkillPiloting() const {
+  uint GetSkillPiloting() const override {
     return level;
   }
 };

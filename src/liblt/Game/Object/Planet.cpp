@@ -29,7 +29,7 @@ AutoClassDerived(PlanetImpl, Planet,
     population(1)
     {}
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
 #if 0

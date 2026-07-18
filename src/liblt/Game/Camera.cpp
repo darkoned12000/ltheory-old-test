@@ -50,7 +50,7 @@ namespace {
       Motion.inertia = 1;
     }
 
-    void OnUpdate(UpdateState& state) {
+    void OnUpdate(UpdateState& state) override {
       BaseType::OnUpdate(state);
 
       if (target && !target->IsDeleted()) {
@@ -74,35 +74,35 @@ namespace {
       Orientation.GetTransformW() = Transform_LookUp(position, newLook, up);
     }
 
-    Object const& GetTarget() const {
+    Object const& GetTarget() const override {
       return target;
     }
 
-    View GetView(float aspect) const {
+    View GetView(float aspect) const override {
       return View(GetTransform(), fov, aspect, kNear, kFar);
     }
 
-    void SetFov(float fov) {
+    void SetFov(float fov) override {
       this->fov = fov;
     }
 
-    void SetRelativePos(V3 const& pos) {
+    void SetRelativePos(V3 const& pos) override {
       relativePos = pos;
     }
 
-    void SetRelativeLookAt(V3 const& lookAt) {
+    void SetRelativeLookAt(V3 const& lookAt) override {
       relativeLookAt = lookAt;
     }
 
-    void SetRelativeUp(V3 const& up) {
+    void SetRelativeUp(V3 const& up) override {
       relativeUp = up;
     }
 
-    void SetRigidity(float rigidity) {
+    void SetRigidity(float rigidity) override {
       this->rigidity = rigidity;
     }
 
-    void SetTarget(Object const& object) {
+    void SetTarget(Object const& object) override {
       target = object;
     }
   };

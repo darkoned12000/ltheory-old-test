@@ -14,9 +14,9 @@ namespace {
     DERIVED_TYPE_EX(ExpressionDeclareLocal)
     POOLED_TYPE
 
-    ExpressionDeclareLocal() {}
+    ExpressionDeclareLocal() = default;
 
-    String Emit(Vector<String>& context) const {
+    String Emit(Vector<String>& context) const override {
       String valueCall = initializer->Emit(context);
       context.push(Stringize()
         | initializer->GetType()->name | " "
@@ -25,17 +25,17 @@ namespace {
       return "";
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       void* lv = env.Allocate(type);
       initializer->Evaluate(lv, env);
       env.registers.push(lv);
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return Type_Get<void>();
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return true;
     }
   };
@@ -46,17 +46,17 @@ namespace {
     DERIVED_TYPE_EX(ExpressionDeclareReference)
     POOLED_TYPE
 
-    ExpressionDeclareReference() {}
+    ExpressionDeclareReference() = default;
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       env.registers.push(initializer->GetLValue(env));
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return Type_Get<void>();
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return true;
     }
   };
@@ -67,19 +67,19 @@ namespace {
     DERIVED_TYPE_EX(ExpressionDeclareReferencePtr)
     POOLED_TYPE
 
-    ExpressionDeclareReferencePtr() {}
+    ExpressionDeclareReferencePtr() = default;
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       void* lv;
       initializer->Evaluate(&lv, env);
       env.registers.push(lv);
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return Type_Get<void>();
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return true;
     }
   };
@@ -92,9 +92,9 @@ namespace {
     DERIVED_TYPE_EX(ExpressionDeclareStatic)
     POOLED_TYPE
 
-    ExpressionDeclareStatic() {}
+    ExpressionDeclareStatic() = default;
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       if (!value) {
         Mutable(value).Construct(type);
         initializer->Evaluate(value.data, env);
@@ -102,11 +102,11 @@ namespace {
       env.registers.push(value.data);
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return Type_Get<void>();
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return true;
     }
   };

@@ -9,9 +9,9 @@ namespace {
     ScriptFunction, getDelta)
     DERIVED_TYPE_EX(WarpCustom)
 
-    WarpCustom() {}
+    WarpCustom() = default;
 
-    V3 GetDelta(V3 const& p) const {
+    V3 GetDelta(V3 const& p) const override {
       V3 result;
       getDelta->VoidCall(&result, instance, p);
       return result;

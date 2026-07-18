@@ -56,7 +56,7 @@ namespace {
     V3, n,
     V2, uv,
     V3, c)
-    ParticleVertex() {}
+    ParticleVertex() = default;
   };
 
   AutoClassDerivedEmpty(ParticleSystemImpl, ParticleSystemT)
@@ -64,9 +64,9 @@ namespace {
     ParticleMapT particles;
     DERIVED_TYPE_EX(ParticleSystemImpl)
 
-    ParticleSystemImpl() {}
+    ParticleSystemImpl() = default;
 
-    void Draw(DrawState* state) const {
+    void Draw(DrawState* state) const override {
       RenderStyle const& style = RenderStyle_Get();
 
       for (ParticleMapT::const_iterator it = particles.begin();
@@ -136,7 +136,7 @@ namespace {
       }
     }
 
-    void Run(float dt) {
+    void Run(float dt) override {
       for (ParticleMapT::iterator it = particles.begin();
            it != particles.end();
            ++it)

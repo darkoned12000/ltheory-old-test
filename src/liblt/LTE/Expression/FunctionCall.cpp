@@ -16,7 +16,7 @@ namespace {
     Expression, expression,
     Type, type,
     bool, isLValue)
-    ArgData() {}
+    ArgData() = default;
 
     ArgData(Expression const& expression) :
       expression(expression),
@@ -34,7 +34,7 @@ namespace {
     POOLED_TYPE
 
 
-    ExpressionFunctionCall() {}
+    ExpressionFunctionCall() = default;
 
     ExpressionFunctionCall(
         Function const& function,
@@ -47,7 +47,7 @@ namespace {
         args[i] = ArgData(arguments[i]);
     }
 
-    String Emit(Vector<String>& scope) const {
+    String Emit(Vector<String>& scope) const override {
       Stringize call = Stringize() | function->name | "(";
       for (size_t i = 0; i < args.size(); ++i) {
         if (i) call | ", ";
@@ -58,7 +58,7 @@ namespace {
       return call;
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       // SFRAME(function->name.data());
 
       for (size_t i = 0; i < args.size(); ++i) {
@@ -81,11 +81,11 @@ namespace {
       }
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return function->returnType;
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       /* TODO */
       return false;
 
@@ -101,7 +101,7 @@ namespace {
     Function, fn,
     uint, order)
     
-    FunctionMatch() {}
+    FunctionMatch() = default;
 
     friend bool operator<(FunctionMatch const& a, FunctionMatch const& b) {
       return a.order < b.order;

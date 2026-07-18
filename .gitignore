@@ -19,6 +19,11 @@ cache/
 # CMake user presets
 CMakeUserPresets.json
 
+# clang tooling: root-level symlink to build/compile_commands.json (generated).
+# The real file lives under build/ (already ignored); the symlink is a local
+# convenience for clang-tidy/clang-format/editors and should not be committed.
+/compile_commands.json
+
 # Object / archive leftovers from in-tree builds
 *.o
 *.obj

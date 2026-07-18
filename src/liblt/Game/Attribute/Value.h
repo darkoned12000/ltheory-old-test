@@ -13,11 +13,11 @@ struct Attribute_Value : public T {
     value(0)
     {}
 
-  Quantity const& GetValue() const {
+  Quantity const& GetValue() const override {
     return value;
   }
 
-  bool HasValue() const {
+  bool HasValue() const override {
     return true;
   }
 };

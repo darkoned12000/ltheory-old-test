@@ -10,7 +10,7 @@ struct Attribute_Sockets : public T {
   typedef Attribute_Sockets SelfType;
   Array<Socket> sockets;
 
-  Array<Socket> const* GetSockets() const {
+  Array<Socket> const* GetSockets() const override {
     return &sockets;
   }
 

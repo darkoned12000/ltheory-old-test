@@ -8,7 +8,7 @@
 AutoClass(ComponentMissionBoard,
   Vector<Mission>, elements)
 
-  ComponentMissionBoard() {}
+  ComponentMissionBoard() = default;
 
   void Run(ObjectT*, UpdateState&) {
     for (int i = 0; i < (int)elements.size(); ++i) {
@@ -21,16 +21,16 @@ AutoClass(ComponentMissionBoard,
 };
 
 AutoComponent(MissionBoard)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     MissionBoard.Run(this, s);
     BaseT::OnUpdate(s);
   }
 
-  void AddMissionListing(Mission const& mission) {
+  void AddMissionListing(Mission const& mission) override {
     MissionBoard.elements.push(mission);
   }
 
-  void RemoveMissionListing(Mission const& mission) {
+  void RemoveMissionListing(Mission const& mission) override {
     MissionBoard.elements.remove(mission);
   }
 };

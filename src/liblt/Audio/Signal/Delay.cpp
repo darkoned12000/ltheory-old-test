@@ -24,7 +24,7 @@ namespace Audio {
         offset(0)
         {}
 
-      double OnGet(GlobalData const& d) {
+      double OnGet(GlobalData const& d) override {
         double s = input->Get(d);
         if (d.sampleNum >= buffer.size())
           s += (amp / feedback) * buffer[offset];

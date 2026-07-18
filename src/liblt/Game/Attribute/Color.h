@@ -14,11 +14,11 @@ struct Attribute_Color : public T {
     color(0)
     {}
 
-  Color const& GetColor() const {
+  Color const& GetColor() const override {
     return color;
   }
 
-  bool HasColor() const {
+  bool HasColor() const override {
     return true;
   }
 };

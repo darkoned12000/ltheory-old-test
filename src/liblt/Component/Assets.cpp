@@ -39,7 +39,7 @@ VoidFreeFunction(Object_AddAsset,
 AutoClass(AssetsIterator,
   Object, object,
   uint, index)
-  AssetsIterator() {}
+  AssetsIterator() = default;
 };
 
 FreeFunction(AssetsIterator, Object_GetAssets,

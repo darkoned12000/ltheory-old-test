@@ -34,27 +34,27 @@ AutoClass(ComponentInterior,
 };
 
 AutoComponent(Interior)
-  void AddInterior(Object const& child) {
+  void AddInterior(Object const& child) override {
     Interior.Add(this, child);
   }
 
-  void Broadcast(Data& message) {
+  void Broadcast(Data& message) override {
     for (size_t i = 0; i < Interior.objects.size(); ++i)
       Interior.objects[i]->Broadcast(message);
     BaseT::Broadcast(message);
   }
 
-  void OnDraw(DrawState* s) {
+  void OnDraw(DrawState* s) override {
     Interior.Draw(this, s);
     BaseT::OnDraw(s);
   }
 
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Interior.Run(this, s);
     BaseT::OnUpdate(s);
   }
 
-  void RemoveInterior(Object const& child) {
+  void RemoveInterior(Object const& child) override {
     Interior.Remove(this, child);
   }
 };

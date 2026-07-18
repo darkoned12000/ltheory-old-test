@@ -9,7 +9,7 @@ namespace {
   AutoClass(ClipRegion,
     V2, lower,
     V2, upper)
-    ClipRegion() {}
+    ClipRegion() = default;
   };
 
   Vector<ClipRegion>& GetStack() {

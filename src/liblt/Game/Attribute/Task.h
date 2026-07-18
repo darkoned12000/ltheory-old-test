@@ -9,13 +9,13 @@ struct Attribute_Task : public T {
   ATTRIBUTE_COMMON(task)
   Task task;
 
-  Attribute_Task() {}
+  Attribute_Task() = default;
 
-  Task const& GetTask() const {
+  Task const& GetTask() const override {
     return task;
   }
 
-  bool HasTask() const {
+  bool HasTask() const override {
     return true;
   }
 };

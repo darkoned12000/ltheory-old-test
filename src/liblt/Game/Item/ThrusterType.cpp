@@ -48,11 +48,11 @@ typedef
 AutoClassDerivedEmpty(ThrusterType, ThrusterTypeBase)
   DERIVED_TYPE_EX(ThrusterType)
 
-  SocketType GetSocketType() const {
+  SocketType GetSocketType() const override {
     return SocketType_Thruster;
   }
 
-  Object Instantiate(ObjectT* object) {
+  Object Instantiate(ObjectT* object) override {
     return Object_Thruster(this, object);
   }
 };

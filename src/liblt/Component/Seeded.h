@@ -13,7 +13,7 @@ AutoClass(ComponentSeeded,
 };
 
 AutoComponent(Seeded)
-  uint GetSeed() const {
+  uint GetSeed() const override {
     return Seeded.seed;
   }
 };

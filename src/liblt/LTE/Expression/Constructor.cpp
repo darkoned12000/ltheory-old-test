@@ -13,19 +13,19 @@ namespace {
     DERIVED_TYPE_EX(ExpressionConstructorEmpty)
     POOLED_TYPE
     
-    ExpressionConstructorEmpty() {}
+    ExpressionConstructorEmpty() = default;
 
-    String Emit(Vector<String>& context) const {
+    String Emit(Vector<String>& context) const override {
       return Stringize() | type->name | "()";
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {}
+    void Evaluate(void* returnValue, Environment& env) const override {}
 
-    Type GetType() const {
+    Type GetType() const override {
       return type;
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return true;
     }
   };
@@ -36,7 +36,7 @@ namespace {
     DERIVED_TYPE_EX(ExpressionConstructorDefault)
     POOLED_TYPE
     
-    ExpressionConstructorDefault() {}
+    ExpressionConstructorDefault() = default;
 
     ExpressionConstructorDefault(
         Type const& type,
@@ -48,17 +48,17 @@ namespace {
         this->expressions[i] = expressions[i];
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       Vector<Field> const& fields = type->GetFields();
       for (size_t i = 0; i < expressions.size(); ++i)
         expressions[i]->Evaluate((char*)returnValue + fields[i].offset, env);
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return type;
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       for (size_t i = 0; i < expressions.size(); ++i)
         if (!expressions[i]->IsConstant(env))
           return false;

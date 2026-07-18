@@ -11,7 +11,7 @@ AutoClass(LogEntry,
   String, message,
   float, importance)
 
-  LogEntry() {}
+  LogEntry() = default;
 
   LogEntry(String const& message, float importance) :
     time(Universe_Age()),
@@ -23,7 +23,7 @@ AutoClass(LogEntry,
 AutoClass(ComponentLog,
   Vector<LogEntry>, elements)
 
-  ComponentLog() {}
+  ComponentLog() = default;
 
   void Add(String const& message, float importance) {
     elements.push(LogEntry(message, importance));
@@ -31,7 +31,7 @@ AutoClass(ComponentLog,
 };
 
 AutoComponent(Log)
-  void AddLogMessage(String const& message, float importance = 0) {
+  void AddLogMessage(String const& message, float importance = 0) override {
     Log.Add(message, importance);
   }
 };

@@ -26,7 +26,7 @@ namespace {
       }
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Visibility Pass";
     }
 
@@ -50,7 +50,7 @@ namespace {
       return state->view->CanSee(self->GetGlobalBound());
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       ObjectT* container = Camera_Get()->GetContainer();
       state->lights.clear();
       state->visible.clear();

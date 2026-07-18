@@ -16,7 +16,7 @@ AutoClass(V3T,
   typedef T MetricType;
 
   /* Constructors. */
-  V3T() {}
+  V3T() = default;
 
   V3T(V2T<T> const& xy, T z) :
     x(xy.x),

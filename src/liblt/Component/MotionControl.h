@@ -10,13 +10,13 @@
 AutoClass(ComponentMotionControl,
   Vector<SDF>, elements)
 
-  ComponentMotionControl() {}
+  ComponentMotionControl() = default;
 
   LT_API void Run(ObjectT* self, UpdateState& state);
 };
 
 AutoComponent(MotionControl)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     MotionControl.Run(this, s);
     BaseT::OnUpdate(s);
   }

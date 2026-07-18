@@ -6,11 +6,11 @@
 #include "LTE/AutoClass.h"
 #include "LTE/Color.h"
 
-AutoClassEmpty(MessageBoost) MessageBoost() {} };
-AutoClassEmpty(MessageCruise) MessageCruise() {} };
-AutoClassEmpty(MessageFire) MessageFire() {} };
-AutoClassEmpty(MessageLaunch) MessageLaunch() {} };
-AutoClassEmpty(MessageReload) MessageReload() {} };
+AutoClassEmpty(MessageBoost) MessageBoost() = default; };
+AutoClassEmpty(MessageCruise) MessageCruise() = default; };
+AutoClassEmpty(MessageFire) MessageFire() = default; };
+AutoClassEmpty(MessageLaunch) MessageLaunch() = default; };
+AutoClassEmpty(MessageReload) MessageReload() = default; };
 
 AutoClass(MessageCollectStars,
   Color, totalColor,
@@ -33,59 +33,59 @@ AutoClass(MessageCollectStars,
 };
 
 AutoClassEmpty(MessageEjected)
-  MessageEjected() {}
+  MessageEjected() = default;
 };
 
 AutoClass(MessageGetColor,
   Color, color)
-  MessageGetColor() {}
+  MessageGetColor() = default;
 };
 
 AutoClass(MessageLink,
   Object, object)
-  MessageLink() {}
+  MessageLink() = default;
 };
 
 AutoClass(MessageStartUsing,
   Object, object,
   Object, target)
-  MessageStartUsing() {}
+  MessageStartUsing() = default;
 };
 
 AutoClass(MessageStopUsing,
   Object, object)
-  MessageStopUsing() {}
+  MessageStopUsing() = default;
 };
 
 AutoClass(MessageTargetPosition,
   Position, position)
-  MessageTargetPosition() {}
+  MessageTargetPosition() = default;
 };
 
 AutoClass(MessageTargetObject,
   Object, object)
-  MessageTargetObject() {}
+  MessageTargetObject() = default;
 };
 
 AutoClass(MessageThrustAngular,
   V3, direction,
   float, amount)
-  MessageThrustAngular() {}
+  MessageThrustAngular() = default;
 };
 
 AutoClass(MessageThrustLinear,
   V3, direction)
-  MessageThrustLinear() {}
+  MessageThrustLinear() = default;
 };
 
 AutoClass(MessageUnlink,
   Object, object)
-  MessageUnlink() {}
+  MessageUnlink() = default;
 };
 
 AutoClass(MessageWaypoint,
   Object, location)
-  MessageWaypoint() {}
+  MessageWaypoint() = default;
 };
 
 #endif

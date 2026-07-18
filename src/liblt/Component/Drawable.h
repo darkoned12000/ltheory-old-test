@@ -15,16 +15,16 @@ AutoClassEmpty(ComponentDrawable)
 };
 
 AutoComponent(Drawable)
-  void OnDraw(DrawState* state) {
+  void OnDraw(DrawState* state) override {
     Drawable.Draw(this, state);
     BaseT::OnDraw(state);
   }
 
-  Renderable GetRenderable() const {
+  Renderable GetRenderable() const override {
     return Drawable.renderable ? Drawable.renderable() : nullptr;
   }
 
-  void SetSupertype(Item const& type) {
+  void SetSupertype(Item const& type) override {
     Renderable const& renderable = type->GetRenderable();
     if (renderable)
       Drawable.renderable = renderable;

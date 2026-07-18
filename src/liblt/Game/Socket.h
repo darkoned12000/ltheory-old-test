@@ -20,7 +20,7 @@ AutoClass(Socket,
   SocketType, type,
   JointType::Enum, joint)
 
-  Socket() {}
+  Socket() = default;
 
   Socket(Transform const& transform, SocketType type) :
     transform(transform),

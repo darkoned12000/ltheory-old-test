@@ -62,12 +62,12 @@ namespace {
       this->guid = nextGUID++;
     }
 
-    ~CubeMapImpl() {
+    ~CubeMapImpl() override {
       if (texture != GL_NullTexture)
         GL_DeleteTexture(texture);
     }
 
-    void BeginRender() {
+    void BeginRender() override {
       Renderer_PushBlendMode(BlendMode::Disabled);
       Renderer_PushCullMode(CullMode::Backface);
       Renderer_PushAllBuffers();
@@ -76,7 +76,7 @@ namespace {
       Renderer_PushZBuffer(false);
     }
 
-    void Bind() const {
+    void Bind() const override {
       GL_BindTexture(GL_TextureTargetBindable::CubeMap, texture);
     }
 
@@ -116,7 +116,7 @@ namespace {
         GL_PixelFormat::RGBA, GL_DataFormat::UnsignedByte, nullptr);
     }
 
-    void EndRender() {
+    void EndRender() override {
       Renderer_PopZBuffer();
       Renderer_PopScissor();
       Renderer_PopViewport();
@@ -128,7 +128,7 @@ namespace {
     void GenerateFromShader(
       Shader const& shader,
       bool generateMips,
-      float maxJobTime)
+      float maxJobTime) override
     {
       SFRAME("Generate CubeMap");
       Renderer_SetShader(*shader);
@@ -184,7 +184,7 @@ namespace {
         GenerateMipmap();
     }
 
-    void GenerateMipmap() {
+    void GenerateMipmap() override {
       Bind();
       GL_GenerateMipmap(GL_TextureTarget::CubeMap);
     }
@@ -192,7 +192,7 @@ namespace {
     void GetData(
       CubeFace::Enum face,
       uint level,
-      void* buffer) const
+      void* buffer) const override
     {
       Bind();
       GL_GetTexImage(
@@ -201,15 +201,15 @@ namespace {
         GL_TextureFormat::DataFormat(format), buffer);
     }
 
-    GL_TextureFormat::Enum GetFormat() const {
+    GL_TextureFormat::Enum GetFormat() const override {
       return format;
     }
 
-    uint GetResolution() const {
+    uint GetResolution() const override {
       return resolution;
     }
 
-    void SaveTo(String const& path, uint level) const {
+    void SaveTo(String const& path, uint level) const override {
       uint res = GetLevelResolution(resolution, level);
       Array<uchar> imageData(4 * res * res);
       Bind();
@@ -230,7 +230,7 @@ namespace {
     void SetData(
       CubeFace::Enum face,
       uint level,
-      void const* buffer) const
+      void const* buffer) const override
     {
       uint res = GetLevelResolution(resolution, level);
       Bind();

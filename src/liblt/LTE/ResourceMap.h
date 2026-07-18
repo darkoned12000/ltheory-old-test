@@ -4,7 +4,7 @@
 #include "Reference.h"
 
 struct ResourceMapT : public RefCounted {
-  virtual ~ResourceMapT() {}
+  virtual ~ResourceMapT() = default;
 
   virtual void AddDirectory(
     String const& path,

@@ -12,7 +12,7 @@ AutoClass(Time,
   uint, day,
   uint, month,
   uint, year)
-  Time() {}
+  Time() = default;
 };
 
 DeclareFunctionNoParams(Time_Current, Time)

@@ -36,8 +36,7 @@ ObjectT::ObjectT() : deleted(false) {
   id = nextObjectID.Convert<ObjectID>()++;
 }
 
-ObjectT::~ObjectT() {
-}
+ObjectT::~ObjectT() = default;
 
 bool ObjectT::CanMove() const {
   return GetContainer()->GetInterior()->allowMovement;

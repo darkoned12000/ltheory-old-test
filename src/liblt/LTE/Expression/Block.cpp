@@ -16,7 +16,7 @@ namespace {
     DERIVED_TYPE_EX(ExpressionBlock)
     POOLED_TYPE
 
-    ExpressionBlock() {}
+    ExpressionBlock() = default;
 
     ExpressionBlock(
         Vector<Expression> const& expressions,
@@ -31,7 +31,7 @@ namespace {
         this->locals[i] = locals[i];
     }
 
-    String Emit(Vector<String>& context) const {
+    String Emit(Vector<String>& context) const override {
       context.push("{");
       Vector<String> localContext;
       String value;
@@ -47,7 +47,7 @@ namespace {
       return value;
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       for (size_t i = 0; i < expressions.size(); ++i)
         if (i + 1 == expressions.size())
           expressions[i]->Evaluate(returnValue, env);
@@ -71,11 +71,11 @@ namespace {
       }
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return expressions[expressions.size() - 1]->GetType();
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       for (size_t i = 0; i < expressions.size(); ++i)
         if (!expressions[i]->IsConstant(env))
           return false;

@@ -13,7 +13,7 @@ namespace {
   AutoClass(TaskPatrolInstance,
     Position, target)
 
-    TaskPatrolInstance() {}
+    TaskPatrolInstance() = default;
   };
 
   AutoClassDerived(TaskPatrol, TaskT,
@@ -21,27 +21,27 @@ namespace {
     DERIVED_TYPE_EX(TaskPatrol)
     POOLED_TYPE
 
-    TaskPatrol() {}
+    TaskPatrol() = default;
 
-    String GetName() const {
+    String GetName() const override {
       return "Patrol";
     }
 
-    String GetNoun() const {
+    String GetNoun() const override {
       return "Patrol Unit";
     }
 
-    Capability GetRateFactor() const {
+    Capability GetRateFactor() const override {
       return Capability_Attack(1);
     }
 
-    void OnBegin(Object const& self, Data& data) {
+    void OnBegin(Object const& self, Data& data) override {
       TaskPatrolInstance it;
       it.target = self->GetPos();
       data = it;
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       TaskPatrolInstance& it = data.Convert<TaskPatrolInstance>();
 
       if (Length(self->GetPos() - it.target) < 512.0f)

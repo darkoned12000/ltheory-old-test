@@ -62,7 +62,7 @@ namespace {
     Object, nextNode,
     Object, target,
     V3, dir)
-    Passenger() {}
+    Passenger() = default;
   };
 
   AutoClassDerived(RailSlotT, RefCounted,
@@ -75,7 +75,7 @@ namespace {
     float, innerRadius,
     float, innerPosition,
     bool, allocated)
-    RailSlotT() {}
+    RailSlotT() = default;
 
     RailSlotT(
         float angle,
@@ -122,7 +122,7 @@ namespace {
     Vector<Passenger>, passengers,
     Vector<RailSlot>, slots)
 
-    WarpNodeControllerT() {}
+    WarpNodeControllerT() = default;
 
     void PrintSlot(RailSlot const& slot) {
       dbg
@@ -395,7 +395,7 @@ AutoClassDerived(WarpNode, WarpNodeBaseT,
     owner = false;
   }
 
-  void OnMessage(Data& m) {
+  void OnMessage(Data& m) override {
     BaseType::OnMessage(m);
     if (m.type == Type_Get<MessageStartUsing>()) {
       MessageStartUsing const& message = m.Convert<MessageStartUsing>();
@@ -441,7 +441,7 @@ AutoClassDerived(WarpNode, WarpNodeBaseT,
     }
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
     if (owner)
       controller->Update(state.dt);

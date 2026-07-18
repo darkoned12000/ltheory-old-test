@@ -10,7 +10,7 @@ namespace LTE {
   struct StackArray {
     T stack[capacity];
 
-    StackArray() {}
+    StackArray() = default;
 
     StackArray(T const & t) {
       for (size_t i = 0; i < capacity; ++i)

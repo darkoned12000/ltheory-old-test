@@ -22,7 +22,7 @@ namespace {
     float, alpha,
     V4, orientation)
 
-    Cloud() {}
+    Cloud() = default;
   };
 
   struct DustClouds : public RenderPassT {
@@ -50,7 +50,7 @@ namespace {
       }
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Dust Clouds";
     }
 
@@ -62,7 +62,7 @@ namespace {
       return V4(sa * axis.x, sa * axis.y, sa * axis.z, ca);
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       if (DrawState_Get("fogDensity").Convert<float>() < 0.01f)
         return;
 

@@ -12,29 +12,29 @@ namespace LTE {
       DERIVED_TYPE_EX(ButtonAnd)
       POOLED_TYPE
 
-      ButtonAnd() {}
+      ButtonAnd() = default;
 
-      bool Down() const {
+      bool Down() const override {
         return a->Down() && b->Down();
       }
 
-      float DownTime() const {
+      float DownTime() const override {
         return Min(a->DownTime(), b->DownTime());
       }
 
-      bool Pressed() const {
+      bool Pressed() const override {
         return 
           (a->Down() && b->Pressed()) ||
           (b->Down() && a->Pressed());
       }
 
-      bool Released() const {
+      bool Released() const override {
         return
           (a->Down() && b->Released()) ||
           (b->Down() && a->Released());
       }
 
-      String ToString() const {
+      String ToString() const override {
         return Stringize() | a->ToString() | " & " | b->ToString();
       }
     };

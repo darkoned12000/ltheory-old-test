@@ -81,14 +81,14 @@ AutoClassDerived(Pulse, PulseBaseT,
       self(self)
       {}
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       Position pos = self->GetPos();
       Bound3 myBox(pos);
       myBox.AddPoint(pos - self->GetLook() * (self->length * self->speed));
       return myBox;
     }
 
-    void Render(DrawState* state) const {
+    void Render(DrawState* state) const override {
       /* Frustum culling. */
       if (self->age == 0 || !state->view->CanSee(GetBound()))
         return;
@@ -126,12 +126,12 @@ AutoClassDerived(Pulse, PulseBaseT,
     Drawable.renderable = (Renderable)(new RenderComponent(this));
   }
 
-  void OnCreate() {
+  void OnCreate() override {
     BaseType::OnCreate();
     lastPos = GetPos();
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     /* TODO : Need a cleaner way to specify functionality that needs to happen
@@ -175,7 +175,7 @@ AutoClassDerived(Pulse, PulseBaseT,
     }
   }
 
-  bool CanCollide(const ObjectT* o) const {
+  bool CanCollide(const ObjectT* o) const override {
     if (Damager.source && o->GetRoot() == Damager.source->GetRoot())
       return false;
     return true;

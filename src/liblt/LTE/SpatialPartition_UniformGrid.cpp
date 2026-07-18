@@ -34,11 +34,11 @@ namespace {
                 (float)extents.z / (float)cellsZ);
     }
 
-    ~UniformGrid() {
+    ~UniformGrid() override {
       Clear();
     }
 
-    void Add(void* object, Bound3 const& box, AddFn callback, void* aux) {
+    void Add(void* object, Bound3 const& box, AddFn callback, void* aux) override {
       Coord minCoord = ToLocalClamped(box.lower);
       Coord maxCoord = ToLocalClamped(box.upper);
 
@@ -54,7 +54,7 @@ namespace {
       }
     }
 
-    void Add(void* object, Bound3 const& box) {
+    void Add(void* object, Bound3 const& box) override {
       Coord minCoord = ToLocalClamped(box.lower);
       Coord maxCoord = ToLocalClamped(box.upper);
 
@@ -65,7 +65,7 @@ namespace {
     }
 
     /* NOTE : Actually releases the memory. */
-    void Clear() {
+    void Clear() override {
       for (size_t i = 0; i < totalCells; ++i) {
         delete cellData[i];
         cellData[i] = nullptr;
@@ -90,7 +90,7 @@ namespace {
       return cellData[index];
     }
 
-    size_t GetMemoryUsage() const {
+    size_t GetMemoryUsage() const override {
       size_t memory = sizeof(*this);
       memory += sizeof(Cell*) * totalCells;
       for (size_t i = 0; i < totalCells; ++i)
@@ -99,7 +99,7 @@ namespace {
       return memory;
     }
 
-    void Remove(void* object, Bound3 const& box) {
+    void Remove(void* object, Bound3 const& box) override {
       Coord minCoord = ToLocalClamped(box.lower);
       Coord maxCoord = ToLocalClamped(box.upper);
 
@@ -122,7 +122,7 @@ namespace {
       return V3((float)x, (float)y, (float)z) * step + origin;
     }
 
-    void Query(V3 const& point, QueryFn callback, void* aux) const {
+    void Query(V3 const& point, QueryFn callback, void* aux) const override {
       Coord c = ToLocal(point);
       Cell* cell = GetCell(c.x, c.y, c.z);
       if (cell)
@@ -131,7 +131,7 @@ namespace {
             return;
     }
 
-    void Query(Bound3 const& box, QueryFn callback, void* aux) const {
+    void Query(Bound3 const& box, QueryFn callback, void* aux) const override {
       Coord minCoord = ToLocalClamped(box.lower);
       Coord maxCoord = ToLocalClamped(box.upper);
 
@@ -146,7 +146,7 @@ namespace {
       }
     }
 
-    void Query(Ray const& ray, float tMax, QueryFn callback, void* aux) const {
+    void Query(Ray const& ray, float tMax, QueryFn callback, void* aux) const override {
       V3 cellTime = Abs(step / ray.direction);
       V3 relative = (ray.origin - origin) / step;
       V3 signOffset = V3(.5f) + .5f * Sign(ray.direction);

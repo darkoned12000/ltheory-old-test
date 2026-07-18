@@ -13,9 +13,9 @@ namespace {
     DERIVED_TYPE_EX(ExpressionAssign)
     POOLED_TYPE
 
-    ExpressionAssign() {}
+    ExpressionAssign() = default;
 
-    String Emit(Vector<String>& context) const {
+    String Emit(Vector<String>& context) const override {
       String locationCall = location->Emit(context);
       String valueCall = value->Emit(context);
       context.push(Stringize()
@@ -24,15 +24,15 @@ namespace {
       return "";
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       value->Evaluate(location->GetLValue(env), env);
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return Type_Get<void>();
     }
 
-    bool IsConstant(CompileEnvironment&) const {
+    bool IsConstant(CompileEnvironment&) const override {
       return true;
     }
   };

@@ -5,7 +5,7 @@
 AutoClass(LogIterator,
   Object, object,
   uint, index)
-  LogIterator() {}
+  LogIterator() = default;
 };
 
 VoidFreeFunction(Object_AddLog,

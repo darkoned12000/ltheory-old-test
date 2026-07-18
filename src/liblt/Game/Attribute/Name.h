@@ -10,15 +10,15 @@ struct Attribute_Name : public T {
   ATTRIBUTE_COMMON(name)
   String name;
 
-  String const& GetName() const {
+  String const& GetName() const override {
     return name;
   }
 
-  bool HasName() const {
+  bool HasName() const override {
     return true;
   }
 
-  String ToString() const {
+  String ToString() const override {
     return name;
   }
 };

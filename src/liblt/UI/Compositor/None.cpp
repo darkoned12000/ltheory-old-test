@@ -14,7 +14,7 @@ namespace {
       shader = Shader_Create("identity.jsl", "ui/none.jsl");
     }
 
-    void Composite(Texture2D const& layer, Mesh const& surface) {
+    void Composite(Texture2D const& layer, Mesh const& surface) override {
       RendererState s(BlendMode::Alpha, CullMode::Backface, false, false);
       (*shader)("layer", layer);
       Renderer_SetShader(*shader);

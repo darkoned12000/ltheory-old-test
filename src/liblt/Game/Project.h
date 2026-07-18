@@ -15,14 +15,14 @@ AutoClass(ProjectAllocation,
   Quantity, completed,
   Quantity, inProgress)
 
-  ProjectAllocation() {}
+  ProjectAllocation() = default;
 };
 
 AutoClass(ProjectManagement,
   Object, manager,
   TaskInstance, task)
 
-  ProjectManagement() {}
+  ProjectManagement() = default;
 };
 
 AutoClass(ProjectMetrics,

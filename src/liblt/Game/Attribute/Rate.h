@@ -13,11 +13,11 @@ struct Attribute_Rate : public T {
     rate(0)
     {}
 
-  float const& GetRate() const {
+  float const& GetRate() const override {
     return rate;
   }
 
-  bool HasRate() const {
+  bool HasRate() const override {
     return true;
   }
 };

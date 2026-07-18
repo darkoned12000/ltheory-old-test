@@ -124,7 +124,7 @@ namespace {
     StackFrame*, frame,
     uint, samples)
 
-    FrameSamples() {}
+    FrameSamples() = default;
 
     friend bool operator<(FrameSamples const& a, FrameSamples const& b) {
       return a.samples > b.samples;
@@ -155,11 +155,11 @@ namespace {
         profiler(profiler)
         {}
 
-      char const* GetName() const {
+      char const* GetName() const override {
         return "Sampler";
       }
 
-      void OnRun(uint) {
+      void OnRun(uint) override {
         while (true) {
           if (profiler->active) {
             {
@@ -209,7 +209,7 @@ namespace {
       return thisFrame;
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Profiler";
     }
 
@@ -290,7 +290,7 @@ namespace {
       std::cout << std::flush;
     }
 
-    void Update() {
+    void Update() override {
       if (active) {
         totalFrames++;
         if (maxTime > 0 && timer.GetElapsed() >= maxTime)

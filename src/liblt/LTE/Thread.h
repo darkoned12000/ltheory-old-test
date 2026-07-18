@@ -5,7 +5,7 @@
 #include "Reference.h"
 
 struct ThreadT : public RefCounted {
-  virtual ~ThreadT() {}
+  virtual ~ThreadT() = default;
 
   virtual Job GetJob() const = 0;
   virtual bool IsFinished() const = 0;

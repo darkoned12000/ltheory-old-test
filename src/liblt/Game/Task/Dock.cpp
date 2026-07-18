@@ -15,25 +15,25 @@ namespace {
     DERIVED_TYPE_EX(TaskDock)
     POOLED_TYPE
 
-    TaskDock() {}
+    TaskDock() = default;
 
-    String GetName() const {
+    String GetName() const override {
       return "Dock";
     }
 
-    Capability GetRateFactor() const {
+    Capability GetRateFactor() const override {
       return Capability_Motion(1);
     }
 
-    Object GetTarget() const {
+    Object GetTarget() const override {
       return args.target;
     }
 
-    bool IsFinished(Object const& self, Data const&) const {
+    bool IsFinished(Object const& self, Data const&) const override {
       return self->GetContainer() == args.target;
     }
 
-    void OnUpdate(Object const& self, float dt, Data&) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data&) override { AUTO_FRAME;
       if (Condition_Nearby(self, args.target, kDockDistance))
         args.target->Dock(self);
       else

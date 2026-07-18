@@ -14,7 +14,7 @@ struct Attribute_Offset : public T {
     offset(0)
     {}
 
-  V3 GetOffset() const {
+  V3 GetOffset() const override {
     return offset;
   }
 

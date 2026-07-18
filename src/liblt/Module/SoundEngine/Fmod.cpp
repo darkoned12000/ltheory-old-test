@@ -158,16 +158,16 @@ namespace {
       playing(false)
       {}
 
-    ~SoundImpl() {
+    ~SoundImpl() override {
       if (sound)
         sound->setPaused(true);
     }
 
-    void Delete() {
+    void Delete() override {
       deleted = true;
     }
 
-    bool IsFinished() const {
+    bool IsFinished() const override {
       if (!sound)
         return true;
 
@@ -181,11 +181,11 @@ namespace {
       }
     }
 
-    bool IsLooped() const {
+    bool IsLooped() const override {
       return looped;
     }
 
-    float GetDuration() const {
+    float GetDuration() const override {
       if (!sound)
         return 0;
 
@@ -199,19 +199,19 @@ namespace {
       }
     }
 
-    float GetPan() const {
+    float GetPan() const override {
       return pan;
     }
 
-    float GetPitch() const {
+    float GetPitch() const override {
       return pitch;
     }
 
-    float GetVolume() const {
+    float GetVolume() const override {
       return volume;
     }
 
-    void SetCursor(float position) {
+    void SetCursor(float position) override {
       if (!sound) return;
 
       uint length;
@@ -222,7 +222,7 @@ namespace {
         sound = nullptr;
     }
 
-    void SetPan(float pan) {
+    void SetPan(float pan) override {
       pan = Clamp(pan, -1.0f, 1.0f);
       this->pan = pan;
       if (!sound) return;
@@ -232,7 +232,7 @@ namespace {
         sound = nullptr;
     }
 
-    void SetPitch(float pitch) {
+    void SetPitch(float pitch) override {
       this->pitch = pitch;
       if (!sound) return;
 
@@ -241,7 +241,7 @@ namespace {
         sound = nullptr;
     }
 
-    void SetPlaying(bool playing) {
+    void SetPlaying(bool playing) override {
       this->playing = playing;
       if (!sound) return;
 
@@ -250,7 +250,7 @@ namespace {
         sound = nullptr;
     }
 
-    void SetVolume(float volume) {
+    void SetVolume(float volume) override {
       volume = Saturate(volume);
       this->volume = volume;
       if (!sound) return;
@@ -268,21 +268,21 @@ namespace {
       event(event)
       {}
 
-    ~SoundEventImpl() {
+    ~SoundEventImpl() override {
       event->release();
     }
 
-    void SetParameter(int index, float value) {
+    void SetParameter(int index, float value) override {
       FMOD::EventParameter* param;
       CheckError(event->getParameterByIndex(index, &param));
       CheckError(param->setValue(value));
     }
 
-    void Start() {
+    void Start() override {
       CheckError(event->start());
     }
 
-    void Stop() {
+    void Stop() override {
       CheckError(event->stop());
     }
   };
@@ -346,26 +346,26 @@ namespace {
       CheckError(eventSystem->setMediaPath("resource/music/"));
     }
 
-    ~SoundEngineFmodImpl() {
+    ~SoundEngineFmodImpl() override {
       eventSystem->release();
     }
 
-    SoundEvent* GetEvent(char const* guid) {
+    SoundEvent* GetEvent(char const* guid) override {
       FMOD::Event* event;
       CheckError(eventSystem->getEventByGUIDString(guid, 0, &event));
       return new SoundEventImpl(event);
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "SoundEngine (FMOD)";
     }
 
-    void LoadProject(char const* name) {
+    void LoadProject(char const* name) override {
       FMOD::EventProject* project;
       CheckError(eventSystem->load(name, nullptr, &project));
     }
 
-    void Update() {
+    void Update() override {
       SFRAME("Sound Engine");
 
       FRAME("Listener Update") {
@@ -465,7 +465,7 @@ namespace {
       return s;
     }
 
-    Sound Play(Array<float> const& buffer) {
+    Sound Play(Array<float> const& buffer) override {
       FMOD::Sound* source;
       FMOD_CREATESOUNDEXINFO createSoundInfo;
       memset(&createSoundInfo, 0, sizeof(FMOD_CREATESOUNDEXINFO));
@@ -492,7 +492,7 @@ namespace {
       return s;
     }
 
-    Sound Play2D(String const& name, float volume, bool looped) {
+    Sound Play2D(String const& name, float volume, bool looped) override {
       Sound2DInstance* info = new Sound2DInstance;
       info->sound = CreateSound(name, false, looped);
       info->sound->SetVolume(volume);
@@ -507,7 +507,7 @@ namespace {
       V3 const& offset,
       float volume,
       float distanceDiv,
-      bool looped)
+      bool looped) override
     {
       Sound3DInstance* info = new Sound3DInstance;
       info->carrier = carrier;

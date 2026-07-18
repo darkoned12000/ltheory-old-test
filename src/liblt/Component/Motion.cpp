@@ -99,7 +99,7 @@ VoidFreeFunction(Object_SetMass,
 AutoClass(Impact,
   float, t,
   Position, position)
-  Impact() {}
+  Impact() = default;
 };
 
 FreeFunction(Impact, GetImpact,

@@ -25,7 +25,7 @@ namespace {
         cellVersion[i] = 0;
     }
 
-    void Add(void* object, Bound3 const& box, AddFn callback, void* aux) {
+    void Add(void* object, Bound3 const& box, AddFn callback, void* aux) override {
       version++;
       Coord minCoord = ToLocal(box.lower);
       Coord maxCoord = ToLocal(box.upper);
@@ -46,7 +46,7 @@ namespace {
       }
     }
 
-    void Add(void* object, Bound3 const& box) {
+    void Add(void* object, Bound3 const& box) override {
       version++;
       Coord minCell = ToLocal(box.lower);
       Coord maxCell = ToLocal(box.upper);
@@ -62,7 +62,7 @@ namespace {
       }
     }
 
-    void Clear() {
+    void Clear() override {
       for (size_t i = 0; i < cellData.size(); ++i)
         cellData[i].clear();
     }
@@ -79,7 +79,7 @@ namespace {
       return empty;
     }
 
-    size_t GetMemoryUsage() const {
+    size_t GetMemoryUsage() const override {
       size_t memory = sizeof(*this);
       for (size_t i = 0; i < cellData.size(); ++i) {
         memory += sizeof(cellData[i]);
@@ -100,14 +100,14 @@ namespace {
       return p1*(uint)c.x + p2*(uint)c.y + p3*(uint)c.z;
     }
 
-    void Query(V3 const& point, QueryFn callback, void* aux) const {
+    void Query(V3 const& point, QueryFn callback, void* aux) const override {
       Cell& cell = GetCell(point);
       for (size_t i = 0; i < cell.size(); ++i)
         if (!callback(cell[i], aux))
           return;
     }
 
-    void Query(Bound3 const& box, QueryFn callback, void* aux) const {
+    void Query(Bound3 const& box, QueryFn callback, void* aux) const override {
       version++;
       Coord minCell = ToLocal(box.lower);
       Coord maxCell = ToLocal(box.upper);
@@ -126,7 +126,7 @@ namespace {
       }
     }
 
-    void Query(Ray const& ray, float tMax, QueryFn callback, void* aux) const {
+    void Query(Ray const& ray, float tMax, QueryFn callback, void* aux) const override {
       V3 cellTime = Abs(cellSize / ray.direction);
       V3 relative = ray.origin / cellSize;
       V3 signOffset = V3(.5f) + .5f * Sign(ray.direction);
@@ -158,7 +158,7 @@ namespace {
       }
     }
 
-    void Remove(void* object, Bound3 const& box) {
+    void Remove(void* object, Bound3 const& box) override {
       version++;
       Coord minCell = ToLocal(box.lower);
       Coord maxCell = ToLocal(box.upper);

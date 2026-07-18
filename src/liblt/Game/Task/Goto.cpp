@@ -21,7 +21,7 @@ namespace {
   AutoClass(Edge,
     PathNode, node,
     float, cost)
-    Edge() {}
+    Edge() = default;
   };
 
   AutoClassDerived(PathNodeT, RefCounted,
@@ -33,7 +33,7 @@ namespace {
     PathNode, prev)
     POOLED_TYPE
 
-    PathNodeT() {}
+    PathNodeT() = default;
     
     PathNodeT(Object const& object) :
       object(object),
@@ -47,7 +47,7 @@ namespace {
 
   AutoClassDerived(PathT, RefCounted,
     Vector<Object>, nodes)
-    PathT() {}
+    PathT() = default;
   };
 
   Path Path_Create(
@@ -166,29 +166,29 @@ namespace {
     DERIVED_TYPE_EX(TaskGoto)
     POOLED_TYPE
 
-    TaskGoto() {}
+    TaskGoto() = default;
 
-    String GetName() const {
+    String GetName() const override {
       return "Goto";
     }
 
-    Capability GetRateFactor() const {
+    Capability GetRateFactor() const override {
       return Capability_Motion(1);
     }
 
-    Object GetTarget() const {
+    Object GetTarget() const override {
       return args.target;
     }
 
-    bool IsFinished(Object const& self, Data const&) const {
+    bool IsFinished(Object const& self, Data const&) const override {
       return Condition_Nearby(self, args.target, args.distance);
     }
 
-    void OnBegin(Object const& self, Data& data) {
+    void OnBegin(Object const& self, Data& data) override {
       data = TaskGotoInstance();
     }
 
-    void OnMessage(Object const& self, Data& data, Data& m) {
+    void OnMessage(Object const& self, Data& data, Data& m) override {
       if (m.type == Type_Get<MessageWaypoint>()) {
         TaskGotoInstance& it = data.Convert<TaskGotoInstance>();
         if (it.flying) {
@@ -221,7 +221,7 @@ namespace {
       }
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       TaskGotoInstance& it = data.Convert<TaskGotoInstance>();
 
       /* If we're not in the same container, need to figure out how to get

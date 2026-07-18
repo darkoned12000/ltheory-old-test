@@ -10,28 +10,28 @@ namespace {
     V4, color,
     V4, uvsize,
     V2, bevelvariance)
-    RectVertex() {}
+    RectVertex() = default;
   };
 
   AutoClassDerived(Rect, GlyphT, Glyph_Rect_Args, args)
     DERIVED_TYPE_EX(Rect)
     POOLED_TYPE
 
-    Rect() {}
+    Rect() = default;
 
-    Glyph Clone() const {
+    Glyph Clone() const override {
       return Glyph_Rect(args);
     }
 
-    Shader GetShader() const {
+    Shader GetShader() const override {
       return Shader_Create("widget.jsl", "ui/rect.jsl");
     }
 
-    Type GetVertexFormat() const {
+    Type GetVertexFormat() const override {
       return Type_Get<RectVertex>();
     }
 
-    void Submit(void* vvertices, GlyphState const& s) const {
+    void Submit(void* vvertices, GlyphState const& s) const override {
       RectVertex* vertices = (RectVertex*)vvertices;
 
       V2 ss = args.position * s.scale + s.center;
@@ -50,7 +50,7 @@ namespace {
         V3(ss + V2(-size.x,  size.y), 0), color, V4(0, 1, size.x, size.y), bv);
     }
 
-    Glyph Transform(V2 const& offset, V2 const& scale) {
+    Glyph Transform(V2 const& offset, V2 const& scale) override {
       args.position = scale * args.position + offset;
       args.size *= scale;
       return this;

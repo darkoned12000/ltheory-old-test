@@ -20,9 +20,9 @@ namespace {
     Vector<uchar>, contents)
 
     DERIVED_TYPE_EX(DirectBlock)
-    DirectBlock() {}
+    DirectBlock() = default;
 
-    void GetData(uchar*& pData, Array<uchar> const& source) const {
+    void GetData(uchar*& pData, Array<uchar> const& source) const override {
       memcpy(pData, contents.data(), contents.size());
       pData += contents.size();
     }
@@ -33,9 +33,9 @@ namespace {
     size_t, length)
 
     DERIVED_TYPE_EX(IndirectBlock)
-    IndirectBlock() {}
+    IndirectBlock() = default;
 
-    void GetData(uchar*& pData, Array<uchar> const& source) const {
+    void GetData(uchar*& pData, Array<uchar> const& source) const override {
       memcpy(pData, source.data() + offset, length);
       pData += length;
     }
@@ -68,11 +68,11 @@ namespace LTE {
     size_t srcSize;
     size_t dstSize;
 
-    ~DiffImpl() {
+    ~DiffImpl() override {
       blocks.deleteElements();
     }
 
-    Array<uchar>* Inflate(const Array<uchar>& source) {
+    Array<uchar>* Inflate(const Array<uchar>& source) override {
       if (source.size() != srcSize)
         return NULL;
 

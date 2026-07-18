@@ -14,9 +14,9 @@ namespace {
     DERIVED_TYPE_EX(ExpressionWhile)
     POOLED_TYPE
 
-    ExpressionWhile() {}
+    ExpressionWhile() = default;
 
-    String Emit(Vector<String>& context) const {
+    String Emit(Vector<String>& context) const override {
       /* Predicate. */ {
         Vector<String> predContext;
         String predCall = predicate->Emit(predContext);
@@ -37,7 +37,7 @@ namespace {
       return "";
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       bool pred;
       while (true) {
         predicate->Evaluate(&pred, env);
@@ -54,11 +54,11 @@ namespace {
       }
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return Type_Get<void>();
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return predicate->IsConstant(env) && statement->IsConstant(env);
     }
   };

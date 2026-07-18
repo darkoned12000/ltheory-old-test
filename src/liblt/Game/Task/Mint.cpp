@@ -15,29 +15,29 @@ namespace {
     DERIVED_TYPE_EX(TaskMint)
     POOLED_TYPE
 
-    TaskMint() {}
+    TaskMint() = default;
 
-    float GetDuration() const {
+    float GetDuration() const override {
       return args.blueprint->GetValue();
     }
 
-    Icon GetIcon() const {
+    Icon GetIcon() const override {
       return Icon_Disc();
     }
 
-    String GetName() const {
+    String GetName() const override {
       return "Mint Assembly Chip";
     }
 
-    String GetNoun() const {
+    String GetNoun() const override {
       return "Assembly Chip Lab";
     }
 
-    Capability GetRateFactor() const {
+    Capability GetRateFactor() const override {
       return Capability_Research(1);
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       if (RandExp() < dt) {
         Blueprint* bp = (Blueprint*)args.blueprint.t;
         self->GetRoot()->AddItem(bp->assemblyChip, 1);

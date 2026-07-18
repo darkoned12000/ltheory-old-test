@@ -12,7 +12,7 @@ namespace {
     char const*, file,
     int,         line,
     char const*, annotation)
-    StackFrameT() {}
+    StackFrameT() = default;
   };
 
   StackFrameT frames[kMaxStackDepth];

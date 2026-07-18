@@ -9,17 +9,17 @@ namespace {
     float, value)
     DERIVED_TYPE_EX(SDFMultiply)
 
-    SDFMultiply() {}
+    SDFMultiply() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       return source->Evaluate(p) * value;
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return source->GetBound();
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return Stringize()
         | "(" | value | " * max(" | source->GetCode(p) | ", 0.))";
     }

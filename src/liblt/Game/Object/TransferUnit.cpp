@@ -71,7 +71,7 @@ AutoClassDerived(TransferUnit, TransferUnitBaseT,
       self(self)
       {}
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       if (self->active < 0.001f)
         return Bound3(0);
 
@@ -79,7 +79,7 @@ AutoClassDerived(TransferUnit, TransferUnitBaseT,
       return Bound3(-r, r);
     }
 
-    void Render(DrawState* state) const {
+    void Render(DrawState* state) const override {
       if (self->active < 0.001f)
         return;
       
@@ -117,11 +117,11 @@ AutoClassDerived(TransferUnit, TransferUnitBaseT,
     firing(false)
     {}
 
-  bool CanCollide(ObjectT const* object) const {
+  bool CanCollide(ObjectT const* object) const override {
     return object->GetRoot() != GetRoot();
   }
 
-  void OnMessage(Data& m) {
+  void OnMessage(Data& m) override {
     BaseType::OnMessage(m);
     if (m.type == Type_Get<MessageFire>())
       firing = true;
@@ -130,7 +130,7 @@ AutoClassDerived(TransferUnit, TransferUnitBaseT,
       targetPos.target = m.Convert<MessageTargetPosition>().position;
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     Pluggable.powerRequest = Supertyped.type->GetPowerDrain();

@@ -13,19 +13,19 @@ namespace {
     float, height)
     DERIVED_TYPE_EX(SDFWedge)
 
-    SDFWedge() {}
+    SDFWedge() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       NOT_IMPLEMENTED
       return 0;
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       float r = radius + radialExtent;
       return Bound3(center - V3(r, height, r), center + V3(r, height, r));
     }
 
-    String GetCode(const String& p) const {
+    String GetCode(const String& p) const override {
       return Stringize()
         | "wedge(" | p | ", " | center | ", " | angle | ", "
         | angularExtent | ", " | radius | ", " | radialExtent | ", "

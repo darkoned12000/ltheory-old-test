@@ -15,27 +15,27 @@ namespace {
     DERIVED_TYPE_EX(ExpressionAddress)
     POOLED_TYPE
 
-    ExpressionAddress() {}
+    ExpressionAddress() = default;
 
     ExpressionAddress(Expression const& location) :
       location(location),
       type(Type_Pointer(location->GetType()))
       {}
 
-    String Emit(Vector<String>& scope) const {
+    String Emit(Vector<String>& scope) const override {
       String label = location->Emit(scope);
       return "(&" + label + ")";
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       *(void**)returnValue = location->GetLValue(env);
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return type;
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return false;
     }
   };

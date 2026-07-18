@@ -12,16 +12,16 @@ namespace {
     DERIVED_TYPE_EX(ExpressionArray)
     POOLED_TYPE
 
-    ExpressionArray() {}
+    ExpressionArray() = default;
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return type;
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return false;
     }
   };

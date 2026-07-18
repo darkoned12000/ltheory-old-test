@@ -8,21 +8,21 @@
 
 AutoClass(ComponentSupertyped,
   Item, type)
-  ComponentSupertyped() {}
+  ComponentSupertyped() = default;
 };
 
 AutoComponent(Supertyped)
-  void SetSupertype(Item const& type) {
+  void SetSupertype(Item const& type) override {
     Supertyped.type = type;
 
     BaseT::SetSupertype(type);
   }
 
-  Icon GetIcon() const {
+  Icon GetIcon() const override {
     return Supertyped.type->GetIcon();
   }
 
-  ItemT* GetSupertype() const {
+  ItemT* GetSupertype() const override {
     return Supertyped.type.t;
   }
 };

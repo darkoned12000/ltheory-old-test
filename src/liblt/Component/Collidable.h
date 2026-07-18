@@ -25,7 +25,7 @@ AutoClass(ComponentCollidable,
 };
 
 AutoComponent(Collidable)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Collidable.Run(this, s);
     BaseT::OnUpdate(s);
   }

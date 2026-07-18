@@ -18,7 +18,7 @@ namespace {
     DERIVED_TYPE_EX(ExpressionExpressionCall)
     POOLED_TYPE
 
-    ExpressionExpressionCall() {}
+    ExpressionExpressionCall() = default;
 
     ExpressionExpressionCall(
         ScriptFunction const& function,
@@ -30,7 +30,7 @@ namespace {
         args[i] = arguments[i];
     }
 
-    String Emit(Vector<String>& scope) const {
+    String Emit(Vector<String>& scope) const override {
       Stringize call = Stringize() | function->name | "(";
       for (size_t i = 0; i < args.size(); ++i) {
         if (i) call | ", ";
@@ -41,7 +41,7 @@ namespace {
       return call;
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       // SFRAME(&function->name.front());
       uint prevBase = env.base;
       uint newBase = env.registers.size();
@@ -70,11 +70,11 @@ namespace {
       env.base = prevBase;
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return function->returnType;
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       /* TODO. */
       return false;
       // return function->expression->IsConstant(env);

@@ -27,11 +27,11 @@ typedef
 AutoClassDerivedEmpty(ScannerType, ScannerTypeBase)
   DERIVED_TYPE_EX(ScannerType)
 
-  SocketType GetSocketType() const {
+  SocketType GetSocketType() const override {
     return SocketType_Generator;
   }
 
-  Object Instantiate(ObjectT* parent) {
+  Object Instantiate(ObjectT* parent) override {
     return Object_Scanner(this);
   }
 };

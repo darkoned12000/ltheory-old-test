@@ -27,26 +27,26 @@ namespace {
       return holoShader->GetShader();
     }
 
-    void OnBegin() {
+    void OnBegin() override {
       Renderer_PushBlendMode(BlendMode::Additive);
       Renderer_PushZBuffer(true);
       Renderer_PushZWritable(true);
       (*holoShader)("seed", Rand());
     }
 
-    void OnEnd() {
+    void OnEnd() override {
       Renderer_PopBlendMode();
       Renderer_PopZBuffer();
       Renderer_PopZWritable();
     }
 
-    void Render(Geometry const& geometry) {
+    void Render(Geometry const& geometry) override {
       currentShader->Begin();
       geometry->Draw();
       currentShader->End();
     }
 
-    void SetShader(ShaderInstanceT* shader) {
+    void SetShader(ShaderInstanceT* shader) override {
       bool hasBlending = shader->HasBlending();
       if (hasBlending)
         currentShader = shader;
@@ -57,11 +57,11 @@ namespace {
       DrawState_Inject(currentShader->GetShader());
     }
 
-    void SetTransform(Transform const& transform) {
+    void SetTransform(Transform const& transform) override {
       Renderer_SetWorldTransform(transform);
     }
 
-    bool WillRender() const {
+    bool WillRender() const override {
       return true;
     }
   };

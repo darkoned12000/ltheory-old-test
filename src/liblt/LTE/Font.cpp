@@ -51,7 +51,7 @@ namespace {
     V3, p,
     V4, color,
     V3, uvScale)
-    TextVertex() {}
+    TextVertex() = default;
   };
 
   struct FontImpl : public FontT {
@@ -65,7 +65,7 @@ namespace {
     FontImpl() :
       cursor(0) {}
 
-    ~FontImpl() {
+    ~FontImpl() override {
       /* Clean up FT. */ {
         FT_Done_Face(face);
         FT_Done_FreeType(ft);
@@ -210,7 +210,7 @@ namespace {
       float size,
       Color const& color,
       float alpha,
-      bool additive) const
+      bool additive) const override
     {
       AUTO_FRAME;
       size /= kFontSize;
@@ -307,7 +307,7 @@ namespace {
       return kerning;
     }
 
-    V2 GetTextSize(String const& text, float size) const {
+    V2 GetTextSize(String const& text, float size) const override {
       float sx = 0;
       float sy = size;
       size /= kFontSize;

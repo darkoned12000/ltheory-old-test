@@ -10,11 +10,11 @@ struct Attribute_Icon : public T {
   ATTRIBUTE_COMMON(icon)
   Icon icon;
 
-  Icon const& GetIcon() const {
+  Icon const& GetIcon() const override {
     return icon;
   }
 
-  bool HasIcon() const {
+  bool HasIcon() const override {
     return true;
   }
 };

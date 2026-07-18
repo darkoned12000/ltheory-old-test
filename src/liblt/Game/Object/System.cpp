@@ -76,7 +76,7 @@ AutoClassDerived(System, SystemBaseT,
   V2 gDir;
   V2 bDir;
 
-  System() {}
+  System() = default;
 
   void Initialize() {
     RNG rng = RNG_MTG(Seeded.seed);
@@ -182,7 +182,7 @@ AutoClassDerived(System, SystemBaseT,
     return curve;
   }
 
-  void BeginDrawInterior(DrawState* state) {
+  void BeginDrawInterior(DrawState* state) override {
     if (Keyboard_Pressed(Key_F6))
       RandomizeColors(RNG_MTG(rand()));
 
@@ -209,11 +209,11 @@ AutoClassDerived(System, SystemBaseT,
     DrawState_Push("colorPoints", (float)kColorPoints);
   }
 
-  void OnDrawInterior(DrawState* state) {
+  void OnDrawInterior(DrawState* state) override {
     interior->Render(state);
   }
 
-  void EndDrawInterior(DrawState* state) {
+  void EndDrawInterior(DrawState* state) override {
     DrawState_Pop("starColor");
     DrawState_Pop("starPos");
 

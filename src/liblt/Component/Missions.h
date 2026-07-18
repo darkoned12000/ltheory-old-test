@@ -8,22 +8,22 @@
 AutoClass(ComponentMissions,
   Vector<Mission>, elements)
 
-  ComponentMissions() {}
+  ComponentMissions() = default;
 
   void Run(ObjectT* self, UpdateState& state) {}
 };
 
 AutoComponent(Missions)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Missions.Run(this, s);
     BaseT::OnUpdate(s);
   }
 
-  void AddMission(Mission const& mission) {
+  void AddMission(Mission const& mission) override {
     Missions.elements.push(mission);
   }
 
-  void RemoveMission(Mission const& mission) {
+  void RemoveMission(Mission const& mission) override {
     Missions.elements.remove(mission);
   }
 };

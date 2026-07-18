@@ -15,11 +15,11 @@ struct Attribute_Docks : public T {
     dockCapacity(0)
     {}
 
-  uint GetDockCapacity() const {
+  uint GetDockCapacity() const override {
     return dockCapacity;
   }
 
-  Vector<Bound3> const* GetDocks() const {
+  Vector<Bound3> const* GetDocks() const override {
     return &docks;
   }
 

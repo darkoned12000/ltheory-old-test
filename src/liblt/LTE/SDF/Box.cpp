@@ -16,15 +16,15 @@ namespace {
       sides(1)
       {}
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       return Length(Max(Abs(p - center) - sides, V3(0)));
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return Bound3(center - sides, center + sides);
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return Stringize()
         | "box(" | p | ", " | center | ", " | sides | ")";
     }
@@ -45,15 +45,15 @@ namespace {
       radius(.5f)
       {}
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       return Length(Max(Abs(p - center) - sides * (1.f - radius), V3(0))) - radius;
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return Bound3(center - sides, center + sides);
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return Stringize()
         | "boxr(" | p | ", " | center | ", " | sides | ", "
         | radius | ")";

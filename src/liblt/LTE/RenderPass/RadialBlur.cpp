@@ -14,7 +14,7 @@ namespace {
     float falloff;
     DERIVED_TYPE_EX(RadialBlur)
 
-    RadialBlur() {}
+    RadialBlur() = default;
 
     RadialBlur(
         V2 const& center,
@@ -28,11 +28,11 @@ namespace {
       falloff(falloff)
       {}
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Radial Blur";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       Renderer_SetShader(*shader);
       (*shader)
         ("texture", state->primary)

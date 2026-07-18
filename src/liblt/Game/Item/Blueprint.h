@@ -21,7 +21,7 @@ typedef
 AutoClass(Modifier,
   String, attribute,
   float, multiplier)
-  Modifier() {}
+  Modifier() = default;
 };
 
 AutoClassDerived(Blueprint, BlueprintBase,
@@ -31,7 +31,7 @@ AutoClassDerived(Blueprint, BlueprintBase,
 
   DERIVED_TYPE_EX(Blueprint)
 
-  Blueprint() {}
+  Blueprint() = default;
 };
 
 #endif

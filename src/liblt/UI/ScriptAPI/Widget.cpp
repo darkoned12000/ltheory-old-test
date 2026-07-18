@@ -12,7 +12,7 @@ TypeAlias(Reference<WidgetT>, Widget);
 AutoClass(WidgetChildIterator,
   Widget, widget,
   size_t, index)
-  WidgetChildIterator() {}
+  WidgetChildIterator() = default;
 };
 
 namespace Children {

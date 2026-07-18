@@ -63,7 +63,7 @@ AutoClassDerived(WeaponType, WeaponTypeBase,
     spread(0)
     {}
 
-  SocketType GetSocketType() const {
+  SocketType GetSocketType() const override {
     return SocketType_Turret;
   }
 
@@ -75,7 +75,7 @@ AutoClassDerived(WeaponType, WeaponTypeBase,
 
   LT_API float GetDPS() const;
 
-  LT_API Object Instantiate(ObjectT* parent);
+  LT_API Object Instantiate(ObjectT* parent) override;
 };
 
 #endif

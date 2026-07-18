@@ -9,28 +9,28 @@ namespace {
     V3, p,
     V4, color,
     V4, uvRadiusAngle)
-    RingVertex() {}
+    RingVertex() = default;
   };
 
   AutoClassDerived(Ring, GlyphT, Glyph_Ring_Args, args)
     DERIVED_TYPE_EX(Ring)
     POOLED_TYPE
 
-    Ring() {}
+    Ring() = default;
 
-    Glyph Clone() const {
+    Glyph Clone() const override {
       return Glyph_Ring(args);
     }
 
-    Shader GetShader() const {
+    Shader GetShader() const override {
       return Shader_Create("widget.jsl", "ui/ring.jsl");
     }
 
-    Type GetVertexFormat() const {
+    Type GetVertexFormat() const override {
       return Type_Get<RingVertex>();
     }
 
-    void Submit(void* vvertices, GlyphState const& s) const {
+    void Submit(void* vvertices, GlyphState const& s) const override {
       RingVertex* vertices = (RingVertex*)vvertices;
 
       V2 ss = args.position * s.scale + s.center;
@@ -45,7 +45,7 @@ namespace {
       vertices[3] = RingVertex(V3(ss + V2(-r,  r), 0), color, V4(0, 1, r, a));
     }
 
-    Glyph Transform(V2 const& offset, V2 const& scale) {
+    Glyph Transform(V2 const& offset, V2 const& scale) override {
       args.position = scale * args.position + offset;
       args.radius *= scale.GetMin();
       return this;

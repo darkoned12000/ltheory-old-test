@@ -4,7 +4,7 @@
 AutoClass(TargetIterator,
   Object, object,
   uint, index)
-  TargetIterator() {}
+  TargetIterator() = default;
 };
 
 VoidFreeFunction(Object_AddTarget,

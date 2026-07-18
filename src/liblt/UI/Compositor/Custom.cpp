@@ -9,15 +9,15 @@ namespace {
     ScriptFunction, composite,
     Compositor, base)
 
-    CompositorCustom() {}
+    CompositorCustom() = default;
 
-    void Composite(Texture2D const& layer, Mesh const& surface) {
+    void Composite(Texture2D const& layer, Mesh const& surface) override {
       Texture2D result;
       composite->VoidCall(&result, instance, layer);
       base->Composite(result, surface);
     }
 
-    void Update() {
+    void Update() override {
       base->Update();
     }
   };

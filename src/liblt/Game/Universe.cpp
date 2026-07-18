@@ -26,7 +26,7 @@ AutoClassDerivedEmpty(UniverseImpl, Universe)
     gActive.push(this);
   }
 
-  ~UniverseImpl() {
+  ~UniverseImpl() override {
     gActive.remove(this);
   }
 };

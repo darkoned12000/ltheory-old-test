@@ -54,9 +54,9 @@ AutoClassDerived(ShipType, ShipTypeBase,
   Item, standardThruster)
   DERIVED_TYPE_EX(ShipType)
 
-  ShipType() {}
+  ShipType() = default;
 
-  Object Instantiate(ObjectT* parent) {
+  Object Instantiate(ObjectT* parent) override {
     Object ship = Object_Ship(this);
     while (ship->Plug(standardThruster)) {}
     ship->Plug(standardGenerator);

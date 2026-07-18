@@ -11,7 +11,7 @@ namespace {
     V3, phase)
     DERIVED_TYPE_EX(SDFRepeat)
 
-    SDFRepeat() {}
+    SDFRepeat() = default;
 
     SDFRepeat(
         SDF const& source,
@@ -26,16 +26,16 @@ namespace {
       box = SDF_Box(boxBound.GetCenter(), boxBound.GetSideLengths() / 2.f);
     }
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       V3 cp = Mod(p - phase, frequency) + phase;
       return Max(source->Evaluate(cp), box->Evaluate(p));
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return box->GetBound();
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return Stringize()
         | "max(" | source->GetCode(Stringize()
         | "(mod(" | p | " - " | phase | ", " | frequency | ") + "

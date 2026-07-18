@@ -13,7 +13,7 @@ namespace {
     float, rcpShape)
     DERIVED_TYPE_EX(SDFPolyhedron)
 
-    SDFPolyhedron() {}
+    SDFPolyhedron() = default;
 
     SDFPolyhedron(Vector<Plane> const& planes, int shape) :
       planes(planes),
@@ -22,7 +22,7 @@ namespace {
       rcpShape = 1 / this->shape;
     }
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       float d = 0;
       for (size_t i = 0; i < planes.size(); ++i) {
         float dot = Dot(p, planes[i].normal) / planes[i].w;
@@ -31,11 +31,11 @@ namespace {
       return Pow(d, rcpShape) - 1;
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return Bound3(-FLT_MAX, FLT_MAX);
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       Stringize str;
       str | "(pow(";
       for (size_t i = 0; i < planes.size(); ++i) {
@@ -53,20 +53,20 @@ namespace {
     Vector<Plane>, planes)
     DERIVED_TYPE_EX(SDFPolyhedron0)
 
-    SDFPolyhedron0() {}
+    SDFPolyhedron0() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       float d = planes[0].PointTest(p);
       for (size_t i = 1; i < planes.size(); ++i)
         d = Max(d, planes[i].PointTest(p));
       return d;
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return Bound3(-FLT_MAX, FLT_MAX);
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       Stringize str;
       for (size_t i = 0; i < planes.size(); ++i) {
         if (i + 1 < planes.size())

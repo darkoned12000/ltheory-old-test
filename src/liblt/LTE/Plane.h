@@ -9,7 +9,7 @@ AutoClassDerived(PlaneT, NullBase< PlaneT<T> >,
   V3T<T>, normal,
   T, w)
 
-  PlaneT() {}
+  PlaneT() = default;
 
   PlaneT(V3T<T> const& origin, V3T<T> const& normal) :
     normal(Normalize(normal))

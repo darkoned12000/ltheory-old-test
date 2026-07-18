@@ -40,7 +40,7 @@ namespace LTE {
       ReadFrom(filename);
     }
 
-    ~ArchiveBasicImpl() {
+    ~ArchiveBasicImpl() override {
       stream.close();
 
       if (modified) {
@@ -86,7 +86,7 @@ namespace LTE {
         free(files[i].data);
     }
 
-    void Dump() const {
+    void Dump() const override {
       std::cout << files.size() << " files:\n";
       for (size_t i = 0; i < files.size(); ++i)
         std::cout << "\t[" << i << "] : "
@@ -95,7 +95,7 @@ namespace LTE {
                   << files[i].data << " @ " << files[i].size << ")\n";
     }
 
-    bool Contains(const String& filename) {
+    bool Contains(const String& filename) override {
       String lowerFilename = filename;
       ToLower(lowerFilename);
 
@@ -105,11 +105,11 @@ namespace LTE {
       return false;
     }
 
-    size_t GetFileCount() const {
+    size_t GetFileCount() const override {
       return files.size();
     }
 
-    String GetFileName(size_t index) const {
+    String GetFileName(size_t index) const override {
       LTE_ASSERT(index < files.size());
       return files[index].name;
     }
@@ -124,7 +124,7 @@ namespace LTE {
       }
     }
 
-    Array<uchar>* Read(const String& filename) {
+    Array<uchar>* Read(const String& filename) override {
       String lowerFilename = filename;
       ToLower(lowerFilename);
 
@@ -191,7 +191,7 @@ namespace LTE {
       }
     }
 
-    bool Write(const String& filename, const Array<uchar>& data) {
+    bool Write(const String& filename, const Array<uchar>& data) override {
       String lowerFilename = filename;
       ToLower(lowerFilename);
 

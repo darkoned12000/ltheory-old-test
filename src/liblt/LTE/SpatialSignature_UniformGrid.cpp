@@ -53,7 +53,7 @@ namespace LTE {
       rcpStep = V3(1) / step;
     }
 
-    void Add(void* object, Bound3 const& box, AddFn cb, void* aux) {
+    void Add(void* object, Bound3 const& box, AddFn cb, void* aux) override {
       Coord minCoord = ToLocal(box.lower);
       Coord maxCoord = ToLocal(box.upper);
       for (int x = minCoord.x; x <= maxCoord.x; ++x)
@@ -63,7 +63,7 @@ namespace LTE {
           cellData[GetCellIndex(x, y, z)] = true;
     }
 
-    void Add(void* object, Bound3 const& box) {
+    void Add(void* object, Bound3 const& box) override {
       Coord minCoord = ToLocal(box.lower);
       Coord maxCoord = ToLocal(box.upper);
       for (int x = minCoord.x; x <= maxCoord.x; ++x)
@@ -72,7 +72,7 @@ namespace LTE {
         cellData[GetCellIndex(x, y, z)] = true;
     }
 
-    void Clear() {
+    void Clear() override {
       for (size_t i = 0; i < cellData.size(); ++i)
         cellData[i] = false;
     }
@@ -89,11 +89,11 @@ namespace LTE {
       return (size_t)(x*cellsYZ + y*cellsZ + z) % totalCells;
     }
 
-    size_t GetMemoryUsage() const {
+    size_t GetMemoryUsage() const override {
       return sizeof(*this) + cellData.size() / 8;
     }
 
-    float GetOccupancy() const {
+    float GetOccupancy() const override {
       size_t occupied = 0;
       for (size_t i = 0; i < cellData.size(); ++i)
         if (cellData[i])
@@ -101,7 +101,7 @@ namespace LTE {
       return (float)occupied / (float)cellData.size();
     }
 
-    bool Query(Bound3 const& box) const {
+    bool Query(Bound3 const& box) const override {
       Coord minCoord = ToLocal(box.lower);
       Coord maxCoord = ToLocal(box.upper);
       for (int x = minCoord.x; x <= maxCoord.x; ++x)

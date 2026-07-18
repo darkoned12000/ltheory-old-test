@@ -9,22 +9,22 @@
 AutoClass(ComponentAsset,
   Player, owner)
 
-  ComponentAsset() {}
+  ComponentAsset() = default;
 
   LT_API void Run(ObjectT* self, UpdateState& state);
 };
 
 AutoComponent(Asset)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Asset.Run(this, s);
     BaseT::OnUpdate(s);
   }
 
-  Player const& GetOwner() const {
+  Player const& GetOwner() const override {
     return Asset.owner;
   }
 
-  void SetOwner(Player const& owner) {
+  void SetOwner(Player const& owner) override {
     if (Asset.owner)
       Asset.owner->RemoveAsset(this);
     owner->AddAsset(this);

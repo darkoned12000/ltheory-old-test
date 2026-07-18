@@ -59,17 +59,17 @@ AutoClassDerived(Ship, ShipBaseT,
   DERIVED_TYPE_EX(Ship)
   POOLED_TYPE
   
-  Ship() {}
+  Ship() = default;
 
-  float GetCullDistanceMult() const {
+  float GetCullDistanceMult() const override {
     return 1.0f;
   }
 
-  Signature GetSignature() const {
+  Signature GetSignature() const override {
     return Signature(GetRadius(), 8, 0.1f, 4);
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
 #if 0

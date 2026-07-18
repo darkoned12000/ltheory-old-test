@@ -19,29 +19,29 @@ namespace {
     DERIVED_TYPE_EX(TaskResearch)
     POOLED_TYPE
 
-    TaskResearch() {}
+    TaskResearch() = default;
 
-    float GetDuration() const {
+    float GetDuration() const override {
       return args.blueprint->GetValue();
     }
 
-    Icon GetIcon() const {
+    Icon GetIcon() const override {
       return Icon_Task_Research();
     }
 
-    String GetName() const {
+    String GetName() const override {
       return "Research";
     }
 
-    String GetNoun() const {
+    String GetNoun() const override {
       return "Research Lab";
     }
 
-    Capability GetRateFactor() const {
+    Capability GetRateFactor() const override {
       return Capability_Research(1);
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       if (10.0 * RandExp() < dt) {
         Item item = Item_Blueprint_Derived(args.blueprint.t);
         self->GetRoot()->AddItem(item, 1);

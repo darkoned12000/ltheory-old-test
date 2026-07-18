@@ -26,7 +26,7 @@ namespace {
   struct PatchImpl : public Patch {
     Vector<PatchEntry> entries;
 
-    void Add(Location const& target, Location const& patchFile) {
+    void Add(Location const& target, Location const& patchFile) override {
       AutoPtr<Array<uchar> > srcData = target->Exists()
         ? target->Read()
         : AutoPtr<Array<uchar> >(new Array<uchar>);
@@ -38,7 +38,7 @@ namespace {
       entries << e;
     }
 
-    bool Apply() const {
+    bool Apply() const override {
       Array< AutoPtr<Array<uchar> > > backups(entries.size());
 
       for (size_t i = 0; i < entries.size(); ++i) {

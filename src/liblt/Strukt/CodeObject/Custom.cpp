@@ -14,17 +14,17 @@ namespace {
     DERIVED_TYPE_EX(CodeObjectCustom)
     POOLED_TYPE
 
-    CodeObjectCustom() {}
+    CodeObjectCustom() = default;
 
-    String GetName() const {
+    String GetName() const override {
       return "Custom Code Object";
     }
 
-    String GetType() const {
+    String GetType() const override {
       return "unknown";
     }
 
-    Widget GetWidget() const {
+    Widget GetWidget() const override {
       return nullptr;
     }
   };

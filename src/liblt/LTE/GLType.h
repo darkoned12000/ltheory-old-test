@@ -4,7 +4,7 @@
 template <class T, int N>
 struct ExplicitTypedef {
   T data;
-  ExplicitTypedef() {}
+  ExplicitTypedef() = default;
   explicit ExplicitTypedef(T data) : data(data) {}
   operator T() const {return data;}
 };

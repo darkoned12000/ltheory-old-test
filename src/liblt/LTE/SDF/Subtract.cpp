@@ -10,20 +10,20 @@ namespace {
     float, sharpness)
     DERIVED_TYPE_EX(SDFSubtract)
 
-    SDFSubtract() {}
+    SDFSubtract() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       float at = a->Evaluate(p);
       float bt = -b->Evaluate(p);
       float alpha = Sigmoid((bt - at) * sharpness);
       return Mix(at, bt, alpha);
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return a->GetBound();
     }
 
-    String GetCode(const String& p) const {
+    String GetCode(const String& p) const override {
       return Stringize()
         | "intersect(" | a->GetCode(p) | ", -" | b->GetCode(p) | ", "
         | sharpness | ")";
@@ -37,17 +37,17 @@ namespace {
     SDF, b)
     DERIVED_TYPE_EX(SDFSubtract0)
 
-    SDFSubtract0() {}
+    SDFSubtract0() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       return Max(a->Evaluate(p), -b->Evaluate(p));
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return a->GetBound();
     }
 
-    String GetCode(const String& p) const {
+    String GetCode(const String& p) const override {
       return Stringize()
         | "max(" | a->GetCode(p) | ", -" | b->GetCode(p) | ")";
     }

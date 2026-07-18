@@ -22,7 +22,7 @@ namespace {
   AutoClass(GlyphInstance,
     Glyph, glyph,
     GlyphState, state)
-    GlyphInstance() {}
+    GlyphInstance() = default;
   };
 
   AutoClass(PanelVertex,
@@ -30,7 +30,7 @@ namespace {
     V4, uvsize,
     V4, color,
     V2, innerAlphaBevel)
-    PanelVertex() {}
+    PanelVertex() = default;
   };
 
   AutoClass(RadialPanelVertex,
@@ -38,7 +38,7 @@ namespace {
     V4, uvr1r2,
     V4, color,
     V4, innerAlphaBevelPhaseAngle)
-    RadialPanelVertex() {}
+    RadialPanelVertex() = default;
   };
 
   typedef Map<Type, Vector<GlyphInstance> > GlyphMapT;

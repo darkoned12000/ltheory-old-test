@@ -8,16 +8,16 @@ namespace {
     Vector<void (*)()> toLoad;
     Vector<void (*)()> toUnload;
 
-    ~LoaderHandler() {
+    ~LoaderHandler() override {
       for (size_t i = 0; i < toUnload.size(); ++i)
         toUnload[i]();
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Loader Handler";
     }
 
-    void Update() {
+    void Update() override {
       for (size_t i = 0; i < toLoad.size(); ++i)
         toLoad[i]();
       toLoad.clear();

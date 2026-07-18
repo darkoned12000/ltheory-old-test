@@ -15,7 +15,7 @@ AutoClass(ComponentEconomy,
   Vector<Item>, items,
   Vector<Task>, tasks)
 
-  ComponentEconomy() {}
+  ComponentEconomy() = default;
 
   Item GetItem() const {
     return items.size() ? items.random() : nullptr;
@@ -25,7 +25,7 @@ AutoClass(ComponentEconomy,
 };
 
 AutoComponent(Economy)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     Economy.Run(this, s);
     BaseT::OnUpdate(s);
   }

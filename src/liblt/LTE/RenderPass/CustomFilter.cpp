@@ -13,13 +13,13 @@ namespace {
     ScriptFunction, render)
     DERIVED_TYPE_EX(CustomFilter)
 
-    CustomFilter() {}
+    CustomFilter() = default;
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Custom Filter";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       Texture2D const& input = state->primary;
       Texture2D result;
       render->VoidCall(&result, instance, input);

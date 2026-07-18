@@ -4,7 +4,7 @@
 #include "Reference.h"
 
 struct CollisionMeshT : public RefCounted {
-  virtual ~CollisionMeshT() {}
+  virtual ~CollisionMeshT() = default;
 
   virtual size_t GetMemoryUsage() const = 0;
 

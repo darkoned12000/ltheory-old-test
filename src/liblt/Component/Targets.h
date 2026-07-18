@@ -9,7 +9,7 @@
 AutoClass(ComponentTargets,
   Vector<Object>, elements)
 
-  ComponentTargets() {}
+  ComponentTargets() = default;
 };
 
 AutoComponent(Targets)

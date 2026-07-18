@@ -14,9 +14,9 @@ namespace {
     DERIVED_TYPE_EX(ExpressionIf)
     POOLED_TYPE
 
-    ExpressionIf() {}
+    ExpressionIf() = default;
 
-    String Emit(Vector<String>& context) const {
+    String Emit(Vector<String>& context) const override {
       String predValue = predicate->Emit(context);
       context.push(Stringize() | "if (" | predValue | ") {");
 
@@ -29,7 +29,7 @@ namespace {
       return "";
     }
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       bool pred;
       predicate->Evaluate(&pred, env);
       if (pred) {
@@ -43,11 +43,11 @@ namespace {
       }
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return Type_Get<void>();
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return predicate->IsConstant(env) && statement->IsConstant(env);
     }
   };

@@ -63,7 +63,7 @@ struct PhysicsEngineImpl : public PhysicsEngine {
   bool CheckCollision(
     ObjectT* object1,
     ObjectT* object2,
-    V3* contactNormal)
+    V3* contactNormal) override
   {
     AUTO_FRAME;
     CollisionMesh const& mesh1 = GetCollisionMesh(object1->GetRenderable());
@@ -91,7 +91,7 @@ struct PhysicsEngineImpl : public PhysicsEngine {
     return e.mesh;
   }
 
-  char const* GetName() const {
+  char const* GetName() const override {
     return "PhysicsEngine";
   }
 
@@ -100,14 +100,14 @@ struct PhysicsEngineImpl : public PhysicsEngine {
     ObjectT* object,
     float tMax,
     float& tOut,
-    V3* normalOut)
+    V3* normalOut) override
   {
     CollisionMesh const& mesh = GetCollisionMesh(object->GetRenderable());
     Matrix const& matrix = object->GetTransform().GetMatrix();
     return mesh ? mesh->Intersects(ray, matrix, tMax, tOut, normalOut) : false;
   }
 
-  void Update() {
+  void Update() override {
     SFRAME("Physics Update");
     float dt = FrameTimer_Get();
     for (MeshMapT::iterator it = meshes.begin(); it != meshes.end(); ++it) {
@@ -124,7 +124,7 @@ struct PhysicsEngineNullImpl : public PhysicsEngine {
   bool CheckCollision(
     ObjectT* e1,
     ObjectT* e2,
-    V3* contactNormal)
+    V3* contactNormal) override
   {
     return false;
   }
@@ -134,16 +134,16 @@ struct PhysicsEngineNullImpl : public PhysicsEngine {
     ObjectT* e,
     float tMax,
     float& tOut,
-    V3* normalOut)
+    V3* normalOut) override
   {
     return false;
   }
 
-  char const* GetName() const {
+  char const* GetName() const override {
     return "PhysicsEngineNull";
   }
 
-  void Update() {}
+  void Update() override {}
 };
 
 PhysicsEngine* CreatePhysicsEngine() {

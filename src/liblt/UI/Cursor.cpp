@@ -6,7 +6,7 @@ namespace {
   AutoClass(Cursor,
     V2, pos,
     V2, last)
-    Cursor() {}
+    Cursor() = default;
   };
 
   Vector<Cursor>& GetStack() {

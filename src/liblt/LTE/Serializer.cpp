@@ -63,11 +63,11 @@ namespace {
         good = false;
     }
 
-    bool IsGood() const {
+    bool IsGood() const override {
       return good;
     }
 
-    int GetVersion() const {
+    int GetVersion() const override {
       return version;
     }
 
@@ -84,7 +84,7 @@ namespace {
       Read((char*)&t, sizeof(t));
     }
 
-    void operator()(void* data, char const* name, Type const& type, void*) {
+    void operator()(void* data, char const* name, Type const& type, void*) override {
       Process(data, type);
     }
 
@@ -133,7 +133,7 @@ namespace {
       Process((void*)&t, Type_Get(t));
     }
 
-    void Process(void* data, Type const& type) {
+    void Process(void* data, Type const& type) override {
       if (!type)
         return;
 
@@ -175,17 +175,17 @@ namespace {
       Write(this->version);
     }
 
-    ~SaverImpl() {
+    ~SaverImpl() override {
       Array<uchar> writeBuffer(cursor);
       memcpy(writeBuffer.data(), buffer->data(), cursor);
       location->Write(writeBuffer);
     }
 
-    bool IsGood() const {
+    bool IsGood() const override {
       return good;
     }
 
-    int GetVersion() const {
+    int GetVersion() const override {
       return version;
     }
 
@@ -207,7 +207,7 @@ namespace {
       Write((char const*)&t, sizeof(t));
     }
 
-    void operator()(void* data, char const* name, Type const& type, void*) {
+    void operator()(void* data, char const* name, Type const& type, void*) override {
       Process(data, type);
     }
 
@@ -247,7 +247,7 @@ namespace {
       Process((void*)&t, Type_Get(t));
     }
 
-    void Process(void* data, Type const& type) {
+    void Process(void* data, Type const& type) override {
       if (!type)
         return;
 

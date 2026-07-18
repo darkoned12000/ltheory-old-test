@@ -23,31 +23,31 @@ namespace LTE {
         lastAxis[axis] = GetAxis(axis);
     }
 
-    float GetAxis(JoystickAxis axis) const {
+    float GetAxis(JoystickAxis axis) const override {
       return sf::Joystick::getAxisPosition(id, (sf::Joystick::Axis)axis) / 100.f;
     }
 
-    float GetAxisDelta(JoystickAxis axis) const {
+    float GetAxisDelta(JoystickAxis axis) const override {
       return GetAxis(axis) - lastAxis[axis];
     }
 
-    bool Down(uint index) const {
+    bool Down(uint index) const override {
       return down[index];
     }
 
-    float DownTime(uint index) const {
+    float DownTime(uint index) const override {
       return downTimer[index].GetElapsed();
     }
 
-    bool Pressed(uint index) const {
+    bool Pressed(uint index) const override {
       return down[index] && !lastDown[index];
     }
 
-    bool Released(uint index) const {
+    bool Released(uint index) const override {
       return !down[index] && lastDown[index];
     }
 
-    void Update() {
+    void Update() override {
       for (uint i = 0; i < sf::Joystick::ButtonCount; ++i) {
         lastDown[i] = down[i];
         down[i] = sf::Joystick::isButtonPressed(id, i);

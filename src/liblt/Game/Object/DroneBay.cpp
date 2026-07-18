@@ -52,7 +52,7 @@ AutoClassDerived(DroneBay, DroneBayBaseT,
     cooldown(0)
     {}
 
-  void OnMessage(Data& m) {
+  void OnMessage(Data& m) override {
     BaseType::OnMessage(m);
 
     if (m.type == Type_Get<MessageLaunch>()) {
@@ -73,7 +73,7 @@ AutoClassDerived(DroneBay, DroneBayBaseT,
       targetPos = m.Convert<MessageTargetPosition>().position;
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     cooldown = Max(0.0f, cooldown - state.dt);
@@ -96,11 +96,11 @@ typedef
 AutoClassDerivedEmpty(DroneBayType, DroneBayTypeBase)
   DERIVED_TYPE_EX(DroneBayType)
 
-  SocketType GetSocketType() const {
+  SocketType GetSocketType() const override {
     return SocketType_Interior;
   }
 
-  Object Instantiate(ObjectT* parent) {
+  Object Instantiate(ObjectT* parent) override {
     Reference<DroneBay> self = new DroneBay;
     self->SetSupertype(this);
     return self;

@@ -18,11 +18,11 @@ namespace {
       style(RenderStyle_Default(true))
       {}
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Particles";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       RenderStyle_Push(style);
       ObjectT* container = (ObjectT*)state->visible[0];
       container->GetInterior()->particles->Draw(state);

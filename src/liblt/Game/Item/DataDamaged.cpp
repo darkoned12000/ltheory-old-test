@@ -23,9 +23,9 @@ namespace {
     DERIVED_TYPE_EX(ItemDataDamaged)
     POOLED_TYPE
 
-    ItemDataDamaged() {}
+    ItemDataDamaged() = default;
 
-    StorageType const& GetStorageType() const {
+    StorageType const& GetStorageType() const override {
       static StorageType storage = StorageType_Database;
       return storage;
     }

@@ -28,7 +28,7 @@ namespace {
     Type dstType;
     ConversionFn function;
 
-    ExpressionConversion() {}
+    ExpressionConversion() = default;
     
     ExpressionConversion(Expression const& statement, Type const& dstType) :
       statement(statement),
@@ -37,18 +37,18 @@ namespace {
       function(FindConversion(srcType, dstType))
       {}
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       void* source = env.Allocate(srcType);
       statement->Evaluate(source, env);
       function(srcType, source, returnValue);
       env.Free(srcType, source);
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return dstType;
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return statement->IsConstant(env);
     }
   };
@@ -59,27 +59,27 @@ namespace {
     DERIVED_TYPE_EX(ExpressionConversionFromData)
     POOLED_TYPE
 
-    ExpressionConversionFromData() {}
+    ExpressionConversionFromData() = default;
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       Data source;
       statement->Evaluate(&source, env);
       dstType->Assign(source.data, returnValue);
     }
 
-    void* GetLValue(Environment& env) const {
+    void* GetLValue(Environment& env) const override {
       return ((Data*)statement->GetLValue(env))->data;
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return dstType;
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return statement->IsConstant(env);
     }
 
-    bool IsLValue() const {
+    bool IsLValue() const override {
       return statement->IsLValue();
     }
   };
@@ -90,9 +90,9 @@ namespace {
     DERIVED_TYPE_EX(ExpressionConversionToData)
     POOLED_TYPE
 
-    ExpressionConversionToData() {}
+    ExpressionConversionToData() = default;
 
-    void Evaluate(void* returnValue, Environment& env) const {
+    void Evaluate(void* returnValue, Environment& env) const override {
       void* src = env.Allocate(srcType);
       statement->Evaluate(src, env);
       ((Data*)returnValue)->Construct(srcType);
@@ -100,11 +100,11 @@ namespace {
       env.Free(srcType, src);
     }
 
-    Type GetType() const {
+    Type GetType() const override {
       return Type_Get<Data>();
     }
 
-    bool IsConstant(CompileEnvironment& env) const {
+    bool IsConstant(CompileEnvironment& env) const override {
       return statement->IsConstant(env);
     }
   };

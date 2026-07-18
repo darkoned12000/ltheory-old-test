@@ -15,11 +15,11 @@ struct Attribute_Range : public T {
     range(0)
     {}
 
-  float const& GetRange() const {
+  float const& GetRange() const override {
     return range;
   }
 
-  bool HasRange() const {
+  bool HasRange() const override {
     return true;
   }
 };

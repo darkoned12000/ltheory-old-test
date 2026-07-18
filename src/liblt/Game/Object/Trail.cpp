@@ -53,7 +53,7 @@ AutoClassDerived(Trail, TrailBaseT,
       self(self)
       {}
 
-    void Render(DrawState* state) const {
+    void Render(DrawState* state) const override {
       if (self->trail.size() < 2)
         return;
 
@@ -141,7 +141,7 @@ AutoClassDerived(Trail, TrailBaseT,
     Drawable.renderable = (Renderable)(new RenderComponent(this));
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
     age += state.dt;
 

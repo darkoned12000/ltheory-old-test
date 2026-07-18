@@ -63,7 +63,7 @@ namespace {
     DERIVED_TYPE_EX(TaskPlay)
     POOLED_TYPE
 
-    TaskPlay() {}
+    TaskPlay() = default;
 
     TaskPlay(Task_Play_Args const& args) :
       args(args)
@@ -202,7 +202,7 @@ namespace {
       ConsiderProject(task);
     }
 
-    String GetName() const {
+    String GetName() const override {
       return "Play";
     }
 
@@ -231,7 +231,7 @@ namespace {
       }
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       /* TODO : Global capital allocation. */
       FindProject();
 

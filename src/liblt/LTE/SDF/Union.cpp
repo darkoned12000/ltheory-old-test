@@ -10,19 +10,19 @@ namespace {
     float, sharpness)
     DERIVED_TYPE_EX(SDFUnion)
 
-    SDFUnion() {}
+    SDFUnion() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       float at = a->Evaluate(p);
       float bt = b->Evaluate(p);
       return Mix(at, bt, Sigmoid((at - bt) * sharpness));
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return a->GetBound().Union(b->GetBound());
     }
 
-    String GetCode(const String& p) const {
+    String GetCode(const String& p) const override {
       return Stringize()
         | "smoothUnion(" | a->GetCode(p) | ", " | b->GetCode(p) | ", "
         | sharpness | ")";
@@ -36,17 +36,17 @@ namespace {
     SDF, b)
     DERIVED_TYPE_EX(SDFUnion0)
 
-    SDFUnion0() {}
+    SDFUnion0() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       return Min(a->Evaluate(p), b->Evaluate(p));
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return a->GetBound().Union(b->GetBound());
     }
 
-    String GetCode(const String& p) const {
+    String GetCode(const String& p) const override {
       return "min(" + a->GetCode(p) + ", " + b->GetCode(p) + ")";
     }
   };

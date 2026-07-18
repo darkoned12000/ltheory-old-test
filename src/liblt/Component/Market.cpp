@@ -180,7 +180,7 @@ AutoClass(MarketIterator,
   MarketDataMap::iterator, iterator,
   Object, object)
 
-  MarketIterator() {}
+  MarketIterator() = default;
 };
 
 FreeFunction(MarketIterator, Object_GetMarketListings,

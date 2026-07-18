@@ -21,11 +21,11 @@ typedef
 AutoClassDerivedEmpty(PowerGeneratorType, PowerGeneratorTypeBase)
   DERIVED_TYPE_EX(PowerGeneratorType)
 
-  SocketType GetSocketType() const {
+  SocketType GetSocketType() const override {
     return SocketType_Generator;
   }
 
-  Object Instantiate(ObjectT* parent) {
+  Object Instantiate(ObjectT* parent) override {
     return Object_PowerGenerator(this);
   }
 };

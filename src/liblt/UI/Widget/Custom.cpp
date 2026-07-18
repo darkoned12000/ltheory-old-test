@@ -27,19 +27,19 @@ namespace {
     DERIVED_TYPE_EX(WidgetCustom)
     POOLED_TYPE
 
-    WidgetCustom() {}
+    WidgetCustom() = default;
 
-    void CaptureFocus(Widget const& self) {
+    void CaptureFocus(Widget const& self) override {
       if (captureFocus)
         captureFocus->VoidCall(0, instance, self);
     }
 
-    void Create(Widget const& self) {
+    void Create(Widget const& self) override {
       if (create)
         create->VoidCall(0, instance, self);
     }
 
-    void CreateChildren(Widget const& self, Vector<Widget>& children) {
+    void CreateChildren(Widget const& self, Vector<Widget>& children) override {
       if (createChildren) {
         ListNP childList;
         createChildren->VoidCall(&childList, instance, self);
@@ -48,57 +48,57 @@ namespace {
       }
     }
 
-    void Destroy(Widget const& self) {
+    void Destroy(Widget const& self) override {
       if (destroy)
         destroy->VoidCall(0, instance, self);
     }
 
-    void GetHash(Widget const& self, HashT& out) {
+    void GetHash(Widget const& self, HashT& out) override {
       if (getHash)
         getHash->VoidCall(&out, instance);
     }
 
-    void GetName(Widget const& self, String& out) {
+    void GetName(Widget const& self, String& out) override {
       if (getName)
         getName->VoidCall(&out, instance);
     }
 
-    void GetPadding(Widget const& self, V4& out) {
+    void GetPadding(Widget const& self, V4& out) override {
       if (getPadding)
         getPadding->VoidCall(&out, instance);
     }
 
-    void PostDraw(Widget const& self) {
+    void PostDraw(Widget const& self) override {
       if (postDraw)
         postDraw->VoidCall(0, instance, self);
     }
 
-    void PostPosition(Widget const& self) {
+    void PostPosition(Widget const& self) override {
       if (postPosition)
         postPosition->VoidCall(0, instance, self);
     }
 
-    void PostUpdate(Widget const& self) {
+    void PostUpdate(Widget const& self) override {
       if (postUpdate)
         postUpdate->VoidCall(0, instance, self);
     }
 
-    void PreDraw(Widget const& self) {
+    void PreDraw(Widget const& self) override {
       if (preDraw)
         preDraw->VoidCall(0, instance, self);
     }
 
-    void PrePosition(Widget const& self) {
+    void PrePosition(Widget const& self) override {
       if (prePosition)
         prePosition->VoidCall(0, instance, self);
     }
 
-    void PreUpdate(Widget const& self) {
+    void PreUpdate(Widget const& self) override {
       if (preUpdate)
         preUpdate->VoidCall(0, instance, self);
     }
 
-    void Receive(Widget const& self, Data const& data) {
+    void Receive(Widget const& self, Data const& data) override {
       if (receive) {
         receive->VoidCall(
           0, instance, self,

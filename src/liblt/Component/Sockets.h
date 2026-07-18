@@ -14,7 +14,7 @@ AutoClass(ComponentSockets,
   Array<Socket>, sockets,
   Array<Object>, instances)
 
-  ComponentSockets() {}
+  ComponentSockets() = default;
 
   LT_API bool Plug(ObjectT* self, Item const& type);
   LT_API bool Plug(ObjectT* self, Item const& type, uint slot);
@@ -24,7 +24,7 @@ AutoClass(ComponentSockets,
 };
 
 AutoComponent(Sockets)
-  void SetSupertype(Item const& type) {
+  void SetSupertype(Item const& type) override {
     LTE_ASSERT(type->GetSockets());
     Sockets.sockets = *type->GetSockets();
     Sockets.instances.resize(Sockets.sockets.size(), nullptr);
@@ -32,7 +32,7 @@ AutoComponent(Sockets)
     BaseT::SetSupertype(type);
   }
 
-  Capability GetCapability() const {
+  Capability GetCapability() const override {
     Capability total = BaseT::GetCapability();
     for (size_t i = 0; i < Sockets.instances.size(); ++i)
       if (Sockets.instances[i])
@@ -40,7 +40,7 @@ AutoComponent(Sockets)
     return total;
   }
 
-  Quantity GetValue() const {
+  Quantity GetValue() const override {
     Quantity total = BaseT::GetValue();
     for (size_t i = 0; i < Sockets.instances.size(); ++i)
       if (Sockets.instances[i])
@@ -48,11 +48,11 @@ AutoComponent(Sockets)
     return total;
   }
 
-  bool Plug(Item const& item) {
+  bool Plug(Item const& item) override {
     return Sockets.Plug(this, item);
   }
 
-  bool Plug(Object const& object) {
+  bool Plug(Object const& object) override {
     return Sockets.Plug(this, object);
   }
 };

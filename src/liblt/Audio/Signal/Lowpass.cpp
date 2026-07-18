@@ -13,7 +13,7 @@ namespace Audio {
         s(0)
         {}
 
-      double OnGet(GlobalData const& d) {
+      double OnGet(GlobalData const& d) override {
         return s = Mix(s, input->Get(d), Exp(-(d.sampleRate / 5000.0)));
       }
     };

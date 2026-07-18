@@ -13,11 +13,11 @@ struct Attribute_Hash : public T {
     hash(0)
     {}
 
-  HashT const& GetHash() const {
+  HashT const& GetHash() const override {
     return hash;
   }
 
-  bool HasHash() const {
+  bool HasHash() const override {
     return true;
   }
 };

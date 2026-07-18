@@ -8,7 +8,7 @@ struct Distribution : public VectorMap<T, float> {
   typedef typename VectorMap<T, float>::BaseType BaseType;
   typedef Distribution SelfType;
 
-  Distribution() {}
+  Distribution() = default;
 
   Distribution(Distribution const& other) :
     VectorMap<T, float>(other)

@@ -1,0 +1,68 @@
+# Copyright (C) 2025  darkoned12000
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Part of the ltheory-old-test modernization effort (Revamp Work).
+# See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
+#
+# Tuned to match the existing house style so a full run produces a MINIMAL diff:
+#   - 2-space indent, no tabs
+#   - K&R / attached braces (opening brace on the same line)
+#   - pointer/reference glued to the type (T* t, char const*)
+#   - ~90 column limit (observed max line ~89)
+#   - namespace contents indented 2 spaces
+# Do NOT reformat vendored code (ext/SFML/, include/) — see .clang-format-ignore
+# style guards below; run clang-format only on src/liblt and src/launch.
+
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++17
+
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+ColumnLimit: 90
+ContinuationIndentWidth: 2
+AccessModifierOffset: -2
+
+# Braces: attached (K&R), keep short things on their own lines like the codebase.
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+
+# Pointers/references glued to the type (T* t, T& r).
+PointerAlignment: Left
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+
+# Namespaces: indent the body (matches `namespace { ... }` at 2 spaces).
+NamespaceIndentation: All
+FixNamespaceComments: false
+CompactNamespaces: false
+
+# Templates on their own line: `template <class T>`.
+AlwaysBreakTemplateDeclarations: Yes
+SpaceAfterTemplateKeyword: true
+
+# Spacing.
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+SpacesInAngles: false
+SpaceBeforeAssignmentOperators: true
+Cpp11BracedListStyle: true
+
+# Includes: leave alone — the codebase groups them by hand and reordering
+# risks breaking include-order-dependent headers. Do not sort automatically.
+SortIncludes: false
+IncludeBlocks: Preserve
+
+# Misc.
+AlignAfterOpenBracket: Align
+AlignTrailingComments: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+BinPackArguments: true
+BinPackParameters: true
+IndentCaseLabels: true
+AlignOperands: true

@@ -11,9 +11,9 @@ namespace {
     DERIVED_TYPE_EX(WidgetStack)
     POOLED_TYPE
 
-    WidgetStack() {}
+    WidgetStack() = default;
 
-    void PostPosition(Widget const& self) {
+    void PostPosition(Widget const& self) override {
       V4 padding = self->GetPadding();
       V2 childPos = self->pos + V2(padding.x, padding.y);
       V2 childSize = self->size - V2(padding.x + padding.z, padding.y + padding.w);
@@ -25,7 +25,7 @@ namespace {
       }
     }
 
-    void PrePosition(Widget const& self) {
+    void PrePosition(Widget const& self) override {
       V2 minSize = 0;
       V4 padding = self->GetPadding();
 

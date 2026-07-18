@@ -23,25 +23,25 @@ namespace {
       soundEngine->LoadProject("LtheoryTest01.fev");
     }
 
-    ~MusicEngineImpl() {
+    ~MusicEngineImpl() override {
       gActive = nullptr;
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "MusicEngine";
     }
 
-    MusicEngine* SetTension(GenericFloat const& tension) {
+    MusicEngine* SetTension(GenericFloat const& tension) override {
       this->tension = tension;
       return this;
     }
 
-    MusicEngine* SetVolume(GenericFloat const& volume) {
+    MusicEngine* SetVolume(GenericFloat const& volume) override {
       this->volume = volume;
       return this;
     }
 
-    void Update() {
+    void Update() override {
       if (!playing) {
         playing = soundEngine->GetEvent(
           EVENTGUID_LTHEORYTEST01_TESTEX_BT_01_SPACE01_MUSIC);

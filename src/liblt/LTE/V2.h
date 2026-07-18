@@ -15,7 +15,7 @@ AutoClass(V2T,
   typedef T MetricType;
 
   /* Constructors. */
-  V2T() {}
+  V2T() = default;
 
   V2T(T xy) :
     x(xy),

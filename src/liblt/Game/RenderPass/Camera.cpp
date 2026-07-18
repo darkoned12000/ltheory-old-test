@@ -19,7 +19,7 @@ namespace {
     Vector<RenderPass> passes;
     DERIVED_TYPE_EX(CameraPass)
 
-    CameraPass() {}
+    CameraPass() = default;
 
     CameraPass(Camera const& camera) : camera(camera) {
       passes.push(RenderPass_Visibility());
@@ -38,11 +38,11 @@ namespace {
       passes.push(RenderPass_PostFilter("post/colorgrade1D.jsl"));
     }
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Camera Pass";
     }
 
-    void OnRender(DrawState* state) {
+    void OnRender(DrawState* state) override {
       ObjectT* target = camera->GetTarget();
       if (target)
         target->GetContainer()->AddInterior(camera);

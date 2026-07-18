@@ -27,7 +27,7 @@ AutoClassDerived(SoundEmitter, SoundEmitterBaseT,
     life(0)
     {}
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     life -= state.dt;

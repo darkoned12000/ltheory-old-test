@@ -11,7 +11,7 @@ namespace {
     DERIVED_TYPE_EX(ItemPropertyOwner)
     POOLED_TYPE
 
-    DataRef Evaluate(Item const& item) const {
+    DataRef Evaluate(Item const& item) const override {
       Object const& object = ItemProperty_Object->Get(item);
       if (!object) {
         returnValue = nullptr;
@@ -22,7 +22,7 @@ namespace {
       return returnValue;
     }
 
-    String GetName() const {
+    String GetName() const override {
       return "Owning Faction";
     }
   };

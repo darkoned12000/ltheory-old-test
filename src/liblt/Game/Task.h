@@ -101,7 +101,7 @@ AutoClass(TaskInstance,
   Data, data,
   float, duration)
 
-  TaskInstance() {}
+  TaskInstance() = default;
 
   TaskInstance(Task const& task) :
     task(task),

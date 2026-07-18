@@ -10,7 +10,7 @@ AutoClass(ComponentDamager,
   Reference<WeaponType>, type,
   Object, source)
 
-  ComponentDamager() {}
+  ComponentDamager() = default;
 
   LT_API bool Hit(
     ObjectT* self,

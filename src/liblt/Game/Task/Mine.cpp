@@ -42,40 +42,40 @@ namespace {
     DERIVED_TYPE_EX(TaskMine)
     POOLED_TYPE
 
-    TaskMine() {}
+    TaskMine() = default;
 
     bool CanMine(Object const& self) const {
       return self->GetFreeCapacity() > kAmount;
     }
 
     /* TODO : Estimate of travel time. */
-    float GetDuration() const {
+    float GetDuration() const override {
       return 1.0f;
     }
 
-    String GetName() const {
+    String GetName() const override {
       return "Mine";
     }
 
-    String GetNoun() const {
+    String GetNoun() const override {
       return "Mining Barge";
     }
 
-    void GetOutputs(Vector<ItemDelta>& outputs) const {
+    void GetOutputs(Vector<ItemDelta>& outputs) const override {
       Pointer<ComponentResources> resources = args.zone->GetResources();
       for (size_t i = 0; i < resources->elements.size(); ++i)
         outputs.push(ItemDelta(resources->elements.entries[i].key, nullptr, 1));
     }
 
-    Capability GetRateFactor() const {
+    Capability GetRateFactor() const override {
       return Capability_Transference(1);
     }
 
-    void OnBegin(Object const& self, Data& data) {
+    void OnBegin(Object const& self, Data& data) override {
       data = TaskMineInstance();
     }
 
-    void OnUpdate(Object const& self, float dt, Data& data) { AUTO_FRAME;
+    void OnUpdate(Object const& self, float dt, Data& data) override { AUTO_FRAME;
       TaskMineInstance& it = data.Convert<TaskMineInstance>();
       it.timer -= dt;
 

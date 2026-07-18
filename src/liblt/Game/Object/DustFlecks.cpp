@@ -22,9 +22,9 @@ AutoClassDerived(DustFlecks, DustFlecksBaseT,
 
   DERIVED_TYPE_EX(DustFlecks)
 
-  DustFlecks() {}
+  DustFlecks() = default;
 
-  void OnDraw(DrawState* state) {
+  void OnDraw(DrawState* state) override {
     static ShaderInstance shader;
     static Mesh mesh;
 

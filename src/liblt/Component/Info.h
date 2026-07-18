@@ -8,7 +8,7 @@
 AutoClass(InfoEntry,
   InfoLevelT, level,
   Time, expiration)
-  InfoEntry() {}
+  InfoEntry() = default;
 };
 
 typedef Map<ObjectID, InfoEntry> InfoMapT;
@@ -16,7 +16,7 @@ typedef Map<ObjectID, InfoEntry> InfoMapT;
 AutoClass(ComponentInfo,
   InfoMapT, elements)
 
-  ComponentInfo() {}
+  ComponentInfo() = default;
 
   bool HasLevel(ObjectT* object, InfoLevelT level) const {
     return GetLevel(object) >= level;
@@ -27,7 +27,7 @@ AutoClass(ComponentInfo,
 };
 
 AutoComponent(Info)
-  void OnUpdate(UpdateState& s) {
+  void OnUpdate(UpdateState& s) override {
     BaseT::OnUpdate(s);
   }
 };

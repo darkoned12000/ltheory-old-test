@@ -5,7 +5,7 @@
 
 namespace LTE {
   struct Archive {
-    virtual ~Archive() {}
+    virtual ~Archive() = default;
 
     LT_API static Archive* Open(String const& filename);
 

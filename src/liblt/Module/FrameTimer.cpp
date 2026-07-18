@@ -18,11 +18,11 @@ namespace {
       ema10(0)
       {}
 
-    char const* GetName() const {
+    char const* GetName() const override {
       return "Frame Timer";
     }
 
-    void Update() {
+    void Update() override {
       dt = timer.GetElapsed();
       ema01 = Mix(ema01, dt, 1.0 - Exp(-dt / 0.5f));
       ema1 = Mix(ema1, dt, 1.0 - Exp(-dt));

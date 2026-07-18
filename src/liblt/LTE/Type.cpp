@@ -130,7 +130,7 @@ FieldType TypeT::FindField(void* base, String const& name) {
       name(name)
       {}
 
-    void operator()(void* field, char const* name, Type const& type, void* aux) {
+    void operator()(void* field, char const* name, Type const& type, void* aux) override {
       if (result.address)
         return;
 
@@ -161,7 +161,7 @@ FieldType TypeT::GetField(void* base, size_t index) {
       index(index)
       {}
 
-    void operator()(void* field, char const* name, Type const& type, void* aux) {
+    void operator()(void* field, char const* name, Type const& type, void* aux) override {
       if (result.address)
         return;
 
@@ -192,7 +192,7 @@ size_t TypeT::GetFieldCount(void* base) {
       result(0)
       {}
 
-    void operator()(void* field, char const* name, Type const& type, void* aux) {
+    void operator()(void* field, char const* name, Type const& type, void* aux) override {
       result++;
     }
   };
@@ -280,7 +280,7 @@ void Type_Print(
       void* field,
       char const* name,
       Type const& type,
-      void* aux)
+      void* aux) override
     {
       for (int i = 0; i < indent + 1; ++i)
         std::cout << "  ";

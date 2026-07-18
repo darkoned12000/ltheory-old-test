@@ -8,9 +8,9 @@ namespace {
     float, strength)
     DERIVED_TYPE_EX(WarpAttractorPoint)
 
-    WarpAttractorPoint() {}
+    WarpAttractorPoint() = default;
 
-    V3 GetDelta(V3 const& p) const {
+    V3 GetDelta(V3 const& p) const override {
       V3 toCenter = center - p;
       float dist = Length(toCenter);
       return Mix(p, center, Exp(-dist / strength)) - p;
@@ -23,9 +23,9 @@ namespace {
     float, strength)
     DERIVED_TYPE_EX(WarpAttractorPlane)
 
-    WarpAttractorPlane() {}
+    WarpAttractorPlane() = default;
 
-    V3 GetDelta(V3 const& p) const {
+    V3 GetDelta(V3 const& p) const override {
       V3 proj = p + normal * Dot(center - p, normal);
       V3 toCenter = proj - p;
       float dist = Length(toCenter);

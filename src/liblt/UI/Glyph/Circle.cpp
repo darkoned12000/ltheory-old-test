@@ -9,28 +9,28 @@ namespace {
     V3, p,
     V4, color,
     V2, uv)
-    CircleVertex() {}
+    CircleVertex() = default;
   };
 
   AutoClassDerived(Circle, GlyphT, Glyph_Circle_Args, args)
     DERIVED_TYPE_EX(Circle)
     POOLED_TYPE
 
-    Circle() {}
+    Circle() = default;
 
-    Glyph Clone() const {
+    Glyph Clone() const override {
       return Glyph_Circle(args);
     }
 
-    Shader GetShader() const {
+    Shader GetShader() const override {
       return Shader_Create("widget.jsl", "ui/circle.jsl");
     }
 
-    Type GetVertexFormat() const {
+    Type GetVertexFormat() const override {
       return Type_Get<CircleVertex>();
     }
 
-    void Submit(void* vvertices, GlyphState const& s) const {
+    void Submit(void* vvertices, GlyphState const& s) const override {
       CircleVertex* vertices = (CircleVertex*)vvertices;
 
       V2 ss = args.position * s.scale + s.center;
@@ -44,7 +44,7 @@ namespace {
       vertices[3] = CircleVertex(V3(ss + V2(-r,  r), 0), color, V2(0, 1));
     }
 
-    Glyph Transform(V2 const& offset, V2 const& scale) {
+    Glyph Transform(V2 const& offset, V2 const& scale) override {
       args.position = scale * args.position + offset;
       args.radius *= scale.GetMin();
       return this;

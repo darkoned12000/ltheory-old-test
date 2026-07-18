@@ -7,41 +7,49 @@
   },
   "configurePresets": [
     {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
       "name": "default",
+      "inherits": "base",
       "displayName": "Linux Release (RelWithDebInfo)",
       "description": "Default development build using Unix Makefiles",
       "generator": "Unix Makefiles",
-      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
     },
     {
       "name": "debug",
+      "inherits": "base",
       "displayName": "Linux Debug",
       "description": "Debug build with full symbols, no optimization",
       "generator": "Unix Makefiles",
-      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
       "name": "ninja",
+      "inherits": "base",
       "displayName": "Linux Release (Ninja)",
       "description": "Fast build using Ninja (install ninja-build first)",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
     },
     {
       "name": "ninja-debug",
+      "inherits": "base",
       "displayName": "Linux Debug (Ninja)",
       "description": "Debug build using Ninja",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }

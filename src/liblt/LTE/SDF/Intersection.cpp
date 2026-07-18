@@ -10,17 +10,17 @@ namespace {
     float, sharpness)
     DERIVED_TYPE_EX(SDFIntersection)
 
-    SDFIntersection() {}
+    SDFIntersection() = default;
 
-    float Evaluate(V3 const& p) const {
+    float Evaluate(V3 const& p) const override {
       return Max(a->Evaluate(p), b->Evaluate(p));
     }
 
-    Bound3 GetBound() const {
+    Bound3 GetBound() const override {
       return a->GetBound().Intersect(b->GetBound());
     }
 
-    String GetCode(String const& p) const {
+    String GetCode(String const& p) const override {
       return "max(" + a->GetCode(p) + ", " + b->GetCode(p) + ")";
     }
   };

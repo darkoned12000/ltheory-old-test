@@ -25,7 +25,7 @@ AutoClassDerivedEmpty(DroneConstruction, DroneConstructionBaseT)
     SetScale(10);
   }
 
-  void OnUpdate(UpdateState& state) {}
+  void OnUpdate(UpdateState& state) override {}
 };
 
 DERIVED_IMPLEMENT(DroneConstruction)
@@ -40,7 +40,7 @@ typedef
 AutoClassDerivedEmpty(DroneConstructionType, DroneConstructionTypeBaseT)
   DERIVED_TYPE_EX(DroneConstructionType)
 
-  Object Instantiate(ObjectT* parent) {
+  Object Instantiate(ObjectT* parent) override {
     return new DroneConstruction;
   }
 };

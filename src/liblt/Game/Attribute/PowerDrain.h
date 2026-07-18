@@ -9,11 +9,11 @@ struct Attribute_PowerDrain : public T {
   ATTRIBUTE_COMMON(powerDrain)
   float powerDrain;
 
-  float const& GetPowerDrain() const {
+  float const& GetPowerDrain() const override {
     return powerDrain;
   }
 
-  bool HasPowerDrain() const {
+  bool HasPowerDrain() const override {
     return true;
   }
 };

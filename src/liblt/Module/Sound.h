@@ -6,7 +6,7 @@
 #include "LTE/Reference.h"
 
 struct SoundT : public RefCounted {
-  virtual ~SoundT() {}
+  virtual ~SoundT() = default;
 
   virtual void Delete() = 0;
 

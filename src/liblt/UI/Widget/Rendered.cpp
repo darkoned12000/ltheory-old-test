@@ -32,9 +32,9 @@ namespace {
 
     DERIVED_TYPE_EX(WidgetRendered)
 
-    WidgetRendered() {}
+    WidgetRendered() = default;
 
-    ~WidgetRendered() {
+    ~WidgetRendered() override {
       Clear();
     }
 
@@ -62,7 +62,7 @@ namespace {
       return self;
     }
 
-    void PreDraw(Widget const& self) {
+    void PreDraw(Widget const& self) override {
       FRAME("Initialize Render") {
         uint targetWidth = (uint)(kResolution * self->size.x);
         uint targetHeight = (uint)(kResolution * self->size.y);
@@ -154,7 +154,7 @@ namespace {
       }
     }
 
-    void PostPosition(Widget const& self) {
+    void PostPosition(Widget const& self) override {
       self->size = self->maxSize;
     }
   };

@@ -14,7 +14,7 @@ namespace LTE {
     Vector<Parameter>, parameters,
     Function, function)
 
-    ScriptFunctionT() {}
+    ScriptFunctionT() = default;
 
     LT_API void Call(void* returnValue, void** args);
 

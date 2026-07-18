@@ -9,31 +9,31 @@ AutoClassDerived(PlayerImpl, PlayerT,
   bool, isHuman)
   DERIVED_TYPE_EX(PlayerImpl)
 
-  PlayerImpl() {}
+  PlayerImpl() = default;
 
-  Health GetHealth() const {
+  Health GetHealth() const override {
     return 100;
   }
 
-  Icon GetIcon() const {
+  Icon GetIcon() const override {
     Icon icon;
     ScriptFunction_Load("Icons:Person")->Call(icon);
     return icon;
   }
 
-  Health GetMaxHealth() const {
+  Health GetMaxHealth() const override {
     return 100;
   }
 
-  bool IsHuman() const {
+  bool IsHuman() const override {
     return isHuman;
   }
 
-  void OnAttacked(Player const& attacker) {
+  void OnAttacked(Player const& attacker) override {
     ModOpinion(attacker, -1.0f);
   }
 
-  void Pilot(Object const& object) {
+  void Pilot(Object const& object) override {
     Unpilot();
     Pointer<ComponentPilotable> p = object->GetPilotable();
     LTE_ASSERT(!p->pilot);
@@ -42,7 +42,7 @@ AutoClassDerived(PlayerImpl, PlayerT,
     container = object;
   }
 
-  void Unpilot() {
+  void Unpilot() override {
     if (piloting) {
       Pointer<ComponentPilotable> p = piloting->GetPilotable();
       LTE_ASSERT(p);

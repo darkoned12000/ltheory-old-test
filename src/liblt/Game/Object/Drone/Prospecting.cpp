@@ -22,14 +22,14 @@ typedef ObjectWrapper
 AutoClassDerivedEmpty(DroneProspecting, DroneProspectingBaseT)
   DERIVED_TYPE_EX(DroneProspecting)
   
-  DroneProspecting() {}
+  DroneProspecting() = default;
 
   DroneProspecting(ObjectT* parent) {
     parent->AddChild(this);
     SetScale(2);
   }
 
-  void OnUpdate(UpdateState& state) {}
+  void OnUpdate(UpdateState& state) override {}
 };
 
 DERIVED_IMPLEMENT(DroneProspecting)
@@ -44,7 +44,7 @@ typedef
 AutoClassDerivedEmpty(DroneProspectingType, DroneProspectingTypeBaseT)
   DERIVED_TYPE_EX(DroneProspectingType)
 
-  Object Instantiate(ObjectT* parent) {
+  Object Instantiate(ObjectT* parent) override {
     return new DroneProspecting(parent);
   }
 };

@@ -72,16 +72,16 @@ AutoClassDerivedEmpty(Station, StationBaseT)
     Zoned.region = SDF_Sphere(0, Length(0.5f * GetLocalBound().GetSideLengths()));
   }
 
-  void BeginDrawInterior(DrawState* state) {
+  void BeginDrawInterior(DrawState* state) override {
     GetContainer()->BeginDrawInterior(state);
   }
 
-  void OnDrawInterior(DrawState* state) {
+  void OnDrawInterior(DrawState* state) override {
     RenderStyle_Get()->SetTransform(Transform_Scale(2000));
     ((StationType*)(ItemT*)Supertyped.type)->interiorModel->Render(state);
   }
 
-  void EndDrawInterior(DrawState* state) {
+  void EndDrawInterior(DrawState* state) override {
     GetContainer()->EndDrawInterior(state);
   }
 };

@@ -28,17 +28,17 @@ namespace {
       thread->launch();
     }
 
-    ~ThreadImpl() {
+    ~ThreadImpl() override {
       if (!finished)
         Terminate();
       job->OnEnd();
     }
 
-    Job GetJob() const {
+    Job GetJob() const override {
       return job;
     }
 
-    bool IsFinished() const {
+    bool IsFinished() const override {
       return finished;
     }
 
@@ -47,12 +47,12 @@ namespace {
       finished = true;
     }
 
-    void Terminate() {
+    void Terminate() override {
       ScopedLock lock(GetThreadLock());
       thread->terminate();
     }
 
-    void Wait() {
+    void Wait() override {
       thread->wait();
     }
   };

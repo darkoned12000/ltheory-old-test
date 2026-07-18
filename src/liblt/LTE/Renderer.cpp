@@ -24,7 +24,7 @@ namespace {
     GL_Texture, texture,
     GL_TextureTarget::Enum, target,
     uint, guid)
-    Attachment() {}
+    Attachment() = default;
   };
 
   struct Renderer {

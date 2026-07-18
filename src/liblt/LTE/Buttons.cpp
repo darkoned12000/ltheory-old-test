@@ -16,27 +16,27 @@ namespace {
     DERIVED_TYPE_EX(AxisButton)
     POOLED_TYPE
 
-    AxisButton() {}
+    AxisButton() = default;
 
-    bool Down() const {
+    bool Down() const override {
       float x = axis->GetRaw();
       return Abs(x) > .2f && Sign(x) == sgn;
     }
 
-    float DownTime() const {
+    float DownTime() const override {
       NOT_IMPLEMENTED
       return 0;
     }
 
-    bool Pressed() const {
+    bool Pressed() const override {
       return Down();
     }
 
-    bool Released() const {
+    bool Released() const override {
       return Down();
     }
 
-    String ToString() const {
+    String ToString() const override {
       return axis->ToString() + (sgn > 0 ? " +" : " -");
     }
   };
@@ -51,7 +51,7 @@ namespace {
     DERIVED_TYPE_EX(KeyWithModifiers)
     POOLED_TYPE
 
-    KeyWithModifiers() {}
+    KeyWithModifiers() = default;
 
     bool Modifiers() const {
       return (!shift || Keyboard_Shift())
@@ -59,24 +59,24 @@ namespace {
           && (!control || Keyboard_Control());
     }
 
-    bool Down() const {
+    bool Down() const override {
       return Modifiers() && Keyboard_Down(key);
     }
 
-    float DownTime() const {
+    float DownTime() const override {
       NOT_IMPLEMENTED
       return 0;
     }
 
-    bool Pressed() const {
+    bool Pressed() const override {
       return Modifiers() && Keyboard_Pressed(key);
     }
 
-    bool Released() const {
+    bool Released() const override {
       return Modifiers() && Keyboard_Released(key);
     }
 
-    String ToString() const {
+    String ToString() const override {
       String str;
       if (control)
         str += "Ctrl-";

@@ -77,7 +77,7 @@ AutoClassDerived(Weapon, WeaponBaseT,
       targetHeading = heading / headingLength;
   }
 
-  bool CanCollide(ObjectT const* other) const {
+  bool CanCollide(ObjectT const* other) const override {
     return other->GetDamager();
   }
 
@@ -132,17 +132,17 @@ AutoClassDerived(Weapon, WeaponBaseT,
     }
   }
 
-  float GetCooldown() const {
+  float GetCooldown() const override {
     if (magazine == 0 && GetMaxUses() > 0)
       return magazineTime / GetWeaponType()->magazineTime;
     return Saturate(1.0f - cooldown * GetWeaponType()->rate);
   }
 
-  Quantity GetMaxUses() const {
+  Quantity GetMaxUses() const override {
     return Supertyped.type->GetUses();
   }
 
-  float GetRange() const {
+  float GetRange() const override {
     return Supertyped.type->GetRange();
   }
 
@@ -156,7 +156,7 @@ AutoClassDerived(Weapon, WeaponBaseT,
     return (WeaponType*)(ItemT*)Supertyped.type;
   }
 
-  Quantity GetUses() const {
+  Quantity GetUses() const override {
     return magazine;
   }
 
@@ -179,7 +179,7 @@ AutoClassDerived(Weapon, WeaponBaseT,
     }
   }
 
-  void OnMessage(Data& m) {
+  void OnMessage(Data& m) override {
     BaseType::OnMessage(m);
     if (m.type == Type_Get<MessageFire>())
       isFiring = true;
@@ -194,7 +194,7 @@ AutoClassDerived(Weapon, WeaponBaseT,
       targetObject = m.Convert<MessageTargetObject>().object;
   }
 
-  void OnUpdate(UpdateState& state) {
+  void OnUpdate(UpdateState& state) override {
     BaseType::OnUpdate(state);
 
     WeaponType const* wType = GetWeaponType();
