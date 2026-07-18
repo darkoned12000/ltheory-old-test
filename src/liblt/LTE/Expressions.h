@@ -149,6 +149,12 @@ namespace LTE {
 
   LT_API Expression Expression_Noop();
 
+  LT_API Expression Expression_Return(Expression const& expression);
+
+  LT_API Expression Expression_Return(
+    StringList const& list,
+    CompileEnvironment& env);
+
   LT_API Expression Expression_Print(
     StringList const& list,
     CompileEnvironment& env);

@@ -15,6 +15,7 @@ namespace LTE {
   void ExpressionT::Evaluate(void* returnValue) const {
     AUTO_FRAME;
     Environment env;
+    env.returnValue = returnValue;
     Evaluate(returnValue, env);
   }
 
@@ -91,6 +92,8 @@ namespace LTE {
         return Expression_List(list, env);
       if (value == "ref")
         return Expression_DeclareReference(list, env, locals);
+      if (value == "return")
+        return Expression_Return(list, env);
       if (value == "set" || value == "=")
         return Expression_Assign(list, env);
       if (value == "static")

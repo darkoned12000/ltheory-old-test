@@ -106,26 +106,30 @@ namespace LTE {
       
       if (value == "otherwise") {
         if (defaultExpression) {
-          Log_Message("switch -- already has 'otherwise' statement");
+          if (env.detail)
+            Log_Message("switch -- already has 'otherwise' statement");
           return nullptr;
         }
 
         defaultExpression = Expression_Block(sub, env, 1);
       } else {
         if (sub->GetSize() < 2) {
-          Log_Message("switch -- case list does not have at least 2 arguments");
+          if (env.detail)
+            Log_Message("switch -- case list does not have at least 2 arguments");
           continue;
         }
 
         Expression predicate = Expression_Compile(sub->Get(0), env);
         if (!predicate) {
-          Log_Message("switch -- case predicate did not compile");
+          if (env.detail)
+            Log_Message("switch -- case predicate did not compile");
           continue;
         }
 
         Expression statement = Expression_Block(sub, env, 1);
         if (!statement) {
-          Log_Message("switch -- case statement did not compile");
+          if (env.detail)
+            Log_Message("switch -- case statement did not compile");
           continue;
         }
 

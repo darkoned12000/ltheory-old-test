@@ -14,7 +14,18 @@ namespace LTE {
     uint base;
     Vector<void*> registers;
 
-    Environment() : base(0) {}
+    /* Set by a `return` expression; signals enclosing blocks to stop
+       evaluating further expressions and propagate the return value up
+       to the calling function. Checked by ExpressionBlock::Evaluate. */
+    bool returnSignal;
+
+    /* Canonical return-value slot for the innermost enclosing function
+       call. Set by ScriptFunctionT::Call (and ExpressionT::Evaluate) so a
+       `return` anywhere in the body writes directly here, regardless of how
+       deeply nested it is. Null for void / unknown return slots. */
+    void* returnValue;
+
+    Environment() : base(0), returnSignal(false), returnValue(nullptr) {}
 
     inline void* Allocate(Type const& type) {
       return type->Allocate();

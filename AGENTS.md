@@ -662,12 +662,37 @@ Ordered best-ROI first. Each is independent unless noted.
     - **Note:** `std::declval` was evaluated as the helper but GCC 15's
       `<type_traits>` has a hard `static_assert` forbidding `declval` in an
       evaluated context, so it is unusable here.
- 4. **LTSL quality-of-life (low effort, high value).**
-   - Add a real `return` keyword (new AST node + parser rule; backward
-     compatible since last-expression still works). Silence/clarify the benign
-     `switch` compile logs (`Switch.cpp:122-128`). Finish the grammar / dispatch
-     / type-system notes in `docs/ltsl-docs.md`.
-5. **Add `SoundEngine_OpenAL` (path off the FMOD blob).**
+ 4. **LTSL quality-of-life (low effort, high value). — DONE (commit after 51a73d6).**
+    - **Real `return` keyword added.** New `ExpressionReturn` AST node
+      (`src/liblt/LTE/Expression/Return.cpp`, Revamp Work) + `Expression_Return`
+      factory declared in `Expressions.h`. `return` is dispatched in
+      `Expression_Compile` (`Expression.cpp`) alongside the other keywords
+      (`if`/`for`/`while`/`switch`); `return <expr>` returns the expression's
+      value, bare `return` returns void. Backward compatible: last-expression
+      still returns as before.
+    - **Early-exit plumbing (no exceptions — engine is `-fno-exceptions`):**
+      `Environment` gained two fields — `returnSignal` (bool, checked by
+      `ExpressionBlock::Evaluate` after each sub-expression to stop the block
+      early) and `returnValue` (void*, the canonical return slot for the
+      innermost function call). `ExpressionReturn::Evaluate` writes its result
+      to `env.returnValue` so a `return` nested inside `if`/`switch`/blocks lands
+      in the function's output rather than a transient buffer. `returnSignal`
+      is reset to false after each function body finishes (`ScriptFunctionT::Call`
+      and `ExpressionExpressionCall::Evaluate`) so a `return` only stops the
+      innermost function and never leaks into the caller's block.
+    - **Benign `switch` logs silenced.** The `Log_Message("switch -- ...")`
+      calls in `Switch.cpp` (the "case ... did not compile" family) are now
+      gated behind `env.detail`, matching the convention used by `If.cpp` and
+      other nodes — they only print during the error-replay pass, not during
+      normal compilation. (These were always benign; also seen in `war.lts`.)
+    - **Verification:** a scratch LTSL app exercised `return` inside `if`,
+      early-return in both branches, fall-through to last-expr, and `return`
+      inside `switch` returning `String` values — all correct, and `war` /
+      `ltheory-main` / `dogfight` / `launcher` run with zero asserts/errors and
+      no benign switch logs. (Scratch app removed after testing.)
+    - Remaining from this item: finish the grammar / dispatch / type-system
+      notes in `docs/ltsl-docs.md`.
+ 5. **Add `SoundEngine_OpenAL` (path off the FMOD blob).**
    - New implementation behind the existing `SoundEngine` interface using SFML
      audio (`sf::Sound`/`sf::Music`/`sf::Listener`, already linked). Covers
      2D/3D playback; the gap is FMOD's event/project system

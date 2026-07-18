@@ -36,9 +36,14 @@ namespace LTE {
     FRAME(&name.front()) {
       Environment env;
       env.registers.reserve(32);
+      env.returnValue = returnValue;
       for (size_t i = 0; i < parameters.size(); ++i)
         env.registers.push(args[i]);
       expression->Evaluate(returnValue, env);
+      /* A `return` inside the body set this flag to stop the body early;
+         clear it so the caller (which may reuse this Environment) is not
+         affected. A `return` only ever applies to the innermost function. */
+      env.returnSignal = false;
     }
   }
 }
