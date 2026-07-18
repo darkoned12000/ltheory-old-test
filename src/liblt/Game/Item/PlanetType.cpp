@@ -46,9 +46,9 @@ AutoClassDerived(PlanetType, PlanetTypeBase,
   bool, hasRings)
 
   DERIVED_TYPE_EX(PlanetType)
-  PlanetType() {}
+  PlanetType() = default;
 
-  Object Instantiate(ObjectT* parent) {
+  Object Instantiate(ObjectT* parent) override {
     return Object_Planet(this);
   }
 };
