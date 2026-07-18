@@ -131,10 +131,7 @@ typedef void (*ToStringFn)(TypeT*, void*, String*);
 
 template <class T>
 size_t AlignOf() {
-  struct Aligner { char c; T t; };
-  return (size_t)(
-    (volatile char*)&((Aligner*)0)->t -
-    (volatile char*)&((Aligner*)0)->c);
+  return alignof(T);
 }
 
 struct TypeT {
@@ -368,9 +365,20 @@ struct FieldType {
 template <class T>
 Type Type_Get(T const& t);
 
+/* Produce a T const& without constructing a T, for ADL-based type
+   resolution in Type_Get<T>(). The reference is never dereferenced by
+   _Type_Get (which only uses the template parameter T); this relies on
+   the same implementation-defined, universally-tolerated mechanism as
+   the standard offsetof macro. Centralized here so the idiom appears
+   exactly once rather than as scattered *(T const*)0 literals. */
+template <class T>
+T const& Type_Ref() {
+  return *static_cast<T const*>(0);
+}
+
 template <class T>
 Type Type_Get() {
-  return Type_Get(*(T const*)0);
+  return Type_Get(Type_Ref<T>());
 }
 
 inline void FillMetadata(TypeT* type) {}

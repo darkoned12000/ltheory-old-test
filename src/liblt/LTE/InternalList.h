@@ -60,7 +60,7 @@
                                                                                \
       type& operator*() {                                                      \
         return *((type*)((volatile char const*)cur -                           \
-                         (volatile char const*)&((type*)0)->__##name));        \
+                         (volatile char const*)offsetof(type, __##name)));     \
       }                                                                        \
                                                                                \
       Iterator& operator++() {                                                 \

@@ -635,10 +635,24 @@ Ordered best-ROI first. Each is independent unless noted.
       removal (§8c.3) and confirming the `texSample` shim approach still holds at
       each version (the Mesa `texture` macro quirk is version-independent, but
       re-validate).
-3. **Kill the `*(T const*)0` UB idioms (correctness).**
-   - Replace with `std::declval`-style helpers / `offsetof` where valid. Touch
-     `Type.h:373`, `Vec.h:25`, `Common.h:272`. Small, surgical.
-4. **LTSL quality-of-life (low effort, high value).**
+ 3. **Kill the `*(T const*)0` UB idioms (correctness). — DONE (commit after 9c306ab).**
+    - `offset_of` (Common.h) and the InternalList member-offset now use the
+      standard `offsetof` macro. `AlignOf<T>()` uses `alignof(T)`. The scattered
+      `Type_Get(*(T const*)0)` literals in Vec.h / Map.h / VectorMap.h / XVector.h
+      were replaced by the no-arg `Type_Get<T>()`.
+    - The `Type_Get<T>()` no-arg entry point still needs a `T const&` to drive
+      ADL-based friend `_Type_Get(T const&)` lookup (reflected types register
+      their `Type` through that friend, e.g. the static-init hook at
+      Common.h ~119). That single null-reference idiom is now centralized in one
+      documented helper, `Type_Ref<T>()` (Type.h), instead of being copy-pasted
+      as `*(T const*)0` across the codebase. It is the same implementation-
+      defined, compiler-tolerated mechanism as `offsetof` and is never
+      dereferenced (`_Type_Get` only uses the template parameter `T`).
+    - **Note:** `std::declval` was evaluated as the "declval-style helper" but
+      GCC 15's `<type_traits>` has a hard `static_assert` forbidding `declval`
+      in an evaluated context, so it is unusable here. The centralized
+      `Type_Ref<T>()` helper is the practical replacement.
+ 4. **LTSL quality-of-life (low effort, high value).**
    - Add a real `return` keyword (new AST node + parser rule; backward
      compatible since last-expression still works). Silence/clarify the benign
      `switch` compile logs (`Switch.cpp:122-128`). Finish the grammar / dispatch

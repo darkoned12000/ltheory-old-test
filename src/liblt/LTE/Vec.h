@@ -22,7 +22,7 @@ namespace LTE {
 
     FIELDS {
       SelfType* self = (SelfType*)addr;
-      static Type type1 = Type_Get(*(T*)0);
+      static Type type1 = Type_Get<T>();
       for (int i = 0; i < N; ++i)
         m(&((*self)[i]), "data", type1, aux);
     }

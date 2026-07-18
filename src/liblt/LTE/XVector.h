@@ -43,7 +43,7 @@ struct STORAGE_NAME(XNAME) : public NullBase<STORAGE_NAME(XNAME)> {
 
   FIELDS {
     SelfType* self = (SelfType*)addr;
-    static Type type1 = Type_Get(*(XTYPE*)0);
+    static Type type1 = Type_Get<XTYPE>();
 #define X(x) m(&self->x, #x, type1, aux);
     XLIST
 #undef X

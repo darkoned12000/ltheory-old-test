@@ -105,8 +105,8 @@ struct Map : public NullBase<Map<KeyT, ValueT> > {
     size_t sz = oldSize;
 
     static Type sizeType = Type_Get(sz);
-    static Type keyType = Type_Get(*(KeyT const*)0);
-    static Type valueType = Type_Get(*(ValueT const*)0);
+    static Type keyType = Type_Get<KeyT>();
+    static Type valueType = Type_Get<ValueT>();
 
     m(&sz, "size", sizeType, aux);
 
