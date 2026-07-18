@@ -15,6 +15,7 @@ typedef ExplicitTypedef<unsigned int, 2> GL_Program;
 typedef ExplicitTypedef<unsigned int, 3> GL_Renderbuffer;
 typedef ExplicitTypedef<unsigned int, 4> GL_Shader;
 typedef ExplicitTypedef<unsigned int, 5> GL_Texture;
+typedef ExplicitTypedef<unsigned int, 6> GL_VertexArray;
 
 static const GL_Buffer       GL_NullBuffer(0);
 static const GL_Framebuffer  GL_NullFramebuffer(0);
@@ -22,5 +23,6 @@ static const GL_Program      GL_NullProgram(0);
 static const GL_Renderbuffer GL_NullRenderbuffer(0);
 static const GL_Shader       GL_NullShader(0);
 static const GL_Texture      GL_NullTexture(0);
+static const GL_VertexArray  GL_NullVertexArray(0);
 
 #endif

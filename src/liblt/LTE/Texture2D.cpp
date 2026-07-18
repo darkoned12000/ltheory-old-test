@@ -127,9 +127,11 @@ namespace {
         GL_TextureFormat::DataFormat(format), data);
       GL_GenerateMipmap(GL_TextureTarget::T2D);
 
-      GLfloat fLargest;
-      glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest);
-      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest);
+      if (GL_SupportsAnisotropy()) {
+        GLfloat fLargest;
+        glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest);
+      }
     }
 
     void GenerateMipmap() override {

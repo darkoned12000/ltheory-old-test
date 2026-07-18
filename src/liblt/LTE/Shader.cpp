@@ -20,7 +20,7 @@
 #include <sstream>
 #include <iostream>
 
-const String kVersionDirective = "#version 120\n";
+const String kVersionDirective = "#version 330 core\n";
 const uint kTextureUnits = 16;
 
 namespace {
@@ -44,7 +44,14 @@ namespace {
   }
 
   /* Run a manual preprocessor on the shader code to support #include. */
-  String JSLPreprocess(String const& code) {
+  String JSLPreprocess(
+    String const& code,
+    Map<String, bool>* declaredOutputs = 0)
+  {
+    Map<String, bool> localOutputs;
+    if (!declaredOutputs)
+      declaredOutputs = &localOutputs;
+
     std::stringstream parsed;
     std::stringstream codestream(code);
     String buf;
@@ -62,24 +69,25 @@ namespace {
         if (tokens[0] == "include") {
           LTE_ASSERT(tokens.size() == 2);
           parsed << JSLPreprocess(
-            Location_Shader("common/" + tokens[1])->ReadAscii());
+            Location_Shader("common/" + tokens[1])->ReadAscii(),
+            declaredOutputs);
         }
 
         else if (tokens[0] == "output") {
           LTE_ASSERT(tokens.size() == 4);
-          int index = FromString<int>(tokens[1]);
-          String const& varType = tokens[2];
-          int components = 1;
-          if (varType.contains('2'))
-            components = 2;
-          else if (varType.contains('3'))
-            components = 3;
-          else if (varType.contains('4'))
-            components = 4;
-          
-          parsed << "#define " << tokens[3] << " gl_FragData[" << index << "]."; 
-          parsed << String("xyzw").substr(0, components);  
-          parsed << '\n';
+          String const& varName = tokens[3];
+
+          // GLSL 3.30 core: declare an explicit output variable (no gl_FragData).
+          // The engine binds these by name via GL_BindFragDataLocation, so the
+          // declared name must match what BindGlobalAttributes() expects
+          // (fragment_color0 / fragment_color1 / fragment_linearDepth).
+          // Skip duplicate #output directives (e.g. a shared include already
+          // declared the same output) -- re-declaring an `out` is a compile error.
+          if (!declaredOutputs->contains(varName)) {
+            (*declaredOutputs)[varName] = true;
+            String const& varType = tokens[2];
+            parsed << "out " << varType << " " << varName << ";\n";
+          }
         }
 
         else

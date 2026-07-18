@@ -33,6 +33,7 @@
 #include "GLEnum.h"
 #include "GLType.h"
 #include <string>
+#include <cstring>
 
 #ifdef BUILD_STRICT
   #include "Common.h"
@@ -83,6 +84,21 @@ inline void GL_BindAttribLocation(
 /* Bind a named buffer object. */
 inline void GL_BindBuffer(GL_BufferTarget::Enum target, GL_Buffer buffer) {
   glBindBuffer(target, (unsigned int)buffer);
+  DEBUG_GL_ERRORS;
+}
+
+/* Create a vertex array object. In a core profile (GL 3.3+) a VAO must be
+ * bound for any vertex attribute / buffer state to be valid, so the engine
+ * relies on a single global VAO created at init. */
+inline GL_VertexArray GL_GenVertexArray() {
+  unsigned int vao = 0;
+  glGenVertexArrays(1, &vao);
+  DEBUG_GL_ERRORS;
+  return (GL_VertexArray)vao;
+}
+
+inline void GL_BindVertexArray(GL_VertexArray vao) {
+  glBindVertexArray((unsigned int)vao);
   DEBUG_GL_ERRORS;
 }
 
@@ -783,12 +799,27 @@ inline void GL_TexMagFilter(
   DEBUG_GL_ERRORS;
 }
 
+/* Returns whether the anisotropy extension is exposed by the active GL
+ * context. Some drivers (notably Mesa under a 3.3 context) do not advertise
+ * GL_EXT_texture_filter_anisotropy, and calling glGetFloatv/glTexParameterf
+ * with the anisotropy enums then yields GL_INVALID_OPERATION. Guard usage. */
+inline bool GL_SupportsAnisotropy() {
+  static int cached = -1;
+  if (cached < 0) {
+    char const* exts = (char const*)glGetString(GL_EXTENSIONS);
+    cached = (exts && strstr(exts, "GL_EXT_texture_filter_anisotropy")) ? 1 : 0;
+  }
+  return cached == 1;
+}
+
 /* NONSTANDARD
    Sets the maximum anisotropy value of the given texture. */
 inline void GL_TexMaxAnisotropy(
   GL_TextureTarget::Enum target,
   float anisotropy)
 {
+  if (!GL_SupportsAnisotropy())
+    return;
   glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
   DEBUG_GL_ERRORS;
 }

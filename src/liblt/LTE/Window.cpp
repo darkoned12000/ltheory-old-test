@@ -55,6 +55,18 @@ namespace {
       hasFocus(true)
     {
       viewport = Viewport_Create(0, size, 1, true);
+      sf::ContextSettings glSettings;
+      glSettings.majorVersion = 3;
+      glSettings.minorVersion = 3;
+      // Request a 3.3 context (shaders use #version 330). Leave attributeFlags
+      // at 0: setting the explicit Core bit makes SFML 2.6 + this Mesa driver
+      // crash with a GLX MakeCurrent / oldCtxInfo assertion at first context
+      // switch. The engine's draw path is made core-compatible via the VBO
+      // fallbacks in Renderer.cpp (DrawQuad / DrawQuadOutline / DrawVertices),
+      // so a core 3.3+ context works without client-side vertex arrays.
+      glSettings.attributeFlags = 0;
+      glSettings.depthBits = 24;
+      glSettings.stencilBits = 8;
       impl.create(
         sf::VideoMode(size.x, size.y, bpp),
         title,
@@ -62,7 +74,8 @@ namespace {
           ? sf::Style::Fullscreen 
           : border
             ? sf::Style::Default
-            : sf::Style::None);
+            : sf::Style::None,
+        glSettings);
       impl.setMouseCursorVisible(false);
       impl.setView(sf::View(sf::FloatRect(0, 0, size.x, size.y)));
       viewport->size = size;

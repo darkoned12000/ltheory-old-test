@@ -115,9 +115,14 @@ python3 configure.py run <app>  # runs bin/launch <app> with LD_LIBRARY_PATH set
   referenced by the engine as `Shader(vertex/x.jsl, fragment/y.jsl)`.
 - Shaders are compiled/loaded at runtime through the engine's `Shader`/
   `ShaderInstance` LTE classes.
-- Modernization note: `.jsl` is effectively GLSL; a future upgrade could map
-  directly to GLSL 3.30+/Vulkan. Keep the `Shader(vertex, fragment)` API stable
-  so LTSL scripts don't break.
+- Shaders are `.jsl` files using **GLSL 3.30 core** syntax (the engine
+  force-prefixes every shader with `#version 330 core` in `Shader.cpp`
+  `kVersionDirective`; the GLSL preprocessor `JSLPreprocess` expands `#include`
+  and `#output`, where `#output N type name` becomes an explicit `out type name;`
+  declaration bound by name via `GL_BindFragDataLocation`). Legacy `attribute`/
+  `varying`/`gl_FragData`/`texture2D` were removed during the 120→330 migration
+  (see §8c.2 item #2). Keep the `Shader(vertex, fragment)` API stable so LTSL
+  scripts don't break.
 
 ---
 
@@ -460,18 +465,25 @@ tooling passes, NOT a ground-up rewrite. **None of §8c is implemented yet.**
   `VoidFreeFunctionN`, ~894 bind sites). Known limits: **no `return` keyword**
   (returns last expression), benign `switch -- case ... did not compile` logs
   (`Switch.cpp:122-128`, only fire on skipped branches — not fatal).
-- **Graphics:** GLEW + **OpenGL 2.1 minimum** (`Renderer.cpp:162-210`,
-  `glewExperimental=GL_TRUE`, asserts ~40 GL entry points). Programmable
-  pipeline: FBOs, MRT (`glDrawBuffers`), VBOs, manual attribute slots
-  (`vertex_position`=0, `_normal`=1, `_uv`=2, `_color`=3, `Shader.cpp:214-221`).
-  Fixed-function is **vestigial** — the only real immediate-mode use is a debug
-  quad outline (`Renderer.cpp:508-516`); `glMatrixMode`/`glTexCoord` exist only
-  as unused wrappers in `GL.h`.
-- **GLSL:** **all `.jsl` shaders are force-prefixed with `#version 120`**
-  (`Shader.cpp:23`) and use GLSL 1.20 syntax (`attribute`/`varying`,
-  `gl_FragData`). A custom preprocessor `JSLPreprocess` (`Shader.cpp:47-91`)
-  handles `#include` and an `#output` directive mapping outputs to
-  `gl_FragData[i]`. 169+ shaders under `resource/shader/`.
+- **Graphics:** GLEW + **OpenGL 3.3+ context** (the engine requests
+  `majorVersion=3, minorVersion=3`; the driver serves a 4.6 core context,
+  on which the 330 shaders run — GLSL version is pinned by `#version 330 core`,
+  NOT the context version). `glewExperimental=GL_TRUE`, asserts ~40 GL entry
+  points. Programmable pipeline: FBOs, MRT (`glDrawBuffers`), VBOs, a single
+  global **VAO** bound at `Renderer_Initialize` (core requires a bound VAO),
+  manual attribute slots (`vertex_position`=0, `_normal`=1, `_uv`=2,
+  `_color`=3). Fixed-function / immediate mode (`glBegin`/`glVertex`) is
+  **removed** — the draw path uses VBO fallbacks (see §8c.2 #2).
+- **GLSL:** **all `.jsl` shaders are force-prefixed with `#version 330 core`**
+  (`Shader.cpp:23` `kVersionDirective`) and use GLSL 3.30 syntax
+  (`in`/`out`, explicit `out` fragment outputs, `texture()`). A custom
+  preprocessor `JSLPreprocess` (`Shader.cpp:47-91`) handles `#include` and
+  an `#output N type name` directive → `out type name;` (deduped across
+  includes so shared `common/frag.jsl` + per-shader `#output` don't clash).
+  Legacy `texture2D`/`textureCube` calls route through overloaded `texSample()`
+  wrapper functions in `common/global.jsl` (a `#define texture2D texture`
+  alias mis-resolves under Mesa's GLSL preprocessor). 169+ shaders under
+  `resource/shader/`.
 - **Audio:** FMOD 4.44 "ex" (low-level) API (`Module/SoundEngine/Fmod.cpp`,
   529 LOC; binary blobs in `extbin/linux64`). **Already abstracted** behind a
   pure-virtual `SoundEngine` interface (`SoundEngine.h:25-43`) with `Fmod` and
@@ -560,14 +572,37 @@ Ordered best-ROI first. Each is independent unless noted.
      `typedef`→`using` (large diff), and the targeted `*(T const*)0` UB kill
      (plan #3). **Never** run clang-format/tidy on `ext/SFML/` or `include/`
      (vendored).
-2. **GLSL `#version 120` → `330 core` + core GL context (highest payoff).**
-   - The `.jsl` preprocessor already abstracts includes/outputs, so most edits
-     are mechanical: change `kVersionDirective` (`Shader.cpp:23`), map
-     `attribute`→`in` / `varying`→`in|out` / `gl_FragData[i]`→explicit
-     `out` decls in `JSLPreprocess`, and request a 3.3 core context via
-     `sf::ContextSettings`. Keep the `Shader(vertex, fragment)` API stable so
-     LTSL scripts don't break (see §5). Unlocks modern GPU features; removes the
-     deprecated GLSL path. **Do this before any SFML 3.x work** (they pair).
+ 2. **GLSL `#version 120` → `330 core` + core GL context (highest payoff).**
+    *(Step 2 — landed.)*
+    - [x] `kVersionDirective` (`Shader.cpp:23`) is now `#version 330 core`.
+      `JSLPreprocess` maps `#output N type name` → `out type name;` (deduped
+      across `#include` boundaries so shared `common/frag.jsl` + per-shader
+      `#output` don't redeclare and error). `attribute`/`varying` → `in`/`out`;
+      `gl_FragData` removed; `texture2D`/`textureCube` route through overloaded
+      `texSample()` wrapper functions in `common/global.jsl` (a `#define
+      texture2D texture` alias mis-resolves under Mesa's GLSL preprocessor).
+      `Shader(vertex, fragment)` API kept stable (see §5).
+    - [x] Draw path made core-compatible: a single global **VAO** is bound at
+      `Renderer_Initialize` (core requires a bound VAO); `Renderer_DrawQuad` /
+      `Renderer_DrawQuadOutline` / `StaticDrawVertices` / the generic
+      `Renderer_DrawVertices(Type...)` were converted from client-side vertex
+      arrays / `glBegin` immediate mode to VBO uploads. `Texture2D.cpp`
+      anisotropy setup is guarded by `GL_SupportsAnisotropy()`.
+    - [x] Context: `Window.cpp` requests `majorVersion=3, minorVersion=3` with
+      `attributeFlags=0`. The driver serves a 4.6 core context on which the 330
+      shaders run (GLSL version is pinned by `#version 330 core`, not the context
+      version). Setting the explicit **Core** bit made SFML 2.6 + this Mesa driver
+      crash with a GLX `MakeCurrent` / `oldCtxInfo` assertion at first context
+      switch, so the Core bit is left off.
+    - [x] Verified: all runnable apps (`ltheory-main`, `war`, `launcher`,
+      `dogfight`, `hud`, `map`, `ui`, `image`, `objectinfo`, `market`, `model`,
+      `draw`, `font`, `universe`, `sandbox`) compile every shader and render
+      with zero GL errors under `BUILD_STRICT` (`DEBUG_GL_ERRORS`). The benign
+      `Object/WarpNode`/`Object/WarpRail` LTSL warnings (also in `war`) remain.
+    - GLSL 4.x (400–460) is the only higher step and was deliberately NOT taken:
+      it gives no benefit here (no tessellation / compute / SSBO usage) and risks
+      new compile errors across the 169 shaders for zero upside. Note for later:
+      see the deferred EasyGL cleanup in §8c.3.
 3. **Kill the `*(T const*)0` UB idioms (correctness).**
    - Replace with `std::declval`-style helpers / `offsetof` where valid. Touch
      `Type.h:373`, `Vec.h:25`, `Common.h:272`. Small, surgical.
@@ -597,6 +632,18 @@ Ordered best-ROI first. Each is independent unless noted.
 ### 8c.3 Explicit non-goals / cautions
 - **Keep `-fno-exceptions`.** The entire engine assumes no exceptions; do not
   introduce try/catch/throw.
+- **Deferred cleanup (not part of the 120→330 migration):** the EasyGL
+  library in `src/liblt/LTE/GL.h` still defines immediate-mode / fixed-
+  function wrappers that are now unused after the migration —
+  `GL_Begin`/`GL_End`/`GL_Vertex`/`GL_TexCoord`/`GL_Normal`(Pointer)/
+  `GL_Color` and the `GL::DrawQuad` helper (GL.h:1052). The engine
+  never called these even under GLSL 1.20 (it always used VBOs +
+  `glVertexAttribPointer`), and core profile removes the underlying
+  `glBegin`/`glVertex` anyway. They are Josh's original public-domain
+  library API surface, so they were left in place during the migration.
+  **Safe to delete later** once confirmed nothing external references
+  them — remove them in a separate, clearly-marked cleanup commit
+  (do NOT mark as Revamp Work; they are original code).
 - **Keep `Reference<T>` / the reflection macros.** They are the backbone of
   serialization + scripting; "modernizing" them to std types is churn without
   benefit and high breakage risk.

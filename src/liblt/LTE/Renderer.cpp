@@ -233,6 +233,12 @@ namespace LTE {
     Renderer_PushCullMode(CullMode::Backface);
     Renderer_PushZBuffer(true);
     Renderer_PushZWritable(true);
+
+    /* Core profile (GL 3.3+) requires a Vertex Array Object to be bound for
+     * any vertex attribute / buffer state to be valid. Bind a single global
+     * VAO for the lifetime of the renderer so the engine's attribute setup
+     * (which never created VAOs) has somewhere to live. */
+    GL_BindVertexArray(GL_GenVertexArray());
   }
 
 // ----------------------------------------------------------------------------
@@ -462,6 +468,52 @@ namespace LTE {
     renderer.polyCount += mesh->GetIndices() / 3;
   }
 
+  namespace {
+    /* A single shared unit quad (pos + uv interleaved) used by Renderer_DrawQuad.
+       Core profiles forbid client-side vertex arrays, so the quad lives in a VBO.
+       The layout matches DrawQuad's attribute setup: attrib 0 = vec3 pos,
+       attrib 2 = vec2 uv. */
+    struct QuadVertex {
+      float p[3];
+      float t[2];
+    };
+
+    GL_Buffer GetSharedQuadVBO() {
+      static GL_Buffer quadVBO = GL_NullBuffer;
+      if (quadVBO == GL_NullBuffer) {
+        static const QuadVertex quad[] = {
+          { { 0.f, 0.f, 0.f }, { 0.f, 0.f } },
+          { { 1.f, 0.f, 0.f }, { 1.f, 0.f } },
+          { { 1.f, 1.f, 0.f }, { 1.f, 1.f } },
+          { { 0.f, 1.f, 0.f }, { 0.f, 1.f } },
+        };
+        quadVBO = GL_GenBuffer();
+        Renderer_BindVertexBuffer(quadVBO, true);
+        GL_BufferData(
+          GL_BufferTarget::Array,
+          sizeof(quad),
+          quad,
+          GL_BufferUsage::StaticDraw);
+      }
+      return quadVBO;
+    }
+
+    GL_Buffer GetSharedQuadIBO() {
+      static GL_Buffer quadIBO = GL_NullBuffer;
+      if (quadIBO == GL_NullBuffer) {
+        static const uchar indices[] = { 0, 1, 2, 0, 2, 3 };
+        quadIBO = GL_GenBuffer();
+        Renderer_BindIndexBuffer(quadIBO, true);
+        GL_BufferData(
+          GL_BufferTarget::ElementArray,
+          sizeof(indices),
+          indices,
+          GL_BufferUsage::StaticDraw);
+      }
+      return quadIBO;
+    }
+  }
+
   void Renderer_DrawQuad(
     V2 const& p1,
     V2 const& p2,
@@ -469,71 +521,107 @@ namespace LTE {
     V2 const& t2,
     float depth)
   {
-    struct VertexPT {
-      V3 p;
-      V2 t;
-
-      VertexPT(V3 const& p, V2 const& t) :
-        p(p),
-        t(t)
-        {}
+    /* Positions are in world space; the shader applies world-view-proj (same
+       as the original client-side-array path). The quad VBO is filled per-call
+       because the rect is dynamic. */
+    QuadVertex scratch[4] = {
+      { { p1.x, p1.y, depth }, { t1.x, t1.y } },
+      { { p2.x, p1.y, depth }, { t2.x, t1.y } },
+      { { p2.x, p2.y, depth }, { t2.x, t2.y } },
+      { { p1.x, p2.y, depth }, { t1.x, t2.y } },
     };
 
-    const VertexPT vertices[] = {
-      VertexPT(V3(p1.x, p1.y, depth), V2(t1.x, t1.y)),
-      VertexPT(V3(p2.x, p1.y, depth), V2(t2.x, t1.y)),
-      VertexPT(V3(p2.x, p2.y, depth), V2(t2.x, t2.y)),
-      VertexPT(V3(p1.x, p2.y, depth), V2(t1.x, t2.y)),
-    };
-
-    uchar indices[] = {
-      0, 1, 2, 0, 2, 3,
-    };
-
-    Renderer_BindVertexBuffer(GL_NullBuffer);
-    Renderer_BindIndexBuffer(GL_NullBuffer);
+    Renderer_BindVertexBuffer(GetSharedQuadVBO(), true);
+    Renderer_BindIndexBuffer(GetSharedQuadIBO(), true);
     Renderer_EnableAttribArray(0);
     Renderer_DisableAttribArray(1);
     Renderer_EnableAttribArray(2);
 
-    GL_VertexAttribPointer(0, 3, GL_DataFormat::Float, false, sizeof(VertexPT),
-                           (void const*)&vertices[0].p);
-    GL_VertexAttribPointer(2, 2, GL_DataFormat::Float, false, sizeof(VertexPT),
-                           (void const*)&vertices[0].t);
-    GL_DrawElements(GL_DrawMode::Triangles, 6, GL_IndexFormat::Byte, indices);
+    GL_BufferData(
+      GL_BufferTarget::Array,
+      sizeof(scratch),
+      scratch,
+      GL_BufferUsage::DynamicDraw);
+
+    GL_VertexAttribPointer(0, 3, GL_DataFormat::Float, false, sizeof(QuadVertex),
+                           (void const*)offset_of(QuadVertex, p));
+    GL_VertexAttribPointer(2, 2, GL_DataFormat::Float, false, sizeof(QuadVertex),
+                           (void const*)offset_of(QuadVertex, t));
+    GL_DrawElements(GL_DrawMode::Triangles, 6, GL_IndexFormat::Byte, nullptr);
     renderer.callCount++;
   }
 
   void Renderer_DrawQuadOutline(V2 const& p1, V2 const& p2) {
-    GL_Begin(GL_DrawMode::LineLoop);
-    GL_Vertex(p1.x, p1.y, 0);
-    GL_Vertex(p1.x, p2.y, 0);
-    GL_Vertex(p2.x, p2.y, 0);
-    GL_Vertex(p2.x, p1.y, 0);
-    GL_End();
+    /* Core profiles forbid immediate mode (glBegin/glVertex), so emit the
+       loop as a dynamic VBO draw. */
+    static GL_Buffer outlineVBO = GL_NullBuffer;
+    if (outlineVBO == GL_NullBuffer)
+      outlineVBO = GL_GenBuffer();
+
+    float const v[4 * 3] = {
+      p1.x, p1.y, 0.f,
+      p1.x, p2.y, 0.f,
+      p2.x, p2.y, 0.f,
+      p2.x, p1.y, 0.f,
+    };
+    Renderer_BindVertexBuffer(outlineVBO, true);
+    GL_BufferData(GL_BufferTarget::Array, sizeof(v), v, GL_BufferUsage::DynamicDraw);
+    Renderer_EnableAttribArray(0);
+    GL_VertexAttribPointer(0, 3, GL_DataFormat::Float, false, 0, nullptr);
+    glDrawArrays(GL_LINE_LOOP, 0, 4);
     renderer.callCount++;
+  }
+
+  namespace {
+    /* Persistent VBO/IBO used for one-off CPU-vertex draws (debug / arbitrary
+       geometry). Core profiles forbid client-side vertex arrays, so we upload
+       the CPU data each call and draw from the buffer. */
+    GL_Buffer GetDebugVBO() {
+      static GL_Buffer b = GL_NullBuffer;
+      if (b == GL_NullBuffer)
+        b = GL_GenBuffer();
+      return b;
+    }
+    GL_Buffer GetDebugIBO() {
+      static GL_Buffer b = GL_NullBuffer;
+      if (b == GL_NullBuffer)
+        b = GL_GenBuffer();
+      return b;
+    }
+    size_t IndexByteSize(GL_IndexFormat::Enum fmt) {
+      return fmt == GL_IndexFormat::Byte ? 1
+           : fmt == GL_IndexFormat::Short ? 2 : 4;
+    }
   }
 
   void StaticDrawVertices(
     Vertex const* vertexData,
+    size_t vertexCount,
     void const* indexData,
     GL_IndexFormat::Enum indexFormat,
     size_t indexCount)
   {
-    Renderer_BindVertexBuffer(GL_NullBuffer);
-    Renderer_BindIndexBuffer(GL_NullBuffer);
+    Renderer_BindVertexBuffer(GetDebugVBO(), true);
+    GL_BufferData(GL_BufferTarget::Array,
+                  (GLsizei)(sizeof(Vertex) * vertexCount),
+                  (void const*)vertexData, GL_BufferUsage::DynamicDraw);
+    Renderer_BindIndexBuffer(GetDebugIBO(), true);
+    GL_BufferData(GL_BufferTarget::ElementArray,
+                  (GLsizei)(IndexByteSize(indexFormat) * indexCount),
+                  indexData, GL_BufferUsage::DynamicDraw);
+
     Renderer_EnableAttribArray(0);
     Renderer_EnableAttribArray(1);
     Renderer_EnableAttribArray(2);
 
     GL_VertexAttribPointer(0, 3, GL_DataFormat::Float, false, sizeof(Vertex),
-                           &vertexData->p);
+                           (void const*)offset_of(Vertex, p));
     GL_VertexAttribPointer(1, 3, GL_DataFormat::Float, false, sizeof(Vertex),
-                           &vertexData->n);
+                           (void const*)offset_of(Vertex, n));
     GL_VertexAttribPointer(2, 2, GL_DataFormat::Float, false, sizeof(Vertex),
-                           &vertexData->u);
+                           (void const*)offset_of(Vertex, u));
 
-    GL_DrawElements(GL_DrawMode::Triangles, indexCount, indexFormat, indexData);
+    GL_DrawElements(GL_DrawMode::Triangles, indexCount, indexFormat, nullptr);
     renderer.callCount++;
     renderer.polyCount += indexCount / 3;
   }
@@ -544,6 +632,7 @@ namespace LTE {
   {
     StaticDrawVertices(
       vertices.data(),
+      vertices.size(),
       indices.data(),
       GL_IndexFormat::Int,
       indices.size());
@@ -555,9 +644,29 @@ namespace LTE {
   {
     StaticDrawVertices(
       vertices.data(),
+      vertices.size(),
       indices.data(),
       GL_IndexFormat::Short,
       indices.size());
+  }
+
+  namespace {
+    /* Find the maximum index referenced so we know how many vertices to upload
+       for a client-side (CPU) vertex array. */
+    uint MaxIndex(void const* indexData, uint count, GL_IndexFormat::Enum fmt) {
+      uint max = 0;
+      if (fmt == GL_IndexFormat::Byte) {
+        uchar const* p = (uchar const*)indexData;
+        for (uint i = 0; i < count; ++i) max = Max(max, (uint)p[i]);
+      } else if (fmt == GL_IndexFormat::Short) {
+        ushort const* p = (ushort const*)indexData;
+        for (uint i = 0; i < count; ++i) max = Max(max, (uint)p[i]);
+      } else {
+        uint const* p = (uint const*)indexData;
+        for (uint i = 0; i < count; ++i) max = Max(max, p[i]);
+      }
+      return max;
+    }
   }
 
   void Renderer_DrawVertices(
@@ -567,8 +676,18 @@ namespace LTE {
     uint indices,
     GL_IndexFormat::Enum indexFormat)
   {
-    Renderer_BindVertexBuffer(GL_NullBuffer);
-    Renderer_BindIndexBuffer(GL_NullBuffer);
+    /* Core profiles forbid client-side vertex arrays, so upload the referenced
+       vertices + indices to VBOs, then bind attrib pointers by offset. */
+    uint maxIdx = MaxIndex(indexData, indices, indexFormat);
+    size_t vertexBytes = (size_t)(maxIdx + 1) * vertexFormat->size;
+
+    Renderer_BindVertexBuffer(GetDebugVBO(), true);
+    GL_BufferData(GL_BufferTarget::Array, (GLsizei)vertexBytes,
+                  vertexData, GL_BufferUsage::DynamicDraw);
+    Renderer_BindIndexBuffer(GetDebugIBO(), true);
+    GL_BufferData(GL_BufferTarget::ElementArray,
+                  (GLsizei)(IndexByteSize(indexFormat) * indices),
+                  indexData, GL_BufferUsage::DynamicDraw);
 
     uint attribs = vertexFormat->GetFieldCount((void*)vertexData);
     for (uint i = 0; i < attribs; ++i) {
@@ -593,10 +712,10 @@ namespace LTE {
         GL_DataFormat::Float,
         false,
         vertexFormat->size,
-        field.address);
+        (void const*)((char const*)field.address - (char const*)vertexData));
     }
 
-    GL_DrawElements(GL_DrawMode::Triangles, indices, indexFormat, indexData);
+    GL_DrawElements(GL_DrawMode::Triangles, indices, indexFormat, nullptr);
 
     for (uint i = 3; i < attribs; ++i)
       Renderer_DisableAttribArray(i);
