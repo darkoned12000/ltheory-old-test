@@ -3,7 +3,7 @@
 # Part of the ltheory-old-test modernization effort (Revamp Work).
 # See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
 
-cmake_minimum_required (VERSION 3.10)
+cmake_minimum_required (VERSION 3.10...4.2)
 project(LTheory)
 
 # Prefer GLVND OpenGL libraries on modern systems (silences CMP0072)
