@@ -1,3 +1,15 @@
+# Copyright (C) 2025  darkoned12000
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Part of the ltheory-old-test modernization effort (Revamp Work).
+# See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
+
+# hnn.lts -- Harmonic Neural Network visualization tech-demo.
+#
+# Originally a "self-widget" app (function Data Main + widget:Create). The
+# modern engine only drives "driven" apps (Main -> App + Initialize/Update), so
+# the widget type (here App) has been renamed HNNScreen and wrapped in a driven
+# App that runs the standard RenderPass pipeline.
+
 type Node
   Vec2 pos
   Vec2 normal
@@ -48,15 +60,13 @@ type HNN
         ref edge (edges.Get i)
         ref node1 (nodes.Get edge.node1)
         ref node2 (nodes.Get edge.node2)
-        
+
         var dist (AngleDistance node1.angle node2.angle)
         dist = (Saturate dist / 2Pi) ^ 8.0
 
         var delta dt * edge.w * (node2.energy - node1.energy)
         node1.mass += delta
         node2.mass -= delta
-
-        # edge.w = (Mix edge.w dist (1.0 - (ExpDecay eTotal * dt 10.0)))
 
     desc "Velocity and Damping"
       var dampFactor (ExpDecay dt 100.0)
@@ -66,10 +76,8 @@ type HNN
         node.energy += dt * node.mass
         while node.angle >= 2Pi
           node.angle -= 2Pi
-        # node.mass *= dampFactor
-        # node.energy *= dampFactor
 
-type App
+type HNNScreen
   HNN network HNN
   (Array Float) history (Array Float)
   Int selected 0
@@ -87,13 +95,6 @@ type App
         Vec2 16.0 0.25 * self.size.y
         Vec2 self.size.x - 16.0 0.25 * self.size.y
         512
-
-      # network.CreateRing self.Center 256 512
-
-      # network.CreateLine
-        Vec2 16.0 0.75 * self.size.y
-        Vec2 self.size.x - 16.0 0.75 * self.size.y
-        256
 
       for i 0 i < 2 i.++
         var n1 (Mod (Int_Random.Abs) network.nodes.Size)
@@ -133,14 +134,11 @@ type App
       var dt 0.03
       for i 0 i < speed i.++
         network.Update dt
-        # ref node (network.nodes.Get 0)
-        # node.p = 5.0 * dt * (Sin t)
         t += dt
 
   function Void PreDraw (Widget self)
     DrawPanel self.pos self.size 0.1 1 1 0
     Draw Icon/Cursors:Cross Cursor_Get 12 4.0 * Colors:Primary 0.3
-    # Widget/Dev/FrameInfo:Draw self
 
     if true
       var glyph (Glyph_Circle 0 1 1 1)
@@ -159,21 +157,31 @@ type App
         Draw glyph p1 16.0 * node.energy node.angle * color 1.0
         Draw (Glyph_Line p1 p2 1 1) 0 1 color 1
 
-      if false
-        for i 0 i < network.edges.Size i.++
-          ref edge (network.edges.Get i)
-          ref node1 (network.nodes.Get edge.node1)
-          ref node2 (network.nodes.Get edge.node2)
-          Draw (Glyph_Line node1.pos node2.pos 1 1) 0 1 Colors:Primary edge.w
-
     self.Rebuild
 
-function Data Main ()
-  widget:Create
-    Layer
-      Compositor_None
-      Mesh_Quad
-      1.0
-      Widget/Components:Padding 16 16
-        ListV 8.0
-          Custom Widget App
+type App
+  Interface ui
+  Interface gameView
+  Camera camera
+
+  function Void Initialize ()
+    camera = Camera_Create
+    camera.Push
+    ui = (Interface_Create "UI")
+    gameView = (Interface_Create "Game View")
+    var passes Vector<Reference<RenderPassT>>
+    passes.Append (RenderPass_Clear (Vec4 0.0))
+    passes.Append (RenderPass_Camera camera)
+    passes.Append (RenderPass_Interface ui)
+    passes.Append (RenderPass_PostFilter "post/dither.jsl")
+    gameView.Add (Widget_Rendered passes)
+    ui.Add (Custom Widget HNNScreen)
+
+  function Void Update ()
+    ui.Update
+    gameView.Update
+    gameView.Draw
+
+function App Main ()
+  var self App
+  self

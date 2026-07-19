@@ -739,14 +739,58 @@ aliases). `Key_<Name>.Pressed` / `.Down` are the two states.
 
 ## 12. Gotchas & engine quirks (learned the hard way)
 
- 1. **Driven vs self-widget apps.** Only apps with `Main -> App` + `Initialize` +
-    `Update` are ticked. `widget:Create Layer ...` apps (loading.lts,
-    ui.lts, …) are not driven the same way and mostly don't render.
-    Start new UI from `war.lts` / `ltheory-main.lts`. (`launcher.lts` is now a
-    working driven app — see §14 — and is a good minimal 2D-UI reference.)
- 2. **Build the world in `Initialize`, not `Update`.** Building inside `Update`
-   then calling `camera.SetTarget player.GetPiloting` crashed with a null
-   reference. Build once up front.
+  1. **Driven vs self-widget apps.** Only apps with `Main -> App` + `Initialize` +
+     `Update` are ticked. Every script under `App/` that used the old
+     `widget:Create Layer ...` shape has now been converted to a driven app
+     (see §13.4). Start new UI from `war.lts` / `ltheory-main.lts` /
+     `launcher.lts`. The canonical driven skeleton is:
+     ```lts
+     type App
+       Interface ui
+       Interface gameView
+       Camera camera
+       function Void Initialize ()
+         camera = Camera_Create; camera.Push
+         ui = (Interface_Create "UI")
+         gameView = (Interface_Create "Game View")
+         var passes Vector<Reference<RenderPassT>>
+         passes.Append (RenderPass_Clear (Vec4 0.0))
+         passes.Append (RenderPass_Camera camera)
+         passes.Append (RenderPass_Interface ui)
+         passes.Append (RenderPass_PostFilter "post/dither.jsl")
+         gameView.Add (Widget_Rendered passes)
+         ui.Add (Custom Widget YourScreen)
+       function Void Update ()
+         ui.Update; gameView.Update; gameView.Draw
+     function App Main ()
+       var self App
+       self
+     ```
+  2. **Build the world in `Initialize`, not `Update`.** Building inside `Update`
+    then calling `camera.SetTarget player.GetPiloting` crashed with a null
+    reference. Build once up front.
+  2b. **You CANNOT pass arguments to `Custom Widget`.** `Custom Widget MyScreen
+    player` does **not** compile (it silently fails to compile, leaving `ui`
+    empty → a black screen). If a screen needs state (a `Player`, an `Object`,
+    …), build it **inside the widget's own `Create` method** and store it as a
+    bare field (`player = Player_Human`), exactly like `objectinfo.lts` /
+    `hud.lts` / `map.lts` / `market.lts` do. (Passing args works for real
+    *factory functions* like `Widget/HUD:Create player` or
+    `Widget/ObjectInfo:Create player object` — those are functions, not
+    `Custom Widget`.)
+  2c. **Set the camera target every frame.** Any app whose widgets read the
+    camera (`Widget/HUD`, `Widget/Map`, `HUD/WorldObjects`, reticle/minimap…)
+    requires `Camera_Get.SetTarget player.GetPiloting` (or
+    `camera.SetTarget …`) called each frame, or the widget draws nothing (black
+    screen). `war.lts` does this in `App::Update`; for self-contained widgets do
+    it in the widget's `PreUpdate` via `Camera_Get.SetTarget player.GetPiloting`.
+    Also note `Widget/HUD.lts` gates most of its children behind
+    `if Camera_Get.IsNotNull`, so a missing camera target drops the whole HUD.
+  2d. **Don't reference widget-built objects from `App::Update`.** If the screen
+    widget builds `system`/`player` in its own `Create`, the `App` type does NOT
+    have those fields — calling `system.Update …` from `App::Update` dereferences
+    a null `system`. Move per-frame object updates (`system.Update dt`,
+    `station.Update dt`) into the widget's `PreUpdate` instead.
 3. **`static` needs an initializer.** `static x false` works; `static x` does
    not compile (`'static' expects 2 arguments`).
 4. **Don't add App members beyond what works.** Adding extra typed members to
@@ -789,12 +833,14 @@ aliases). `Key_<Name>.Pressed` / `.Down` are the two states.
     (§14.2). Path is relative to the engine's working directory.
   15. **LTSL cannot launch another app.** There is no script API to start a
      different `.lts`. A launcher can only highlight the selection (§14.3).
-  16. **Functions return their last expression; there is no `return`.** Writing
-     `return expr` fails to compile. Just end the function with the value
-     (e.g. `Config_Get` ends with `Substring ...` or `""`). This broke
-     `Texture/RandomScreenshot.lts` (it used `return`) — rewritten to drop the
-     keyword. (A `return` with no value, used to exit early, is also invalid;
-     restructure the control flow instead.)
+  16. **`return` keyword is now supported (Revamp Work).** A real `return`
+      keyword was added (see AGENTS §8c.2 #4): `return expr` returns the value,
+      bare `return` returns void, and it works from inside `if`/`switch`/blocks.
+      The legacy behavior (functions return their last expression) is preserved
+      for backward compatibility, so older scripts that omit `return` still work.
+      `Texture/RandomScreenshot.lts` (which used `return`) was rewritten to load
+      `resource/texture/splash.png` (its original `return` + hardcoded
+      `~/Dropbox/...` path were both broken).
   17. **`switch -- case statement did not compile` at startup is benign.** It is
      printed twice (same as `war.lts`) and does not prevent the app from running.
      Ignore it.
@@ -931,6 +977,56 @@ If you want a click to *do* something, the realistic options are:
 - **C++ side (would be a real feature):** expose a ScriptAPI function such as
   `Program_Launch(name)` in `src/liblt/LTE/ScriptAPI/` that tells the `Launcher`
   to swap apps. That is an engine change, not a script change.
+
+---
+
+## 13.4 App status — what runs and how it was fixed
+
+Every app under `resource/script/App/` is now a **driven** app (`Main -> App`
++ `Initialize`/`Update`) that renders through the `Widget_Rendered` /
+`RenderPass` pipeline. The following were converted from the old
+`widget:Create Layer ...` self-widget shape or had their render path fixed:
+
+| App | Status | Notes / fix |
+|---|---|---|
+| `war` | runs | Canonical game app; already driven (reference). |
+| `dogfight` | runs | Already driven. |
+| `ltheory-main` | runs | Revamp Work sandbox; already driven (see AGENTS §7b). |
+| `launcher` | runs | Pure-2D driven UI; reference for §14. |
+| `threads` | runs | Converted from self-widget. **`Thread_Create`/`GetResult` currently crash with an Access Violation in this engine build** (worker thread touches engine state that is not main-thread-safe, or `GetResult` returns null) — this is a SEPARATE engine bug, tracked against `ScriptAPI/Thread`. The app computes the demo result on the main thread so it runs; restoring the real background-thread path needs the engine fix. |
+| `colony` | runs | Converted from self-widget. Builds `Object_Universe 42 0`, walks to the first `IsSystem`, and shows its `GetName`. The universe build runs inside `ColonyScreen:Create` (self-contained); custom fields are set **bare** inside the type's own methods (e.g. `systemName = ...`), not `self.systemName`. |
+| `hnn` | runs | Converted from self-widget. Harmonic Neural Network sim; all logic in `HNNScreen` (`CreateChildren`/`PreUpdate`/`PreDraw`); `self.Rebuild` is kept and works. |
+| `ui` | runs | Converted from self-widget. UI showcase; `UIScreen` loads `Texture/RandomScreenshot:Get` (splash.png) and builds windows + a `TextEditor`. |
+| `platemesh` | runs | Converted from self-widget. `PlateScreen` hosts `Widget/ModelEditor:Create`. |
+| `hud` | runs | Converted from self-widget. Originally searched the universe for a player (which doesn't exist — stations/players aren't auto-generated; see AGENTS §8b.1); now creates the player explicitly (`Player_Human` + `Item_ShipType` ship + `player.Pilot ship`) inside `HUDApp:Create`, and sets `Camera_Get.SetTarget player.GetPiloting` in `PreUpdate` (the HUD requires a live camera target — without it the whole HUD is dropped and the screen is black). |
+| `objectinfo` | runs | Converted from self-widget. Already had all build logic in `Create` (self-contained); just wrapped in the driven `App`. |
+| `map` | runs | Was already driven but used the **old `Layer`/`Compositor_Basic` + `ui.Draw` render path, which hangs/doesn't render** — fixed by switching to the `Widget_Rendered`/`RenderPass` pipeline. It also originally did `Custom Widget MapWidget player` (invalid — fails to compile, leaving `ui` empty/black) and scanned the universe for a player that doesn't exist. Now builds the player + system inside `MapWidget:Create` (self-contained) and sets the camera target in `PreUpdate`. |
+| `market` | runs | Same `Layer`→`RenderPass` and `Custom Widget … args` fixes as `map`; the player/station/market build moved into `MarketWidget:Create` and `station.Update` into `PreUpdate`. |
+
+**Remaining compile errors in all apps (benign):** `Object/WarpNode.lts` and
+`Object/WarpRail.lts` fail to compile because `Position` (a `V3T<double>`)
+has no LTSL arithmetic operators registered in the engine. That is a known
+engine gap (static-initialization-order fiasco when registering `Position`
+conversions/operators) tracked separately — see AGENTS §8b.1 / the warp-rail
+notes. It does not prevent the apps from running; the warp rails are cosmetic.
+
+**Conversion rules that worked (proven across all the above):**
+- The main screen widget is its own `type XScreen` (or keeps its existing
+  name). Inside its own methods, set custom fields **bare** (`systemName = ...`),
+  not `self.field` — `self.<customfield>` parses as a function call and fails.
+  Built-in widget fields (`pos`, `size`, `Center`) are accessed via `self.`.
+- Build the world/objects inside `XScreen:Create` (or `App::Initialize` for
+  state stored on the App) rather than in a `widget:Create` block — there is no
+  `widget:Create` anymore.
+- If the screen needs data computed in `Initialize` (App scope), build it
+  inside the screen's own `Create` instead, since you cannot write custom
+  fields of a `Custom Widget` from outside (the widget binds as base `Widget`).
+- Drive everything with `ui.Update; gameView.Update; gameView.Draw` in
+  `App::Update`, and render through `RenderPass_Clear` → `RenderPass_Camera` →
+  `RenderPass_Interface ui` → `RenderPass_PostFilter "post/dither.jsl"`.
+- Do NOT use the `Layer`/`Compositor_Basic`/`Mesh_Quad`/`Stack` path inside a
+  driven app — it hangs. (That path is only valid in true self-widget apps like
+  `SplashScreen.lts`.)
 
 ---
 

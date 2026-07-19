@@ -1,6 +1,20 @@
 type MapWidget
   Player player
+  Object system
   Texture texture Texture/RandomScreenshot:Get
+
+  function Void Create (Widget self)
+    system = (Object_System (Vec3 15.012) 1340)
+    Object/System:Init system
+
+    var shipType (Item_ShipType 10000 20 1 1 1 1 1 1)
+    var ship shipType.Instantiate
+    ship.SetPos (Vec3 0)
+    system.AddInterior ship
+
+    player = Player_Human
+    player.AddAsset ship
+    player.Pilot ship
 
   function List CreateChildren (Widget self)
     var l List
@@ -9,6 +23,11 @@ type MapWidget
         Widget/Components:Expand
           Widget/Map:Create player player.GetPiloting.GetSystem
     l
+
+  function Void PreUpdate (Widget self)
+    Camera_Get.SetTarget player.GetPiloting
+    var dt 10.0 * FrameTimer_Get
+    system.Update dt
 
   function Void PreDraw (Widget self)
     DrawPanel self.pos self.size (Vec3 0.1 0.2 0.3) 1 1 0
@@ -35,36 +54,29 @@ type MapWidget
                 message.widget
 
 type MapApp
-  Object system
-  Player player
   Interface ui
-    
+  Interface gameView
+  Camera camera
+
   function Void Initialize ()
-    system = (Object_System (Vec3 15.012) 1340)
-
-    Object/System:Init system
-
-    for it system.GetInteriorObjects it.HasMore it.Advance
-      if it.Get.GetOwner.IsNotNull
-        player = it.Get.GetOwner
-
+    camera = Camera_Create
+    camera.Push
     ui = (Interface_Create "UI")
-    ui.Add
-      Layer
-        Compositor_Basic 0.05 0.2 (Vec3 0.25 0.50 0.75)
-        Mesh_Quad
-        1.0
-        Stack
-          Custom Widget
-            MapWidget player
+    gameView = (Interface_Create "Game View")
+    var passes Vector<Reference<RenderPassT>>
+    passes.Append (RenderPass_Clear (Vec4 0.0))
+    passes.Append (RenderPass_Camera camera)
+    passes.Append (RenderPass_Interface ui)
+    passes.Append (RenderPass_PostFilter "post/dither.jsl")
+    gameView.Add (Widget_Rendered passes)
+    ui.Add (Custom Widget MapWidget)
 
   function Void Update ()
     if Key_T.Pressed Shader_RecompileAll
 
-    var dt 10.0 * FrameTimer_Get
-    system.Update dt
     ui.Update
-    ui.Draw
+    gameView.Update
+    gameView.Draw
 
 function MapApp Main ()
   MapApp

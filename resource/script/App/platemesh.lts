@@ -1,4 +1,16 @@
-type App
+# Copyright (C) 2025  darkoned12000
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Part of the ltheory-old-test modernization effort (Revamp Work).
+# See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
+
+# platemesh.lts -- a model-editor tech-demo.
+#
+# Originally a "self-widget" app (function Data Main + widget:Create). The
+# modern engine only drives "driven" apps (Main -> App + Initialize/Update), so
+# the widget type (here App) has been renamed PlateScreen and wrapped in a
+# driven App that runs the standard RenderPass pipeline.
+
+type PlateScreen
   Texture texture Texture/RandomScreenshot:Get
 
   function List CreateChildren (Widget self)
@@ -22,11 +34,29 @@ type App
         ref msg (cast Widget/Messages:MessageAddContextMenu data)
         self.AddChild msg.widget
 
-function Data Main ()
-  widget:Create
-    Layer
-      Compositor_Basic 0.0 0.0 (Vec3 0.40 0.50 0.75)
-      Mesh_Quad
-      1.0
-      Stack
-        Custom Widget App
+type App
+  Interface ui
+  Interface gameView
+  Camera camera
+
+  function Void Initialize ()
+    camera = Camera_Create
+    camera.Push
+    ui = (Interface_Create "UI")
+    gameView = (Interface_Create "Game View")
+    var passes Vector<Reference<RenderPassT>>
+    passes.Append (RenderPass_Clear (Vec4 0.0))
+    passes.Append (RenderPass_Camera camera)
+    passes.Append (RenderPass_Interface ui)
+    passes.Append (RenderPass_PostFilter "post/dither.jsl")
+    gameView.Add (Widget_Rendered passes)
+    ui.Add (Custom Widget PlateScreen)
+
+  function Void Update ()
+    ui.Update
+    gameView.Update
+    gameView.Draw
+
+function App Main ()
+  var self App
+  self

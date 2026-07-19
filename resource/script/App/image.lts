@@ -1,4 +1,21 @@
-type App
+# Copyright (C) 2025  darkoned12000
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Part of the ltheory-old-test modernization effort (Revamp Work).
+# See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
+
+# image.lts -- a screenshot / texture viewer.
+#
+# WHAT IT DOES: loads a texture (the bundled splash.png) into a
+# Widget/ImageEditor, which applies circle-min/circle-max filter passes and a
+# gain, then previews the (filtered) image inside a panel with a grid overlay
+# and a mouse cursor.
+#
+# This was originally a "self-widget" app (function Data Main + widget:Create
+# Layer ...). The modern engine only drives "driven" apps (Main -> App +
+# Initialize/Update), so it has been converted to that lifecycle. The widget
+# drawing code is unchanged; only the app shell changed.
+
+type ImageScreen
   function List CreateChildren (Widget self)
     var l List
     l +=
@@ -6,9 +23,9 @@ type App
         Widget/Components:Margin 16 16
           Widget/ImageEditor:Create
             ?
-              false (Texture_LoadFrom (Location_File "1.png"))
+              false (Texture_LoadFrom (Location_File "resource/texture/splash.png"))
               true
-                Texture_LoadFrom (Location_File "data/screenshot/29.png")
+                Texture_LoadFrom (Location_File "resource/texture/splash.png")
               otherwise (Texture/RandomScreenshot:Get)
             "image.png"
     l
@@ -23,13 +40,29 @@ type App
   function Void PostUpdate (Widget self)
     Thread_SleepMS 16
 
-function Data Main ()
-  widget:Create
-    Layer
-      ?
-        false (Compositor_Basic 0.1 0.1 (Vec3 0.4 0.50 0.9))
-        otherwise Compositor_None
-      Mesh_Quad
-      1.0
-      Stack
-        Custom Widget App
+type App
+  Interface ui
+  Interface gameView
+  Camera camera
+
+  function Void Initialize ()
+    camera = Camera_Create
+    camera.Push
+    ui = (Interface_Create "UI")
+    gameView = (Interface_Create "Game View")
+    var passes Vector<Reference<RenderPassT>>
+    passes.Append (RenderPass_Clear (Vec4 0.0))
+    passes.Append (RenderPass_Camera camera)
+    passes.Append (RenderPass_Interface ui)
+    passes.Append (RenderPass_PostFilter "post/dither.jsl")
+    gameView.Add (Widget_Rendered passes)
+    ui.Add (Custom Widget ImageScreen)
+
+  function Void Update ()
+    ui.Update
+    gameView.Update
+    gameView.Draw
+
+function App Main ()
+  var self App
+  self

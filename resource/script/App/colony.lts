@@ -1,7 +1,31 @@
-type App
-  Object universe
-  Object system
+# Copyright (C) 2025  darkoned12000
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Part of the ltheory-old-test modernization effort (Revamp Work).
+# See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
+
+# colony.lts -- a universe-viewer tech-demo.
+#
+# WHAT IT DOES: creates a universe (Object_Universe 42 0), walks down to the
+# first system, and renders a full-screen panel with the system name and a
+# mouse cursor.
+#
+# Originally a "self-widget" app (type App used as both App and widget, plus
+# widget:Create Layer Compositor_Basic). The modern engine only drives "driven"
+# apps (Main -> App + Initialize/Update), so it has been converted: the universe
+# is built inside the screen widget's Create, and the App drives the standard
+# RenderPass pipeline.
+
+type ColonyScreen
+  String systemName
   Float t
+
+  function Void Create (Widget self)
+    var universe (Object_Universe 42 0)
+    var system universe
+    while (! system.IsSystem)
+      system = system.GetInteriorObjects.Get
+    systemName = system.GetName
+    t = 0.0
 
   function Void PreDraw (Widget self)
     DrawPanel self.pos self.size 0.1 1 1 0
@@ -10,19 +34,32 @@ type App
     var m Cursor_Get
     var c 4.0 * Colors:Secondary
     Draw Icon/Cursors:Pointer m 12 c 0.5
-    DrawText Fonts:Heading system.GetName (Vec2 16 32) 72 0.3 1 false
+    DrawText Fonts:Heading systemName (Vec2 16 32) 72 0.3 1 false
     t += FrameTimer_Get
 
-function Widget Main ()
-  var self App
-  self.universe = (Object_Universe 42 0)
-  self.system = self.universe
-  self.t = 0.0
-  while (! self.system.IsSystem)
-    self.system = self.system.GetInteriorObjects.Get
+type App
+  Interface ui
+  Interface gameView
+  Camera camera
 
-  Layer
-    Compositor_Basic 0.1 0.1 (Vec3 0.25 0.50 0.75)
-    Mesh_Quad
-    1.0
-    Custom Widget self
+  function Void Initialize ()
+    camera = Camera_Create
+    camera.Push
+    ui = (Interface_Create "UI")
+    gameView = (Interface_Create "Game View")
+    var passes Vector<Reference<RenderPassT>>
+    passes.Append (RenderPass_Clear (Vec4 0.0))
+    passes.Append (RenderPass_Camera camera)
+    passes.Append (RenderPass_Interface ui)
+    passes.Append (RenderPass_PostFilter "post/dither.jsl")
+    gameView.Add (Widget_Rendered passes)
+    ui.Add (Custom Widget ColonyScreen)
+
+  function Void Update ()
+    ui.Update
+    gameView.Update
+    gameView.Draw
+
+function App Main ()
+  var self App
+  self

@@ -1,3 +1,15 @@
+# Copyright (C) 2025  darkoned12000
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Part of the ltheory-old-test modernization effort (Revamp Work).
+# See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
+
+# ui.lts -- a UI widget showcase tech-demo.
+#
+# Originally a "self-widget" app (function Data Main + widget:Create). The
+# modern engine only drives "driven" apps (Main -> App + Initialize/Update), so
+# the widget type (here App) has been renamed UIScreen and wrapped in a driven
+# App that runs the standard RenderPass pipeline.
+
 type CircleIcon
   Icon icon
   function Void PreDraw (Widget self)
@@ -53,7 +65,7 @@ function Widget CreatePrompt (String title Widget contents String option1 String
         ListV 0
           Custom Widget
             Prompt title contents option1 option2
-      
+
 type Scratch
   function List CreateChildren (Widget self)
     var l List
@@ -111,7 +123,7 @@ type WindowList
           Widgets:Icon Icons:Medic Colors:Primary
     l
 
-type App
+type UIScreen
   Texture texture Texture/RandomScreenshot:Get
 
   function List CreateChildren (Widget self)
@@ -132,31 +144,6 @@ type App
             "Text Editor"
             Widget/TextEditor:Create "../lt/resource/script/Widget/Map.lts"
 
-    # l +=
-      CreatePrompt
-        "WARNING"
-        Widgets:ListV3 16
-          Widgets:Text Fonts:Default "You are about to embark on an amazing journey." 16 1
-          Widget/Components:Padding 16 16
-            Widget/Components:AlignCenter
-              Widgets:ListH2 32
-                Widget/Components:MinSize 32
-                  Widgets:Icon Icons:Cargo 1.5 * Colors:Primary
-                Widget/Components:MinSize 32
-                  Widgets:Icon Icons:Wormhole 1.5 * Colors:Primary
-          Widgets:ListH5 0
-            Widget/Components:AlignBottomLeft
-              Widgets:Text Fonts:Default "You will face many " 16 1
-            Widget/Components:AlignBottomLeft
-              Widgets:Text Fonts:Medium "CHALLENGES" 20 Colors:Primary
-            Widget/Components:AlignBottomLeft
-              Widgets:Text Fonts:Default " and " 16 1
-            Widget/Components:AlignBottomLeft
-              Widgets:Text Fonts:Medium "OBSTACLES" 20 Colors:Primary
-            Widget/Components:AlignBottomLeft
-              Widgets:Text Fonts:Default "." 16 1
-        "ACCEPT"
-        "CANCEL"
     l
 
   function Void PreDraw (Widget self)
@@ -172,11 +159,29 @@ type App
         ref msg (cast Widget/Messages:MessageAddContextMenu data)
         self.AddChild msg.widget
 
-function Data Main ()
-  widget:Create
-    Layer
-      Compositor_Basic 0.1 0.1 (Vec3 0.40 0.50 0.75)
-      Mesh_Quad
-      1.0
-      Stack
-        Custom Widget App
+type App
+  Interface ui
+  Interface gameView
+  Camera camera
+
+  function Void Initialize ()
+    camera = Camera_Create
+    camera.Push
+    ui = (Interface_Create "UI")
+    gameView = (Interface_Create "Game View")
+    var passes Vector<Reference<RenderPassT>>
+    passes.Append (RenderPass_Clear (Vec4 0.0))
+    passes.Append (RenderPass_Camera camera)
+    passes.Append (RenderPass_Interface ui)
+    passes.Append (RenderPass_PostFilter "post/dither.jsl")
+    gameView.Add (Widget_Rendered passes)
+    ui.Add (Custom Widget UIScreen)
+
+  function Void Update ()
+    ui.Update
+    gameView.Update
+    gameView.Draw
+
+function App Main ()
+  var self App
+  self
