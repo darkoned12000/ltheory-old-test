@@ -161,6 +161,9 @@ foreach(TARGET ${TARGETS})
 
 endforeach(TARGET)
 
+# LTE core unit tests (headless; link against the engine shared library)
+add_subdirectory(tests)
+
 # Treat warnings as errors for our own code (excludes vendored ext/SFML)
 target_compile_options(lt PRIVATE -Werror)
 foreach(TARGET ${TARGETS})

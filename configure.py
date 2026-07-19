@@ -10,6 +10,7 @@ Usage:
     python3 configure.py build          # parallel build
     python3 configure.py clean          # remove bin/ build/ cache/
     python3 configure.py run <app>      # run an LTSL app with LD_LIBRARY_PATH
+    python3 configure.py test           # build + run the LTE core unit tests
     python3 configure.py help           # show this help
 
 CMake presets (use directly if preferred):
@@ -64,6 +65,22 @@ def run_app(args):
     return subprocess.run([exe] + args, env=env).returncode
 
 
+def run_tests():
+    exe = "bin/lte_tests"
+    env = dict(os.environ)
+    if sys.platform != "win32":
+        paths = [
+            os.path.join(os.getcwd(), "bin"),
+            os.path.join(os.getcwd(), "extbin", "linux64"),
+        ]
+        existing = env.get("LD_LIBRARY_PATH", "")
+        env["LD_LIBRARY_PATH"] = os.pathsep.join(
+            paths + existing.split(os.pathsep) if existing else paths
+        )
+    print("[configure.py] Running LTE core unit tests")
+    return subprocess.run([exe], env=env).returncode
+
+
 def main():
     args = sys.argv[1:]
 
@@ -82,6 +99,14 @@ def main():
 
     elif args[0] == "run":
         sys.exit(run_app(args[1:]))
+
+    elif args[0] == "test":
+        if run_cmake_build() != 0:
+            sys.exit(1)
+        return run_tests()
+
+    elif args[0] in ("help", "--help", "-h"):
+        print(__doc__.strip())
 
     elif args[0] in ("help", "--help", "-h"):
         print(__doc__.strip())

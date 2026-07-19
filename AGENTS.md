@@ -340,9 +340,15 @@ Ordered roughly by impact vs. effort. Check items off as completed.
       conversion/resolution rules, and the known gotchas (`return` keyword,
       `switch` benign logs, function-last-expr return, `(Int x)` is a function
       call not a cast).
-- [ ] Add unit tests for `LTE` core (Serializer, Type, Vector/Array, String).
-      **Low-impact** — a small `tests/` target under CMake; would have caught
-      the `Reference<unknown type>` regression automatically.
+- [x] Add unit tests for `LTE` core (String, Vector/Array, Type/reflection).
+      Landed as a headless `lte_tests` target (`tests/`, wired into the
+      top-level `CMakeLists.txt`, run via `python3 configure.py test`). Covers
+      `String` operators, `Vector`/`Array` container ops, and a **regression
+      guard for the `Reference<unknown type>` corruption** (§7 / §8d #2) that
+      asserts `Type_Get<RNGT/FontT/InterfaceT>()` and the corresponding
+      `Reference<>` types resolve to their real names, never `"unknown type"`.
+      Would have caught that regression automatically. (A `Serializer` round-trip
+      test is still a TODO — it needs a `Location`/file backend and is heavier.)
 - [ ] **Lazy/late type registration from `LTE_Initialize`** (proper long-term fix
       for the `Reference<unknown type>` SIOF, §8d #1 / §7 "Reference<unknown
       type> corruption"). Replace static-init `_Type_Get` caching with a single
@@ -903,11 +909,16 @@ an implementation note when you do.**
     call not a cast). High-value, low-risk (docs only). See §8 Engine Code
     checklist.
 
-12. **Add LTE core unit tests.** *(NOT started.)* Small `tests/` target under
-    CMake covering Serializer, Type, Vector/Array, String. Would have caught the
-    `Reference<unknown type>` regression automatically. Low-risk; medium effort
-    to set up the harness around the reflection/serializer core. See §8 Engine
-    Code checklist.
+12. **Add LTE core unit tests.** *(DONE this session.)* Landed a headless
+    `lte_tests` target under `tests/` (wired into top-level `CMakeLists.txt`,
+    run via `python3 configure.py test`). A tiny dependency-free `Harness.h`
+    registers `LTE_TEST` cases; `TestString.cpp`, `TestVectorArray.cpp`, and
+    `TestType.cpp` cover `String` operators, `Vector`/`Array` container ops, and
+    a **regression guard for the `Reference<unknown type>` corruption** (§7 /
+    §8d #2) asserting `Type_Get<RNGT/FontT/InterfaceT>()` and the corresponding
+    `Reference<>` types resolve to their real named types, never `"unknown
+    type"`. 12 tests / 60 checks pass. (A `Serializer` round-trip test is still
+    open — it needs a `Location`/file backend; see note below.)
 
 13. **Lazy/late type registration from `LTE_Initialize` (proper SIOF fix).**
     *(NOT started.)* Replace static-init `_Type_Get` caching with a single
