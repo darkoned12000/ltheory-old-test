@@ -71,10 +71,10 @@
   XY(NP8, Numpad8)                                                             \
   XY(NP9, Numpad9)                                                             \
   XY(Add, Add)                                                                 \
-  XY(BackSpace, BackSpace)                                                     \
-  XY(BackSlash, BackSlash)                                                     \
+  XY(BackSpace, Backspace)                                                     \
+  XY(BackSlash, Backslash)                                                     \
   XY(Comma, Comma)                                                             \
-  XY(Dash, Dash)                                                               \
+  XY(Dash, Hyphen)                                                             \
   XY(Delete, Delete)                                                           \
   XY(Divide, Divide)                                                           \
   XY(Down, Down)                                                               \
@@ -91,16 +91,16 @@
   XY(PageUp, PageUp)                                                           \
   XY(Pause, Pause)                                                             \
   XY(Period, Period)                                                           \
-  XY(Quote, Quote)                                                             \
+  XY(Quote, Apostrophe)                                                       \
   XY(RBracket, RBracket)                                                       \
-  XY(Return, Return)                                                           \
+  XY(Return, Enter)                                                            \
   XY(Right, Right)                                                             \
-  XY(SemiColon, SemiColon)                                                     \
+  XY(SemiColon, Semicolon)                                                     \
   XY(Slash, Slash)                                                             \
   XY(Space, Space)                                                             \
   XY(Subtract, Subtract)                                                       \
   XY(Tab, Tab)                                                                 \
-  XY(Tilde, Tilde)                                                             \
+  XY(Tilde, Grave)                                                             \
   XY(Up, Up)                                                                   \
   XY(LAlt, LAlt)                                                               \
   XY(RAlt, RAlt)                                                               \

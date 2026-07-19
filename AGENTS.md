@@ -292,10 +292,15 @@ Ordered roughly by impact vs. effort. Check items off as completed.
       This is the riskiest dependency to move.
 - [x] Confirm system **FreeType** usage; remove any remaining bundled copies.
 - [ ] Upgrade **UTF8-CPP** include to a current release.
-- [ ] Replace deprecated SFML 2.6 keyboard key names in `Keyboard.cpp`
+- [x] Replace deprecated SFML 2.6 keyboard key names in `Keyboard.cpp`
       (`BackSpace` → `Backspace`, `Dash` → `Hyphen`, `Quote` → `Apostrophe`,
       `Return` → `Enter`, `SemiColon` → `Semicolon`, `BackSlash` → `Backslash`,
-      `Tilde` → `Grave`). Currently works via deprecated aliases.
+      `Tilde` → `Grave`). Done (commit after 8603d4a): the deprecated
+      aliases in the `KEY_MAP_XY` macro's SFML side were swapped for the
+      canonical enum names; the LTE `Key_*` enums and the `Key_Name`
+      display strings were left untouched (they are internal, not SFML). Build
+      clean; launcher runs with no errors. Behavior-preserving (the aliases
+      were `= canonical` in the vendored SFML 2.6.2 header).
 - [ ] Consider upgrading **GLEW** → GLFW/glad if SFML is upgraded anyway.
 
 ### Engine Code
@@ -698,13 +703,19 @@ Ordered best-ROI first. Each is independent unless noted.
      2D/3D playback; the gap is FMOD's event/project system
      (`SoundEvent`/`LoadProject` in `Fmod.h`) — audit whether the game uses it.
      Select via `GetSoundEngine()` (add a build/config toggle).
-6. **SFML 2.6.2 → 3.x + GLEW → glad (do together, after #2).**
+6. **SFML 2.6.2 → 3.x + GLEW → glad (do together, after #2). — DEFERRED.**
    - SFML 3 is C++11-min with renames (`sf::Window`/`sf::RenderWindow`, audio
      module, `sf::Keyboard` enum names — see §8 Libraries). Pairs naturally with
      the core-profile context bump. glad (header-only) removes GLEW's runtime
      init quirks (`glewExperimental`).
+   - **Status (user decision): deferred.** This is a large, high-regression-risk
+     refactor of the window/input/audio startup paths with no runtime benefit
+     for the current stability/perf goal, so it stays on the list but is not
+     being pursued now. The only safe part — the deprecated SFML 2.6 keyboard
+     key-name aliases — was already cleaned up (see Libraries checklist item,
+     done after 8603d4a), which is what #7 below covered.
 7. **Deprecated SFML 2.6 key aliases** in `Keyboard.cpp` (see §8 Libraries) —
-   folds into #6.
+   DONE (folds into #6, but completed standalone since it was zero-risk).
 8. **(Optional / large) LTSL bytecode VM.**
    - Only if scripting becomes a measured perf bottleneck (unlikely for
      gameplay logic). Would replace the tree-walking `Evaluate` with a compiled
