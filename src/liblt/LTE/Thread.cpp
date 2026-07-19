@@ -4,6 +4,8 @@
 #include "Job.h"
 #include "Lock.h"
 
+#include <atomic>
+
 #include "SFML/System.hpp"
 
 namespace {
@@ -16,11 +18,13 @@ namespace {
   struct ThreadImpl : public ThreadT {
     Job job;
     AutoPtr<sf::Thread> thread;
-    bool finished;
+    std::atomic<bool> finished;
+    bool waited;
 
     ThreadImpl(Job const& job) :
       job(job),
-      finished(false)
+      finished(false),
+      waited(false)
     {
       ScopedLock lock(GetThreadLock());
       job->OnBegin();
@@ -29,7 +33,7 @@ namespace {
     }
 
     ~ThreadImpl() override {
-      if (!finished)
+      if (!finished.load(std::memory_order_acquire))
         Terminate();
       job->OnEnd();
     }
@@ -39,12 +43,15 @@ namespace {
     }
 
     bool IsFinished() const override {
-      return finished;
+      return finished.load(std::memory_order_acquire);
     }
 
     void Run() {
       job->OnRun(UINT_MAX);
-      finished = true;
+      /* Publish the result (written by OnRun via the job's returnValue)
+         before marking the thread finished, so a consumer that observes
+         IsFinished() == true is guaranteed to also observe the result. */
+      finished.store(true, std::memory_order_release);
     }
 
     void Terminate() override {
@@ -53,7 +60,10 @@ namespace {
     }
 
     void Wait() override {
-      thread->wait();
+      if (!waited) {
+        thread->wait();
+        waited = true;
+      }
     }
   };
 }

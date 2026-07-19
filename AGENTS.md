@@ -313,19 +313,25 @@ Ordered roughly by impact vs. effort. Check items off as completed.
 
 ### Content / LTSL
 - [x] Catalog which `resource/script/App/*.lts` apps currently run vs. crash.
-      Working: `war`, `dogfight`, `ltheory-main` (Revamp Work sandbox;
-      see §7b), `launcher` (pure-2D UI, see §14).
+      **All 13 apps now run** (`war`, `dogfight`, `ltheory-main`, `launcher`,
+      `threads`, `colony`, `hnn`, `ui`, `platemesh`, `hud`, `objectinfo`,
+      `map`, `market`). Every self-widget app was converted to the driven
+      `Main -> App + Initialize/Update` lifecycle (see `docs/ltsl-docs.md` §13.4
+      for the per-app fix log). The only remaining compile errors in every app
+      are the benign `Object/WarpNode`/`Object/WarpRail` `Position`-math
+      failures (see §8d item #1).
 - [x] `Texture/RandomScreenshot.lts` was broken (hardcoded
       `/home/josh/Dropbox/lt/screenshot` path + a `return` keyword). It was rewritten
       to just load `resource/texture/splash.png`. This also unblocks `Widget/DevPanel`
       and the apps that used it as a backdrop (`widget.lts`, `ui.lts`, `map.lts`,
       `image.lts`, `objectinfo.lts`, `market.lts`, `hud.lts`).
-- [ ] Investigate and fix remaining broken apps: `colony`, `font`, `hnn`,
-      `threads`, `platemesh`. (`widget`, `ui`, `map`, `image`, `objectinfo`,
-      `market`, `hud` are now at least partially unblocked by the
-      RandomScreenshot fix but still need per-app verification.)
-- [ ] Document the LTSL standard library surface exposed to scripts.
-- [ ] Decide on a path for new content once the platform is stable.
+- [x] Convert the remaining self-widget / dead-render-path apps to the driven
+      lifecycle and fix their black-screen bugs (invalid `Custom Widget X args`,
+      missing `Camera_Get.SetTarget` each frame, null player from scanning a
+      universe with no generated owners). See commit `362ffe3` and
+      `docs/ltsl-docs.md` §13.4.
+- [ ] Fix the `threads.lts` background-thread demo: `Thread_Create`/`GetResult`
+      crash with an Access Violation in this engine build (see §8d item #2).
 - [ ] Document the LTSL standard library surface exposed to scripts.
 - [ ] Decide on a path for new content once the platform is stable.
 
@@ -741,6 +747,116 @@ Ordered best-ROI first. Each is independent unless noted.
   benefit and high breakage risk.
 - **Keep the `Shader(vertex, fragment)` LTSL API and `.jsl` layout stable** when
   modernizing GLSL, so scripts and the 169 shaders migrate mechanically.
+
+---
+
+## 8d. Improvement backlog (9 tracked items)
+
+Consolidated, prioritized list of the outstanding engine/LTSL/content
+improvements agreed with the user. Each links back to the section with the full
+context. Roughly grouped by effort/risk. **Check items off as completed and add
+an implementation note when you do.**
+
+### Group A — High-value, low-risk (script / small C++)
+
+1. **Fix the `Position` engine gap → restore warp rails.** *(NOT started.)*
+   The `Object/WarpNode`/`Object/WarpRail` compile failures are the **only**
+   remaining errors in every running app. Root cause: `Position`
+   (`V3T<DistanceT>`, a double-precision `V3`) has **no LTSL arithmetic
+   operators or `Position -> V3` conversion registered**, so script math like
+   `Normalize (p2 - p1)`, `0.5 * (p1 + p2)`, `GetPos self + (...)*dir` fails to
+   compile. **Known trap (do NOT repeat):** registering these via `DefineConversion`
+   / operator macros at **static-init** corrupts the global type registry (a
+   static-initialization-order fiasco — every numeric literal like `0.5` starts
+   failing with `variable name '0.5' not found`), because `Type_Get<Position>()`
+   runs before `Position`/`V3` are registered across TUs. The fix must use
+   **lazy / late registration** called from `LTE_Initialize` / `launch` (after
+   all types exist), NOT static-init. Files: `src/liblt/LTE/Math/Vec.h`
+   (`Position`/`V3T`), `src/liblt/LTE/ScriptAPI/V3.cpp` (`DefineConversion`
+   patterns; `V3F = Vec3`, `Position = V3T<double>`), `src/liblt/Game/ScriptAPI/Object.cpp`
+   (`TypeAlias(Position, Position)`), `src/liblt/LTE/Function.h`
+   (`DefineConversion` calls `Type_Get<SourceType>()` at static-init — the SIOF
+   source). Warp-rail scripts to re-enable once it compiles:
+   `Object/WarpNode.lts`, `Object/WarpRail.lts`, and the `Orbital rail` block in
+   the upstream `Object/System.lts`.
+
+2. **Fix `Thread_Create` / `GetResult` (the `threads` app).** *(DONE this
+   session.)* Root cause was a **missing memory barrier**, not a worker-thread
+   engine-state violation: `Thread_GetResult` polled a plain (non-atomic)
+   `finished` flag and read `returnValue` before the worker had published it,
+   giving a torn / uninitialized value. Fixed in `src/liblt/LTE/Thread.cpp`
+   (`std::atomic<bool> finished` with release/acquire ordering so the result is
+   published before `finished` is set) and `src/liblt/LTE/ScriptAPI/Thread.cpp`
+   (`Thread_GetResult` now joins the worker via `Wait()` before reading the
+   result — a full synchronization, so the value is guaranteed visible). A typed
+   `Thread_GetResultInt` (`GetResultInt`) accessor was added so the integer
+   result can be read directly as an `Int` (see the note below on why the
+   `Data -> Int` path is avoided). `threads.lts` now spins up `MyJob.Main` on a
+   real background thread and displays `49995000` (sum 0..9999). Verified under
+   gdb: worker runs, joins, `GetResultInt` returns the correct value, no AV.
+   - **Related pre-existing engine bug (NOT fixed here, tracked separately):**
+     the `Data -> Int` conversion `(Int (thread.GetResult))` crashes with an
+     Access Violation because `ResolveType("Int")` resolves to a corrupted
+     `Reference<unknown type>` type object (confirmed via a debug build: the
+     `Data -> Int` conversion's destination type was `Reference<unknown type>`
+     while the source was `signed int`; the same crash reproduces without
+     threads via `(Int (Data_None))`). This correlates with the documented
+     exe/dll `Type_Get<T>` static-storage divergence (launch.cpp ~62-66) /
+     static-init type-registration SIOF, but the exact root cause was not
+     isolated this session. Reading the result via `GetResultInt` (Int->String
+     conversion, the common working path) sidesteps it. Fixing the underlying
+     SIOF is the larger effort described in §8d #1.
+
+3. **`ltheory-main` universe knobs (§8b Pass A).** *(NOT started.)* Wire the
+   §8b.2 `gameConfig.txt` keys (`numOfPlanets`, `numOfShips`, `numOfAsteroids`,
+   `planetRingRatio`, `dustLevel`, `fogLevel`, `sunBrightness`, `sunColor`,
+   `nebulaIntensity`, and a `numOfStations`) through `ltheory-main.lts` /
+   `SystemPopulate.lts`. Counts are pure-script loops; `planetRingRatio` needs a
+   small C++ `ringRatio` arg on `Item_PlanetType`. See §8b.3 Pass A.
+
+9. **Add `Station` generation to systems (§8b.1).** *(NOT started.)* Stations
+   exist fully in C++ (`Object_Station` + `Item_StationType(seed, value,
+   capacity, integrity)`, docks/market/mission board) but **nothing spawns
+   them**. Have `SystemPopulate.lts` place ~1–3 stations at random seeded
+   positions scattered across the system volume (user's chosen placement). Pairs
+   naturally with item #3's `numOfStations` knob. See §8b.3 Pass A "Stations".
+
+### Group B — Medium (engine C++ / GLSL)
+
+4. **Live DevTool tweaking (§8b.3 Pass C).** *(NOT started; depends on #3.)*
+   Extend `Widget/DevPanel` (F2) or a new `Widget/UniverseEditor` to expose the
+   §8b.2 knobs as editable fields that re-run `SystemPopulate` in place, so a
+   running session can be tuned without editing `gameConfig.txt` + reloading.
+   Requires #3 to land the knobs behind a single re-init entry point first.
+
+5. **Biomes (§8b.3 Pass B).** *(NOT started.)* Add a `biome` enum to
+   `Item_PlanetType` (Desert / Terran / Ice / Lava / GasGiant / Vegetation)
+   driving new uniforms in `resource/shader/fragment/gen/planet.jsl` +
+   `fragment/planet.jsl` (terrain palette, lava/ice shading, gas-giant banding,
+   vegetation tint). Currently every planet reads as a similar "desert" (§8b.1).
+   Open question (§8b.4): color-only vs. also changing the height mesh.
+
+6. **GLSL 4.30 staged upgrade (§8c.2 #2b).** *(NOT started.)* Bump
+   `kVersionDirective` one major at a time (330 → 400 → 410 → 420 → 430), fixing
+   only each version's errors, to unlock compute shaders + SSBOs for CPU-bound
+   work. **Profile first** to confirm a CPU bottleneck justifies it. Stop at
+   4.30 (beyond that, evaluate Vulkan instead).
+
+7. **Add `SoundEngine_OpenAL` (§8c.2 #5).** *(NOT started.)* New implementation
+   behind the existing pure-virtual `SoundEngine` interface using SFML audio
+   (`sf::Sound`/`sf::Music`/`sf::Listener`, already linked), to get off the
+   closed-source FMOD 4.44 blob. Audit whether the game uses FMOD's
+   event/project system (`SoundEvent`/`LoadProject`) — that's the coverage gap.
+   Select via `GetSoundEngine()` (add a build/config toggle).
+
+### Group C — Low (cleanup)
+
+8. **Delete dead EasyGL fixed-function wrappers (§8c.3).** *(NOT started.)*
+   `GL_Begin`/`GL_End`/`GL_Vertex`/`GL_TexCoord`/`GL_Normal`(Pointer)/`GL_Color`
+   and `GL::DrawQuad` in `src/liblt/LTE/GL.h` are unused after the 120→330
+   migration. Remove in a separate, clearly-marked cleanup commit once confirmed
+   nothing references them. **Do NOT** mark as Revamp Work — they are Josh's
+   original public-domain code.
 
 ---
 
