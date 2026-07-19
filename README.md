@@ -76,11 +76,12 @@ git clone https://github.com/darkoned12000/ltheory-old-test.git
 cd ltheory-old-test
 ```
 
-## Compiling
+## Compiling & Unit Tests
 
 ```
 python3 configure.py            # generate build files (CMake)
 python3 configure.py build      # compile (parallel, ~10s on fast hardware)
+python3 configurepy test
 ```
 
 This produces `bin/launch` (the launcher) and `bin/liblt.so` (the engine).

@@ -66,6 +66,7 @@ python3 configure.py            # cmake configure (-DCMAKE_BUILD_TYPE=RelWithDeb
 python3 configure.py build      # cmake --build ./build
 python3 configure.py clean      # rm -rf bin build cache
 python3 configure.py run <app>  # runs bin/launch <app> with LD_LIBRARY_PATH set
+python3 configure.py test       # this runs all the current unit tests
 ```
 
 ### Key CMake facts (top-level `CMakeLists.txt`)
