@@ -993,7 +993,7 @@ Every app under `resource/script/App/` is now a **driven** app (`Main -> App`
 | `dogfight` | runs | Already driven. |
 | `ltheory-main` | runs | Revamp Work sandbox; already driven (see AGENTS §7b). |
 | `launcher` | runs | Pure-2D driven UI; reference for §14. |
-| `threads` | runs | Converted from self-widget. **`Thread_Create`/`GetResult` currently crash with an Access Violation in this engine build** (worker thread touches engine state that is not main-thread-safe, or `GetResult` returns null) — this is a SEPARATE engine bug, tracked against `ScriptAPI/Thread`. The app computes the demo result on the main thread so it runs; restoring the real background-thread path needs the engine fix. |
+| `threads` | runs | Converted from self-widget. `Thread_Create`/`GetResult` were crashing with an Access Violation — root cause was a **missing memory barrier** (the worker published `returnValue` before the non-atomic `finished` flag), not a worker-thread engine-state violation. Fixed in `LTE/Thread.cpp` (`std::atomic<bool> finished` with release/acquire ordering) and `LTE/ScriptAPI/Thread.cpp` (`Thread_GetResult` joins via `Wait()` before reading, plus a typed `Thread_GetResultInt`/`GetResultInt` accessor). `threads.lts` now spins up `MyJob.Main` on a real background thread and displays `49995000` (sum 0..9999). See AGENTS §8d #2. |
 | `colony` | runs | Converted from self-widget. Builds `Object_Universe 42 0`, walks to the first `IsSystem`, and shows its `GetName`. The universe build runs inside `ColonyScreen:Create` (self-contained); custom fields are set **bare** inside the type's own methods (e.g. `systemName = ...`), not `self.systemName`. |
 | `hnn` | runs | Converted from self-widget. Harmonic Neural Network sim; all logic in `HNNScreen` (`CreateChildren`/`PreUpdate`/`PreDraw`); `self.Rebuild` is kept and works. |
 | `ui` | runs | Converted from self-widget. UI showcase; `UIScreen` loads `Texture/RandomScreenshot:Get` (splash.png) and builds windows + a `TextEditor`. |
@@ -1027,6 +1027,140 @@ notes. It does not prevent the apps from running; the warp rails are cosmetic.
 - Do NOT use the `Layer`/`Compositor_Basic`/`Mesh_Quad`/`Stack` path inside a
   driven app — it hangs. (That path is only valid in true self-widget apps like
   `SplashScreen.lts`.)
+
+---
+
+## 15. Language internals (parser → AST → evaluation)
+
+This section is reverse-engineered from the engine source
+(`src/liblt/LTE/LTSL.cpp`, `Expression*.{h,cpp}`, `Script*.{h,cpp}`,
+`Expression.h`, `ScriptFunction.*`, `Type.h`). It is the reference for *why*
+LTSL behaves the way it does (the gotchas in §12 all trace back here).
+
+### 15.1 Pipeline overview
+
+```
+ source .lts
+   │
+   ▼
+ LTSL::Tokenize            -> token stream
+   │
+   ▼
+ LTSL_ApplyRewrites        -> rewrites `.` member access + infix operators
+                              into explicit prefix/call forms, applying the
+                              operator-precedence table (LTSL.cpp:4-82)
+   │
+   ▼
+ Expression_Compile       -> builds the AST (one Expression* node per construct)
+   │                         keyword dispatch: if/for/while/switch/return/...
+   ▼
+ AST of Expression*        -> 25 node types under LTE/Expression/
+   │
+   ▼
+ ScriptFunctionT::Call    -> evaluates the body with an Environment&
+                              (tree-walking interpreter; no bytecode/VM/JIT)
+```
+
+The interpreter is **tree-walking**: every AST node has a virtual
+`Evaluate(void* out, Environment& env)` (`Expression.h:23`). There is no
+bytecode, no JIT, no VM register file — each call to `Evaluate` writes its
+result into `out` and recurses into children. This is why deeply nested scripts
+are O(depth) per evaluation and why the heavy work is on the C++ side
+(`ScriptAPI` functions), not in LTSL loops.
+
+### 15.2 `LTSL_ApplyRewrites` — the infix/dot transform
+
+Before compilation, `.` access and infix operators (`+`, `*`, `==`, `<`, …)
+are rewritten into explicit forms so the compiler sees a uniform prefix grammar:
+
+- `a.b` → member/field access on `a` (looked up via the type system / `FIELDS`).
+- `a op b` → `(op a b)` for the operators in the precedence table.
+- Parentheses and function calls stay as-is.
+- Method calls `obj.Method arg` become `Method obj arg` (message passing) once
+  rewritten — which is why `self.field` *outside* a method parses as a call to a
+  function named `field` (and fails if none exists). This is the root of the
+  §12.2b / §13.4 "set custom fields bare" rule: inside a method `self` is the
+  receiver, but inside the type's own body `field = ...` is a bare local/field
+  assignment, and `self.field` would be a *call*.
+
+### 15.3 The 25 expression-node types
+
+The AST is built from concrete `Expression_*` classes in `src/liblt/LTE/Expression/`.
+The catalog (filenames = node kind):
+
+| Node | Role |
+|---|---|
+| `Expression` (base) | virtual `Evaluate(out, env)` |
+| `Block` | sequence of sub-expressions; runs each, stops early on `env.returnSignal` |
+| `Declare` | `var x expr` / typed `var x T` |
+| `Assign` | `x = expr` (also `+=`, field assignment) |
+| `Dereference` | `x.field` / `ptr->field` |
+| `Reference` | taking a `ref` / address of a variable |
+| `Constructor` | `Type args` value construction |
+| `Conversion` | explicit/numeric conversion between types |
+| `FunctionCall` / `ExpressionCall` | calling a `ScriptFunction` or free function |
+| `MemberFunctionCall` | `obj.Method args` (dynamic dispatch) |
+| `DynamicDispatch` | resolves the call against the receiver's type |
+| `If` | `if pred cons alt` |
+| `Switch` | `switch / case / otherwise` (benign "did not compile" logs, see §12.17) |
+| `For` | `for i start pred incr body` |
+| `While` | `while pred body` |
+| `Return` | `return expr` / bare `return` (Revamp Work, §12.16) |
+| `Literal` | numeric / string / bool literal |
+| `Variable` | a named local/parameter reference |
+| `Type` | a type reference (e.g. in `var x T`) |
+| `Cast` | type cast node |
+| `Lambda` / `Closure` | function-valued expressions (`Data`/`onPress`) |
+| `List` | `l += ...` list construction/append |
+| `BinaryOp` / `UnaryOp` | arithmetic/logic primitives post-rewrite |
+| `StringOp` | string concat (`+` on strings) |
+| `Message` | a `Data` message value (`MessageBuy`, `SelectItem`, …) |
+
+### 15.4 Dispatch & the type system
+
+- **C++ functions** are bound through the `Function_Generated.h` macro family
+  (`FreeFunctionN` / `MemberFunctionN` / `VoidFreeFunctionN`, ~894 bind sites in
+  `ScriptAPI/`). At compile time `Expression_Compile` resolves a call name to a
+  `Function` by argument types; if no exact match, it tries registered
+  **conversions** (`DefineConversion`) and **operator overloads**.
+- **`FunctionAlias(RNG_Int, Int)`** is why `(Int x)` is *not* a cast — it is the
+  `RNG_Int` function (random int). See §12 and AGENTS §8d #2. Do not write
+  `(Int result)` expecting a numeric cast of a `Data`/thread result; use a typed
+  accessor like `Thread_GetResultInt`.
+- **`Type_Get<T>()` / `Type_Ref<T>()`** drive reflection. Reflected types
+  register a `Type` via a friend `_Type_Get(T const&)` (ADL) hooked from
+  `REGISTER_TYPE` / `DeclareMetadata` / `DefineMetadata`. Abstract `RefCounted`
+  bases used only through `Reference<X>` (`RNGT`, `InterfaceT`, `FontT`) must be
+  reflected too, or `Type_Get<X>()` falls through to the generic `"unknown
+  type"` fallback (null function pointers) and conversions crash. See AGENTS
+  §7 / §8d #13.
+- **Dynamic dispatch** for `obj.Method` walks the receiver's type metadata to
+  find the member function; this is how widget hook methods (`Create`,
+  `PreUpdate`, …) get called by the engine.
+
+### 15.5 The `Environment`
+
+`Environment` carries per-call state: local variables, the `returnSignal` bool,
+and the `returnValue` void* slot (canonical output of the innermost function).
+`ExpressionReturn::Evaluate` sets `env.returnValue` + `env.returnSignal`;
+`ExpressionBlock::Evaluate` checks `returnSignal` after each sub-expression and
+stops; `ScriptFunctionT::Call` and `ExpressionExpressionCall::Evaluate` reset
+`returnSignal` to false after the body finishes so a `return` cannot leak into
+the caller. (This is how early-exit works without exceptions — the engine is
+`-fno-exceptions`.)
+
+### 15.6 Known semantic rules (quick ref)
+
+- **Functions return their last expression** (legacy). `return` is now available
+  (§12.16) but is optional.
+- **`switch` benign logs** are gated behind `env.detail` — they only print during
+  the error-replay pass, never during normal runs (§12.17).
+- **Operator resolution is type-driven**, not overload-by-name; adding operators
+  for a new type (like `Position`) must be done via **late registration at
+  `LTE_Initialize`**, never at static-init, or it corrupts the global type
+  registry (the `Position`/`WarpNode` SIOF, §12.18, AGENTS §8d #1).
+- **No `return` keyword originally** — added as Revamp Work; do not rely on it in
+  scripts you want to run on the unmodified upstream engine.
 
 ---
 

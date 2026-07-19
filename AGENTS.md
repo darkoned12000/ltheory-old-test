@@ -329,9 +329,27 @@ Ordered roughly by impact vs. effort. Check items off as completed.
 - [ ] Audit remaining `-Wmaybe-uninitialized`/deprecation sources (GCC 15 is
       strict); fix at source, not via suppression.
 - [ ] Document the `AutoClass`/`FIELDS`/`MapFields` reflection system (it is the
-      backbone of serialization + scripting).
+      backbone of serialization + scripting). **Low-impact, high-value** — write
+      `docs/reflection.md` (or a section in `docs/ltsl-docs.md`) covering
+      `DeclareMetadata`/`DefineMetadata`/`AutoClass`/`FIELDS`/`MAPFIELD`/
+      `AUTOMATIC_REFLECTION_*`/`METADATA`/`REGISTER_TYPE`, the `_Type_Get` ADL
+      dispatch, and the `Type_Ref<T>()` helper.
 - [ ] Write LTSL language notes: grammar sketch, dispatch model, type system.
+      **Low-impact, high-value** — expand `docs/ltsl-docs.md` (see that file's
+      TODO list) with the parser pipeline, the 25 expression-node types, the
+      conversion/resolution rules, and the known gotchas (`return` keyword,
+      `switch` benign logs, function-last-expr return, `(Int x)` is a function
+      call not a cast).
 - [ ] Add unit tests for `LTE` core (Serializer, Type, Vector/Array, String).
+      **Low-impact** — a small `tests/` target under CMake; would have caught
+      the `Reference<unknown type>` regression automatically.
+- [ ] **Lazy/late type registration from `LTE_Initialize`** (proper long-term fix
+      for the `Reference<unknown type>` SIOF, §8d #1 / §7 "Reference<unknown
+      type> corruption"). Replace static-init `_Type_Get` caching with a single
+      process-wide map keyed by `std::type_index`/`typeid(T).name()`, populated
+      once at `LTE_Initialize`/`launch` after all types exist. Eliminates the
+      whole class of unreflected-type → "unknown type" corruption. Medium effort,
+      touches the reflection core — do carefully.
 
 ### Content / LTSL
 - [x] Catalog which `resource/script/App/*.lts` apps currently run vs. crash.
@@ -865,6 +883,46 @@ an implementation note when you do.**
    them**. Have `SystemPopulate.lts` place ~1–3 stations at random seeded
    positions scattered across the system volume (user's chosen placement). Pairs
    naturally with item #3's `numOfStations` knob. See §8b.3 Pass A "Stations".
+
+### Group A+ — Low-impact, high-value (docs / tests / core safety)
+
+10. **Document the reflection system (`AutoClass`/`FIELDS`/`MapFields`).**
+    *(NOT started.)* Write `docs/reflection.md` (or a section in
+    `docs/ltsl-docs.md`) covering `DeclareMetadata`/`DefineMetadata`/`AutoClass`/
+    `FIELDS`/`MAPFIELD`/`AUTOMATIC_REFLECTION_*`/`METADATA`/`REGISTER_TYPE`, the
+    `_Type_Get` ADL dispatch, and the `Type_Ref<T>()` helper. This is the
+    backbone of serialization + scripting; the §8d #1 SIOF trap and the
+    `Reference<unknown type>` fix both live here. High-value, low-risk (docs
+    only). See §8 Engine Code checklist.
+
+11. **Write LTSL grammar / dispatch / type-system notes.** *(NOT started.)*
+    Expand `docs/ltsl-docs.md` with the parser pipeline (`LTSL_ApplyRewrites` →
+    `Expression_Compile` → AST), the 25 expression-node types, the
+    conversion/resolution rules, and the known gotchas (`return` keyword,
+    `switch` benign logs, function-last-expr return, `(Int x)` is a function
+    call not a cast). High-value, low-risk (docs only). See §8 Engine Code
+    checklist.
+
+12. **Add LTE core unit tests.** *(NOT started.)* Small `tests/` target under
+    CMake covering Serializer, Type, Vector/Array, String. Would have caught the
+    `Reference<unknown type>` regression automatically. Low-risk; medium effort
+    to set up the harness around the reflection/serializer core. See §8 Engine
+    Code checklist.
+
+13. **Lazy/late type registration from `LTE_Initialize` (proper SIOF fix).**
+    *(NOT started.)* Replace static-init `_Type_Get` caching with a single
+    process-wide map keyed by `std::type_index`/`typeid(T).name()`, populated
+    once at `LTE_Initialize`/`launch` after all types exist. Eliminates the whole
+    class of unreflected-type → "unknown type" corruption (the root cause behind
+    §7 / §8d #2). Medium effort, touches the reflection core — do carefully.
+    Pairs with #10 (document first). See §8 Engine Code checklist.
+
+### Group C+ — Tooling
+
+14. **Add CI (GitHub Actions).** *(NOT started.)* Build on Linux (GCC + Clang)
+    and Windows. Reuse the `configure.py` flow / CMakePresets. Should run
+    `clang-format --dry-run --Werror` and a build with `-Werror` scoped to
+    project targets. See §8 Build & Tooling checklist.
 
 ### Group B — Medium (engine C++ / GLSL)
 
