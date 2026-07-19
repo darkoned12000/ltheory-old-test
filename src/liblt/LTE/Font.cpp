@@ -346,3 +346,17 @@ DefineFunction(Font_Get) {
   }
   return font;
 }
+
+
+Type _Type_Get(FontT const& t) {
+  Type& type = Type_GetStorage<FontT>();
+  if (!type) {
+    type = Type_Create("FontT", sizeof(FontT));
+    type->alignment = AlignOf<FontT>();
+    type->assign = __type_default_assign<FontT>;
+    type->deallocate = __type_default_deallocator<FontT>;
+    type->destruct = __type_default_destruct<FontT>;
+    type->toString = __type_default_tostring<FontT>;
+  }
+  return type;
+}

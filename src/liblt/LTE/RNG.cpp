@@ -142,3 +142,23 @@ RNG RNG_MTG(uint seed) {
 RNG RNG_MTG(uint const* arr, size_t size) {
   return new MTG(arr, size);
 }
+
+/* RNGT is an abstract RefCounted base. It is only ever used through
+   Reference<RNGT>, never by value, so we only need Type_Get<RNGT>() to
+   resolve to a real (named) type instead of the generic "unknown type"
+   fallback -- that fallback left Reference<RNGT> as "Reference<unknown
+   type>" (with null function pointers) and crashed Data -> RNG
+   conversions (e.g. the RNG_Int function's RNG parameter). RNGT has no
+   BaseType, so we cannot use the DefineMetadata macro directly. */
+Type _Type_Get(RNGT const& t) {
+  Type& type = Type_GetStorage<RNGT>();
+  if (!type) {
+    type = Type_Create("RNGT", sizeof(RNGT));
+    type->alignment = AlignOf<RNGT>();
+    type->assign = __type_default_assign<RNGT>;
+    type->deallocate = __type_default_deallocator<RNGT>;
+    type->destruct = __type_default_destruct<RNGT>;
+    type->toString = __type_default_tostring<RNGT>;
+  }
+  return type;
+}

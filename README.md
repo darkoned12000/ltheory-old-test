@@ -38,6 +38,14 @@ To build Limit Theory, you'll need a few standard developer tools. All of them a
 
 Limit Theory builds and runs on modern Linux (tested with GCC 15 / CMake 4).
 
+> **Wayland / X11:** the engine uses **SFML 2.6.2**, which has an **X11-only**
+> backend. On a Wayland session it runs transparently through **XWayland** (most
+> distros enable this by default), so no extra setup is needed. If you are on a
+> pure-Wayland session without XWayland, launch under XWayland or an X11 session.
+> A known harmless quirk: on some Wayland+XWayland setups, pressing **ESC** can
+> leave the **CapsLock LED** stuck on — just tap CapsLock to clear it; it is a
+> compositor artifact, not an engine bug.
+
 ## Dependencies
 
 Install the following packages (Debian/Ubuntu):
@@ -91,8 +99,16 @@ Example:
 
 runs `resource/script/App/war.lts`, an AI skirmish test. The `war` app runs
 on Linux with working mouse UI — pressing Escape opens the menu, and EXIT GAME
-works. Many other apps are broken or incomplete, but some work well enough to
-fly around a system. Other apps to try: `dogfight`.
+works. Many other apps are broken or incomplete, but several work well enough to
+fly around a system. Other apps to try: `dogfight`, `launcher`, `threads`,
+`colony`, `hnn`, `ui`, `platemesh`, `hud`, `objectinfo`, `map`, `market`.
+
+**`ltheory-main`** is the recommended starting point for exploring the engine:
+a seed-driven 3D universe sandbox (`python3 configure.py run ltheory-main`).
+It generates a star + nebula + a planet with a seeded asteroid belt, spawns the
+player ship among the rocks, and exposes a DevTool (**F2**) and a live scene
+inspector (**F3**). Tweak the system via `resource/script/gameConfig.txt`
+(`seed`, `loadTime`, `playerCredits`, `shipHull`).
 
 > The `run` helper sets `LD_LIBRARY_PATH` so the bundled FMOD runtime
 > libraries in `extbin/linux64` and `bin` are found automatically.
@@ -167,7 +183,8 @@ python configure.py run war
   system, serializer, LTSL scripting), `Game`, `Component`, `UI`, `Module`
   (SoundEngine/FMOD, Physics, Scheduler), `Audio`, `Volume`.
 - **`src/launch/`** — the `launch` executable entry point (`main()`).
-- **`ext/SFML/`** — vendored SFML 2.6.2, built statically into `liblt.so`.
+- **`ext/SFML/`** — vendored SFML 2.6.2 (X11-only backend; runs on Wayland via
+  XWayland), built statically into `liblt.so`.
 - **`extbin/`** — shipped runtime binaries (FMOD).
 - **`resource/`** — game data: 169 `.jsl` shaders, textures, fonts, LTSL scripts.
 - **`script/`** — Python tooling (`tloc`, `assetlist`, ...).

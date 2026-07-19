@@ -9,6 +9,15 @@
 struct RNGT : public RefCounted {
   virtual ~RNGT() = default;
 
+  /* RNGT is an abstract RefCounted base; it is only ever used through
+     Reference<RNGT>, never by value, so we reflect it only so that
+     Type_Get<RNGT>() resolves to a real (named) type instead of falling
+     through to the generic "unknown type" fallback. That fallback left
+     Reference<RNGT> as "Reference<unknown type>" (with null function
+     pointers), which crashed any Data -> RNG conversion (e.g. the
+     RNG_Int function's RNG parameter). */
+  DeclareMetadata(RNGT)
+
   /* [0, 2^32 - 1] */
   virtual unsigned int GetInt() = 0;
 

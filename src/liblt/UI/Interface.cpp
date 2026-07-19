@@ -131,3 +131,17 @@ DefineFunction(Interface_Create) {
 DefineFunction(RenderPass_Interface) {
   return new RenderPassInterface(args.interface);
 }
+
+
+Type _Type_Get(InterfaceT const& t) {
+  Type& type = Type_GetStorage<InterfaceT>();
+  if (!type) {
+    type = Type_Create("InterfaceT", sizeof(InterfaceT));
+    type->alignment = AlignOf<InterfaceT>();
+    type->assign = __type_default_assign<InterfaceT>;
+    type->deallocate = __type_default_deallocator<InterfaceT>;
+    type->destruct = __type_default_destruct<InterfaceT>;
+    type->toString = __type_default_tostring<InterfaceT>;
+  }
+  return type;
+}

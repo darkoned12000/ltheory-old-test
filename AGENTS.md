@@ -93,7 +93,7 @@ python3 configure.py run <app>  # runs bin/launch <app> with LD_LIBRARY_PATH set
 
 | Library    | Version / State            | Role                         | Status / Notes |
 |------------|----------------------------|------------------------------|----------------|
-| **SFML**   | 2.6.2, vendored `ext/SFML` | Window, GL context, input, audio, graphics | Upgraded from 2.5.0. Uses deprecated key aliases (`BackSpace`, `Dash`, etc.) that work but may be cleaned up later. |
+| **SFML**   | 2.6.2, vendored `ext/SFML` | Window, GL context, input, audio, graphics | Upgraded from 2.5.0. Uses deprecated key aliases (`BackSpace`, `Dash`, etc.) that work but may be cleaned up later. **No Wayland backend** — X11 only; runs on Wayland via XWayland. |
 | **FMOD**   | 4.44.24 (ex-api), binary   | 3D audio, music, sound       | Closed-source. Prebuilt `.so` in `extbin/linux64`. **Hard to upgrade** (old low-level API). |
 | **FreeType**| system (`libfreetype-dev`)| Font rasterization           | Uses SYStem freetype; bundled copy removed from `extbin/linux64` (conflicted). |
 | **GLEW**   | system (`libglew-dev`)     | OpenGL extension loading     | Link-only. |
@@ -184,9 +184,31 @@ reintroduce the old patterns:
   before the main loop exits, which Launcher overrides to clear `instance` and
   reset engines in the correct order.
 - **`Function_Generated.h` missing** (deleted from upstream; contains the
-  `VoidFreeFunction`, `MemberFunction`, etc. macros). Restored from upstream
-  `JoshParnell/ltheory-old` GitHub. `VoidFreeFunctionNoParams` used in
-  `ScriptAPI/Program.cpp` to register `Exit` as a zero-param global function.
+   `VoidFreeFunction`, `MemberFunction`, etc. macros). Restored from upstream
+   `JoshParnell/ltheory-old` GitHub. `VoidFreeFunctionNoParams` used in
+   `ScriptAPI/Program.cpp` to register `Exit` as a zero-param global function.
+- **`Reference<unknown type>` corruption (type-system SIOF, partial fix).** Several
+   abstract `RefCounted` base types used only through `Reference<X>` —
+   `RNGT`, `InterfaceT`, `FontT` — had **no reflection** (`DeclareMetadata`/
+   `DefineMetadata`). So `Type_Get<RNGT>()` fell through to the generic fallback in
+   `Type.h` (`template <class T> Type _Type_Get(T const&)`, the `#if 1 "Allow
+   unknown types"` block) which creates and **caches** a type literally named
+   `"unknown type"` with **null function pointers**. Consequently
+   `Reference<RNGT>` resolved to `Reference<unknown type>`, and any conversion to
+   such a type (e.g. the `RNG_Int` function's `RNG` parameter, which is
+   `Reference<RNGT>`) crashed with an Access Violation dereferencing the null
+   `assign` pointer. Fixed by adding minimal reflection for the three types
+   (`RNG.h`/`RNG.cpp`, `Font.h`/`Font.cpp`, `UI/Interface.h`/`UI/Interface.cpp`):
+   they now resolve to real named types (`RNGT`, `FontT`, `InterfaceT`) with valid
+   function pointers. Note: `RNGT`/`InterfaceT`/`FontT` are abstract, so their
+   `_Type_Get` deliberately omits `allocate`/`construct` (they are never
+   constructed by value — only used via `Reference<>`). This is a **partial** fix:
+   the generic `"unknown type"` fallback still exists for any *other* unreflected
+   type; the proper long-term fix is lazy/late type registration from
+   `LTE_Initialize` (see §8d #1 / the `Position` SIOF note). The `threads.lts`
+   demo reads its result via the typed `Thread_GetResultInt` accessor (added this
+   session), since `(Int (thread.GetResult))` is actually the `RNG_Int` *function*
+   (random int), not a cast — see the corrected note in §8d #2.
 
 ---
 
@@ -709,17 +731,30 @@ Ordered best-ROI first. Each is independent unless noted.
      2D/3D playback; the gap is FMOD's event/project system
      (`SoundEvent`/`LoadProject` in `Fmod.h`) — audit whether the game uses it.
      Select via `GetSoundEngine()` (add a build/config toggle).
-6. **SFML 2.6.2 → 3.x + GLEW → glad (do together, after #2). — DEFERRED.**
-   - SFML 3 is C++11-min with renames (`sf::Window`/`sf::RenderWindow`, audio
-     module, `sf::Keyboard` enum names — see §8 Libraries). Pairs naturally with
-     the core-profile context bump. glad (header-only) removes GLEW's runtime
-     init quirks (`glewExperimental`).
-   - **Status (user decision): deferred.** This is a large, high-regression-risk
-     refactor of the window/input/audio startup paths with no runtime benefit
-     for the current stability/perf goal, so it stays on the list but is not
-     being pursued now. The only safe part — the deprecated SFML 2.6 keyboard
-     key-name aliases — was already cleaned up (see Libraries checklist item,
-     done after 8603d4a), which is what #7 below covered.
+ 6. **SFML 2.6.2 → 3.x + GLEW → glad (do together, after #2). — DEFERRED.**
+    - SFML 3 is C++11-min with renames (`sf::Window`/`sf::RenderWindow`, audio
+      module, `sf::Keyboard` enum names — see §8 Libraries). Pairs naturally with
+      the core-profile context bump. glad (header-only) removes GLEW's runtime
+      init quirks (`glewExperimental`).
+    - **Status (user decision): deferred.** This is a large, high-regression-risk
+      refactor of the window/input/audio startup paths with no runtime benefit
+      for the current stability/perf goal, so it stays on the list but is not
+      being pursued now. The only safe part — the deprecated SFML 2.6 keyboard
+      key-name aliases — was already cleaned up (see Libraries checklist item,
+      done after 8603d4a), which is what #7 below covered.
+    - **Wayland note (added this session):** vendored SFML 2.6.2 has **no
+      Wayland backend** — only X11 (`ext/SFML/src/SFML/Window/Unix/`). The
+      engine itself makes **zero** direct X11/Wayland calls (all windowing/input
+      goes through SFML), so the engine code is already Wayland-portable; the
+      only blocker is the SFML dependency. Today it runs on Wayland sessions
+      because **XWayland** is enabled (`DISPLAY=:0` alongside `WAYLAND_DISPLAY`),
+      which emulates an X server over Wayland. **Native Wayland requires SFML 3.x**
+      (which added a `Window/Wayland/` backend) — that is the real motivation for
+      the deferred SFML 3 upgrade, since Linux distros (incl. the user's,
+      Linux 7.x) are deprecating X11 / moving to Wayland as the default.
+      **Recommended near-term path:** keep XWayland (zero engine work) and treat
+      SFML 3.x as the future native-Wayland upgrade. Do NOT rush the SFML 3
+      refactor — XWayland covers current users.
 7. **Deprecated SFML 2.6 key aliases** in `Keyboard.cpp` (see §8 Libraries) —
    DONE (folds into #6, but completed standalone since it was zero-risk).
 8. **(Optional / large) LTSL bytecode VM.**
@@ -794,18 +829,28 @@ an implementation note when you do.**
    `Data -> Int` path is avoided). `threads.lts` now spins up `MyJob.Main` on a
    real background thread and displays `49995000` (sum 0..9999). Verified under
    gdb: worker runs, joins, `GetResultInt` returns the correct value, no AV.
-   - **Related pre-existing engine bug (NOT fixed here, tracked separately):**
-     the `Data -> Int` conversion `(Int (thread.GetResult))` crashes with an
-     Access Violation because `ResolveType("Int")` resolves to a corrupted
-     `Reference<unknown type>` type object (confirmed via a debug build: the
-     `Data -> Int` conversion's destination type was `Reference<unknown type>`
-     while the source was `signed int`; the same crash reproduces without
-     threads via `(Int (Data_None))`). This correlates with the documented
-     exe/dll `Type_Get<T>` static-storage divergence (launch.cpp ~62-66) /
-     static-init type-registration SIOF, but the exact root cause was not
-     isolated this session. Reading the result via `GetResultInt` (Int->String
-     conversion, the common working path) sidesteps it. Fixing the underlying
-     SIOF is the larger effort described in §8d #1.
+     - **Related type-system SIOF (ROOT CAUSED + partially fixed this session):**
+      the `(Int (thread.GetResult))` crash was previously blamed on a corrupted
+      `Reference<unknown type>` type. This session the real root cause was isolated:
+      `RNGT` / `InterfaceT` / `FontT` are abstract `RefCounted` bases used only
+      through `Reference<X>`, but had **no reflection**, so `Type_Get<RNGT>()`
+      fell through to the generic `"unknown type"` fallback (Type.h `#if 1` block)
+      which caches a type with **null function pointers**. That made
+      `Reference<RNGT>` resolve to `Reference<unknown type>`, and the `RNG_Int`
+      function's `RNG` parameter (aliased `Int` via `FunctionAlias(RNG_Int, Int)`)
+      became `Reference<unknown type>` — so `(Int x)` (really `RNG_Int(x)`) did a
+      `Data -> Reference<unknown type>` extraction that dereferenced the null
+      `assign` → Access Violation. Fixed by reflecting the three types
+      (see §7 "Reference<unknown type> corruption"): `Reference<RNGT>` now
+      resolves to `Reference<RNGT>` (confirmed via a debug build: the conversion
+      destination changed from `Reference<unknown type>` to `Reference<RNGT>`).
+      **Important LTSL clarification:** `(Int x)` is NOT a cast — it is the
+      `RNG_Int` *function* (random int), so it can never extract an int from a
+      `Data`/thread result. The correct extraction path is the typed
+      `Thread_GetResultInt` accessor (added this session), which `threads.lts` uses.
+      The generic `"unknown type"` fallback and the broader exe/dll `Type_Get<T>`
+      static-storage divergence (launch.cpp ~62-66) remain; lazy/late type
+      registration from `LTE_Initialize` is still the long-term fix (§8d #1).
 
 3. **`ltheory-main` universe knobs (§8b Pass A).** *(NOT started.)* Wire the
    §8b.2 `gameConfig.txt` keys (`numOfPlanets`, `numOfShips`, `numOfAsteroids`,
@@ -851,12 +896,29 @@ an implementation note when you do.**
 
 ### Group C — Low (cleanup)
 
-8. **Delete dead EasyGL fixed-function wrappers (§8c.3).** *(NOT started.)*
-   `GL_Begin`/`GL_End`/`GL_Vertex`/`GL_TexCoord`/`GL_Normal`(Pointer)/`GL_Color`
-   and `GL::DrawQuad` in `src/liblt/LTE/GL.h` are unused after the 120→330
-   migration. Remove in a separate, clearly-marked cleanup commit once confirmed
-   nothing references them. **Do NOT** mark as Revamp Work — they are Josh's
-   original public-domain code.
+ 8. **Delete dead EasyGL fixed-function wrappers (§8c.3).** *(NOT started.)*
+    `GL_Begin`/`GL_End`/`GL_Vertex`/`GL_TexCoord`/`GL_Normal`(Pointer)/`GL_Color`
+    and `GL::DrawQuad` in `src/liblt/LTE/GL.h` are unused after the 120→330
+    migration. Remove in a separate, clearly-marked cleanup commit once confirmed
+    nothing references them. **Do NOT** mark as Revamp Work — they are Josh's
+    original public-domain code.
+
+ 9. **CapsLock / ESC keyboard-LED quirk on XWayland (NOT an engine bug — documented).**
+    *(Investigated this session.)* On a Wayland session with XWayland enabled,
+    pressing **ESC** (which opens the game menu / calls `Exit`) causes the OS
+    **CapsLock LED to turn on** and stay on after the app exits. **Root cause is
+    NOT in the engine or LTSL:** the `ESC → Exit → Program::Delete` path never
+    touches X11/XKB/LED state, the engine makes **zero** direct X11 calls, and
+    SFML's key handling is read-only (`XQueryKeymap`). The flip is an **XWayland
+    keymap/XKB desync** artifact (the X server is emulated on top of Wayland, and
+    certain key events like Escape can leave the compositor's modifier/LED state
+    inconsistent). A speculative patch removing `XSetInputFocus(...,
+    RevertToPointerRoot)` in SFML's `WindowImplX11::grabFocus` was tried and
+    reverted — it did NOT address the ESC-specific symptom. **Mitigation:**
+    tap CapsLock to clear the LED; or run on a pure X11 session to confirm the
+    XWayland cause. No engine change is warranted. This is a data point for the
+    §8c.2 #6 SFML-3/Wayland upgrade decision (native Wayland would remove the
+    XWayland layer where the quirk lives).
 
 ---
 

@@ -12,6 +12,13 @@ struct InterfaceT : public RefCounted {
   virtual void Clear() = 0;
   virtual void Draw() = 0;
   virtual void Update() = 0;
+
+  /* InterfaceT is an abstract RefCounted base, only ever used through
+     Reference<InterfaceT>. Reflected so Type_Get<InterfaceT>() resolves to a
+     real (named) type instead of the generic "unknown type" fallback, which
+     otherwise left Reference<InterfaceT> as "Reference<unknown type>" (null
+     function pointers) and crashed any Data -> Interface conversion. */
+  DeclareMetadata(InterfaceT)
 };
 
 DeclareFunction(Interface_Create, Interface,
