@@ -1,3 +1,10 @@
+// Copyright (C) 2025  darkoned12000
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Part of the ltheory-old-test modernization effort (Revamp Work).
+// See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
+// Substantial modification: replaced static-init TypeAlias(Position, Position)
+// with lazy dll-side Position_RegisterConstructor() binding "Position" -> V3D.
+
 #include "Game/Common.h"
 #include "Game/Object.h"
 #include "Game/Player.h"
@@ -11,8 +18,28 @@
 
 TypeAlias(Reference<ObjectT>, Object);
 TypeAlias(Reference<PlayerT>, Player);
-TypeAlias(Position, Position);
 TypeAlias(HashT, HashT);
+
+/* Position === V3D === V3T<double> (see Game/Common.h). We bind the script name
+ * "Position" to the (fully operator-populated) Vec3d type.
+ *
+ * IMPORTANT (AGENTS.md §8d #1): binding Position via the static-init TypeAlias
+ * macro (which calls Type_Get<Position>()) triggers the static-initialization-
+ * order fiasco that corrupts the global registry (every numeric literal like
+ * '0.5' starts failing with "variable name '0.5' not found"). The fix is lazy /
+ * late registration. We use a dll-side __attribute__((constructor)) so this runs
+ * at dll load, AFTER all dll static-init (so V3D is fully populated) and BEFORE
+ * any script is compiled -- avoiding both the SIOF and re-entrancy with the
+ * compiler. We reach the type via Type_Get<V3D>() (safe; V3.cpp resolves it
+ * cleanly) and never call Type_Get<Position>(). */
+static void Position_RegisterScriptAPI() {
+  Type_AddAlias(Type_Get<V3D>(), "Position");
+}
+
+__attribute__((constructor))
+static void Position_RegisterConstructor() {
+  Position_RegisterScriptAPI();
+}
 
 DefineConversion(object_to_player, Object, Player) {
   dest = (Player)src;

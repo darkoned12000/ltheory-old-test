@@ -1,3 +1,10 @@
+# Copyright (C) 2025  darkoned12000
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Part of the ltheory-old-test modernization effort (Revamp Work).
+# See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
+# Substantial modification: Update rewritten to use no-arg rng.Exp + parenthesized
+# arithmetic (the dotted rng.Float / rng.Float a b calls are broken in LTSL).
+
 type ObjectWarpRail
   Object node1
   Object node2
@@ -12,15 +19,15 @@ type ObjectWarpRail
       var look (Normalize p2 - p1)
 
       for i 0 i < 16 (++ i)
-        var dir ((rng.Float -1 1) * 50.0 * look)
+        var dir (((rng.Exp) * 2.0 - 1.0) * 50.0 * look)
         var energy 1.0 + 0.5 * rng.Exp ^ 2.0
 
         ps.Add
           particle
-          Mix p1 p2 rng.Float
+          Mix p1 p2 (rng.Exp)
           energy * dir
-          50.0 * rng.Float
-          rng.Float 1 5
+          50.0 * (rng.Exp)
+          (1.0 + (rng.Exp) * 4.0)
           energy * (Vec3 1.0 1.5 2.0)
 
     true

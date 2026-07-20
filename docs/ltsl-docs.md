@@ -845,13 +845,33 @@ aliases). `Key_<Name>.Pressed` / `.Down` are the two states.
      printed twice (same as `war.lts`) and does not prevent the app from running.
      Ignore it.
   18. **`Object_System` does not create planets/asteroids.** The C++ factory only
-     builds the star + nebula + starfield. To get a populated system you must
-     call a populator (e.g. `Object/SystemPopulate:Init root`). Do **not** use
-     the upstream `Object/System.lts` `Init` — it places the planet at
-     `Vec3_Cylinder 0 ...` (radius 0, spawns at the origin **inside the camera**)
-     and has an `Orbital rail` block that calls `Object/WarpNode`, which fails to
-     compile in this build. Write a local populator instead; seed everything from
-     one `RNG_MTG(self.GetSeed)` so layouts are reproducible per seed.
+      builds the star + nebula + starfield. To get a populated system you must
+      call a populator (e.g. `Object/SystemPopulate:Init root`). Do **not** use
+      the upstream `Object/System.lts` `Init` — it places the planet at
+      `Vec3_Cylinder 0 ...` (radius 0, spawns at the origin **inside the camera**).
+      Its `Orbital rail` block (which links warp nodes via `Object/WarpNode`/
+      `Object/WarpRail`) **now compiles and runs** (the `Position` type gap was
+      fixed — see AGENTS §8d #1), but the planet placement is still wrong, so keep
+      using `Object/SystemPopulate.lts` as the populator. Seed everything from one
+      `RNG_MTG(self.GetSeed)` so layouts are reproducible per seed.
+  21. **`Position` is a fully working LTSL type now.** `Position` is bound to the
+      engine's double-precision `Vec3d` (alias), so `SetLook(Normalize(p2 - p1))`,
+      `GetPos self + (radius * dir)`, and `ps.Add(particle, pos, velocity, ...)`
+      all work with `Position` values (e.g. warp-rail / `Object/WarpNode` scripts).
+      Do **not** rely on a `Position -> V3` conversion or mixed-precision
+      `Vec3d + V3F` *operator* overloads — those were tried and rejected because
+      they corrupt the type registry (static-init SIOF) or create ambiguous
+      overloads that break single-precision ship physics (NaN → `force.IsFinite()`
+      abort in `Motion.cpp`). Prefer the existing `V3F -> V3D` conversion for
+      mixed `Position + V3` arithmetic; it resolves cleanly.
+  22. **LTSL dotted random calls are fragile.** `rng.Float` resolves to
+      `(Float rng)` — i.e. *constructing the `Float` type from `rng`*, not calling
+      an RNG method (because `Float` is a type name). So `rng.Float` and
+      `rng.Float 0 1` (the 2-arg form) are both broken. Use the no-arg `rng.Exp`
+      for an exponential random value, `rng.Int`, `rng.Direction`, `rng.Sphere`,
+      or the explicit `Float (RNG_Float rng ...)` function form instead. This is
+      why `Object/WarpRail.lts`'s `Update` was rewritten to use `rng.Exp` + plain
+      parenthesized arithmetic.
   19. **Iterate an object's children with `GetInteriorObjects`.**
      `for it obj.GetInteriorObjects it.HasMore it.Advance` then `it.Get` gives
      each child `Object`. `obj.GetInteriorObjects` (no type arg) yields **all**
@@ -1003,12 +1023,11 @@ Every app under `resource/script/App/` is now a **driven** app (`Main -> App`
 | `map` | runs | Was already driven but used the **old `Layer`/`Compositor_Basic` + `ui.Draw` render path, which hangs/doesn't render** — fixed by switching to the `Widget_Rendered`/`RenderPass` pipeline. It also originally did `Custom Widget MapWidget player` (invalid — fails to compile, leaving `ui` empty/black) and scanned the universe for a player that doesn't exist. Now builds the player + system inside `MapWidget:Create` (self-contained) and sets the camera target in `PreUpdate`. |
 | `market` | runs | Same `Layer`→`RenderPass` and `Custom Widget … args` fixes as `map`; the player/station/market build moved into `MarketWidget:Create` and `station.Update` into `PreUpdate`. |
 
-**Remaining compile errors in all apps (benign):** `Object/WarpNode.lts` and
-`Object/WarpRail.lts` fail to compile because `Position` (a `V3T<double>`)
-has no LTSL arithmetic operators registered in the engine. That is a known
-engine gap (static-initialization-order fiasco when registering `Position`
-conversions/operators) tracked separately — see AGENTS §8b.1 / the warp-rail
-notes. It does not prevent the apps from running; the warp rails are cosmetic.
+**Remaining compile errors in all apps:** there are now **none** — the
+`Object/WarpNode.lts` / `Object/WarpRail.lts` `Position`-math failures were
+fixed (see AGENTS §8d #1). Warp nodes/rails now instantiate and the upstream
+`Object/System.lts` `Orbital rail` block compiles as-is. `rails.lts` is a good
+smoke-test app that builds a chain of warp nodes + rails.
 
 **Conversion rules that worked (proven across all the above):**
 - The main screen widget is its own `type XScreen` (or keeps its existing
@@ -1158,7 +1177,14 @@ the caller. (This is how early-exit works without exceptions — the engine is
 - **Operator resolution is type-driven**, not overload-by-name; adding operators
   for a new type (like `Position`) must be done via **late registration at
   `LTE_Initialize`**, never at static-init, or it corrupts the global type
-  registry (the `Position`/`WarpNode` SIOF, §12.18, AGENTS §8d #1).
+  registry (the `Position`/`WarpNode` SIOF, §12.18, AGENTS §8d #1). The pragmatic
+  fix that landed: `Position` is an **alias** of the already-populated `Vec3d`
+  type (so it inherits all `Vec3d` operators) bound lazily via a dll-side
+  `__attribute__((constructor))` + `Type_AddAlias(Type_Get<V3D>(), "Position")`.
+  Do **not** add mixed-precision *operator* overloads (e.g. `Vec3d + V3F` aliased
+  `+`) — they create ambiguous overload resolution that breaks single-precision
+  ship physics (NaN → `force.IsFinite()` abort in `Motion.cpp`). Prefer the
+  existing `V3F -> V3D` conversion for mixed `Position + V3` arithmetic.
 - **No `return` keyword originally** — added as Revamp Work; do not rely on it in
   scripts you want to run on the unmodified upstream engine.
 

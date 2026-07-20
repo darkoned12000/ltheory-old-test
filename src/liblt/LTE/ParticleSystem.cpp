@@ -1,3 +1,9 @@
+// Copyright (C) 2025  darkoned12000
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Part of the ltheory-old-test modernization effort (Revamp Work).
+// See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
+// Substantial modification: added ParticleSystem_Add_Position overload (Position/Vec3d).
+
 #include "ParticleSystem.h"
 
 #include "DrawState.h"
@@ -175,6 +181,19 @@ DefineFunction(ParticleSystem_Add) {
     args.life,
     args.attribute));
 } FunctionAlias(ParticleSystem_Add, Add);
+
+/* Overload accepting Position (V3D) for velocity/attribute. See AGENTS.md §8d #1
+ * and ParticleSystem.h. Avoids a V3D -> V3F conversion that corrupts the global
+ * conversion table. */
+DefineFunction(ParticleSystem_Add_Position) {
+  ((ParticleSystemImpl*)args.particleSystem.t)
+    ->particles[args.particle].push(Particle(
+    V3(args.position),
+    V3(args.velocity),
+    args.scale,
+    args.life,
+    V3(args.attribute)));
+} FunctionAlias(ParticleSystem_Add_Position, Add);
 
 DefineFunction(ParticleSystem_Create) {
   return new ParticleSystemImpl;

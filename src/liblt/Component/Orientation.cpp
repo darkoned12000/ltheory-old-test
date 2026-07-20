@@ -1,3 +1,9 @@
+// Copyright (C) 2025  darkoned12000
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Part of the ltheory-old-test modernization effort (Revamp Work).
+// See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
+// Substantial modification: added Object_SetLook_Position overload (Position/Vec3d).
+
 #include "Orientation.h"
 #include "Game/Object.h"
 #include "LTE/Function.h"
@@ -58,6 +64,17 @@ VoidFreeFunction(Object_SetLook,
 {
   object->SetLook(look);
 } FunctionAlias(Object_SetLook, SetLook);
+
+/* Overload of SetLook for a double-precision Position direction (see
+ * AGENTS.md §8d #1). Added as a function overload rather than a V3D -> V3F
+ * conversion because the latter corrupts the engine's global conversion table. */
+VoidFreeFunction(Object_SetLook_Position,
+  "Orient 'object' to face towards 'look' direction (Position)",
+  Object, object,
+  V3D, look)
+{
+  object->SetLook(V3(look));
+} FunctionAlias(Object_SetLook_Position, SetLook);
 
 VoidFreeFunction(Object_SetPos,
   "Move 'object' to 'position'",

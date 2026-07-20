@@ -255,8 +255,9 @@ Josh's original apps. All of these are **Revamp Work** (GPL-3.0) new files:
   can spawn the player relative to it). Why a separate file instead of the
   upstream `Object/System.lts`: upstream's `Init` places the planet at
   `Vec3_Cylinder 0 ...` (radius 0 → spawned at the origin, inside the camera) and
-  has a broken `Orbital rail` block (`Object/WarpNode` fails to compile in this
-  build). `SystemPopulate` instead places the planet at a real orbital radius,
+   has a broken `Orbital rail` block (`Object/WarpNode` used to fail to compile
+   in this build — now fixed, see §8d #1). `SystemPopulate` instead places the
+   planet at a real orbital radius,
   adds a 1000-rock seeded belt (shell at `planetRadius*1.6..2.3`, rock scale
   `150*Exp`), gives the planet a seeded `Grammar_Get "$system"` name, and **never**
   calls the WarpNode block. Everything derives from one `RNG_MTG(self.GetSeed)`
@@ -364,9 +365,9 @@ Ordered roughly by impact vs. effort. Check items off as completed.
       `threads`, `colony`, `hnn`, `ui`, `platemesh`, `hud`, `objectinfo`,
       `map`, `market`). Every self-widget app was converted to the driven
       `Main -> App + Initialize/Update` lifecycle (see `docs/ltsl-docs.md` §13.4
-      for the per-app fix log). The only remaining compile errors in every app
-      are the benign `Object/WarpNode`/`Object/WarpRail` `Position`-math
-      failures (see §8d item #1).
+      for the per-app fix log). The `Object/WarpNode`/`Object/WarpRail`
+      `Position`-math failures are now **fixed** (see §8d item #1), so every app
+      compiles cleanly.
 - [x] `Texture/RandomScreenshot.lts` was broken (hardcoded
       `/home/josh/Dropbox/lt/screenshot` path + a `return` keyword). It was rewritten
       to just load `resource/texture/splash.png`. This also unblocks `Widget/DevPanel`
@@ -377,8 +378,8 @@ Ordered roughly by impact vs. effort. Check items off as completed.
       missing `Camera_Get.SetTarget` each frame, null player from scanning a
       universe with no generated owners). See commit `362ffe3` and
       `docs/ltsl-docs.md` §13.4.
-- [ ] Fix the `threads.lts` background-thread demo: `Thread_Create`/`GetResult`
-      crash with an Access Violation in this engine build (see §8d item #2).
+  - [x] Fix the `threads.lts` background-thread demo: `Thread_Create`/`GetResult`
+       crash with an Access Violation in this engine build (see §8d item #2).
 - [ ] Document the LTSL standard library surface exposed to scripts.
 - [ ] Decide on a path for new content once the platform is stable.
 
@@ -819,26 +820,55 @@ an implementation note when you do.**
 
 ### Group A — High-value, low-risk (script / small C++)
 
-1. **Fix the `Position` engine gap → restore warp rails.** *(NOT started.)*
-   The `Object/WarpNode`/`Object/WarpRail` compile failures are the **only**
-   remaining errors in every running app. Root cause: `Position`
-   (`V3T<DistanceT>`, a double-precision `V3`) has **no LTSL arithmetic
-   operators or `Position -> V3` conversion registered**, so script math like
-   `Normalize (p2 - p1)`, `0.5 * (p1 + p2)`, `GetPos self + (...)*dir` fails to
-   compile. **Known trap (do NOT repeat):** registering these via `DefineConversion`
-   / operator macros at **static-init** corrupts the global type registry (a
-   static-initialization-order fiasco — every numeric literal like `0.5` starts
-   failing with `variable name '0.5' not found`), because `Type_Get<Position>()`
-   runs before `Position`/`V3` are registered across TUs. The fix must use
-   **lazy / late registration** called from `LTE_Initialize` / `launch` (after
-   all types exist), NOT static-init. Files: `src/liblt/LTE/Math/Vec.h`
-   (`Position`/`V3T`), `src/liblt/LTE/ScriptAPI/V3.cpp` (`DefineConversion`
-   patterns; `V3F = Vec3`, `Position = V3T<double>`), `src/liblt/Game/ScriptAPI/Object.cpp`
-   (`TypeAlias(Position, Position)`), `src/liblt/LTE/Function.h`
-   (`DefineConversion` calls `Type_Get<SourceType>()` at static-init — the SIOF
-   source). Warp-rail scripts to re-enable once it compiles:
-   `Object/WarpNode.lts`, `Object/WarpRail.lts`, and the `Orbital rail` block in
-   the upstream `Object/System.lts`.
+ 1. **Fix the `Position` engine gap → restore warp rails.** *(DONE this
+    session, GPL-3.0 Revamp Work.)* The WarpNode/WarpRail/System `Orbital rail`
+    scripts now compile and warp rails instantiate.
+    - **Root cause:** `Position` IS the exact same C++ type as `V3D` / `V3T<double>`
+      (`DistanceT = double`; `Position = V3T<DistanceT>`). `Vec3d` already has all
+      the arithmetic operators, but the script name `"Position"` was never bound
+      to it, and scripts needed `SetLook`/`ParticleSystem::Add` overloads that
+      accept `Position` (V3D) directly.
+    - **The fix (clean, crash-free):** three small dll-side additions, NO mixed
+      operator overloads and NO `V3D -> V3F` conversion (both were tried and
+      rejected — see trap below):
+      1. `src/liblt/Game/ScriptAPI/Object.cpp` — a dll-side
+         `__attribute__((constructor)) Position_RegisterConstructor()` calls
+         `Type_AddAlias(Type_Get<V3D>(), "Position")`. This binds the script name
+         to the already-populated `V3D` type using `Type_Get<V3D>()` (safe),
+         never `Type_Get<Position>()`.
+      2. `src/liblt/Component/Orientation.cpp` — a `Object_SetLook_Position`
+         overload (V3D arg) aliased `SetLook`, so `SetLook(Normalize(p2-p1))`
+         works without a V3D→V3F conversion.
+      3. `src/liblt/LTE/ParticleSystem.cpp` + `ParticleSystem.h` — a
+         `ParticleSystem_Add_Position` overload (V3D position/velocity/attribute)
+         aliased `Add`, so `ps.Add(particle, pos, velocity, ...)` works with
+         `Position` values.
+    - **KNOWN TRAP (do NOT repeat):** two approaches were attempted and REJECTED
+      because they corrupt the engine / crash apps:
+      - *(a)* Registering a `V3D -> V3F` conversion (`DefineConversion`) at
+        static-init, or calling `Type_Get<Position>()` at static-init (the old
+        `TypeAlias(Position, Position)` macro). Both trigger the static-init
+        **order fiasco** that corrupts the global type/function registry — every
+        numeric literal (`0.5`, `1.0`, …) starts failing with
+        `variable name '0.5' not found`. The same corruption appears if you do it
+        from `LTE_Initialize` in the exe (exe/dll static-storage divergence — see
+        §7 `Reference<unknown type>` note). Bind lazily via the dll-side
+        `__attribute__((constructor))` + `Type_Get<V3D>()` instead.
+      - *(b)* Adding mixed-precision **operator** overloads (`Vec3d_Add_V3F`,
+        `Vec3d_Subtract_V3F`, `Vec3d_MultRight`, aliased `+`/`-`/`*`). These
+        create **ambiguous overload resolution** for single-precision vector math
+        used in ship physics (`Component/Motion.cpp` `force.IsFinite()` assertion
+        → ship NaN → SIGABRT in `rails`/any app with ships). Removed; the existing
+        `V3F -> V3D` conversion handles `center + (radius*Vec3)` cases cleanly via
+        operator overload resolution.
+    - **Verification:** `rails` 3/3 clean runs (no abort); `ltheory-main` and
+      `war` compile WarpNode/WarpRail/System `Orbital rail` with no errors and no
+      `variable name` corruption; `configure.py test` 60 checks, 0 failures.
+    - **Script side (Revamp Work):** `resource/script/Object/WarpRail.lts` `Update`
+      rewritten to use the no-arg `rng.Exp` (the dotted `rng.Float` /
+      `rng.Float a b` calls are broken — see §8d trap below) plus parenthesized
+      arithmetic to fix operator-precedence parsing. The upstream
+      `Object/System.lts` `Orbital rail` block now compiles as-is.
 
 2. **Fix `Thread_Create` / `GetResult` (the `threads` app).** *(DONE this
    session.)* Root cause was a **missing memory barrier**, not a worker-thread
