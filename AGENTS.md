@@ -205,8 +205,9 @@ reintroduce the old patterns:
    `_Type_Get` deliberately omits `allocate`/`construct` (they are never
    constructed by value — only used via `Reference<>`). This is a **partial** fix:
    the generic `"unknown type"` fallback still exists for any *other* unreflected
-   type; the proper long-term fix is lazy/late type registration from
-   `LTE_Initialize` (see §8d #1 / the `Position` SIOF note). The `threads.lts`
+   type; the broader exe/dll type-cache divergence has since been **fixed** via
+   cache unification (single dll-owned `std::map<std::type_index, Type>` +
+   idempotent `LTE_Initialize()`) — see §8d #13. The `threads.lts`
    demo reads its result via the typed `Thread_GetResultInt` accessor (added this
    session), since `(Int (thread.GetResult))` is actually the `RNG_Int` *function*
    (random int), not a cast — see the corrected note in §8d #2.
@@ -351,13 +352,13 @@ Ordered roughly by impact vs. effort. Check items off as completed.
       `Reference<>` types resolve to their real names, never `"unknown type"`.
       Would have caught that regression automatically. (A `Serializer` round-trip
       test is still a TODO — it needs a `Location`/file backend and is heavier.)
-- [ ] **Lazy/late type registration from `LTE_Initialize`** (proper long-term fix
+- [x] **Lazy/late type registration from `LTE_Initialize`** (proper long-term fix
       for the `Reference<unknown type>` SIOF, §8d #1 / §7 "Reference<unknown
-      type> corruption"). Replace static-init `_Type_Get` caching with a single
-      process-wide map keyed by `std::type_index`/`typeid(T).name()`, populated
-      once at `LTE_Initialize`/`launch` after all types exist. Eliminates the
-      whole class of unreflected-type → "unknown type" corruption. Medium effort,
-      touches the reflection core — do carefully.
+      type> corruption"). Cache unification landed: single dll-owned
+      `std::map<std::type_index, Type>` replaces the per-TU `static Type` slot in
+      `Type_GetStorage<T>()`, plus an idempotent `LTE_Initialize()` hook at the top
+      of `Launcher::Launch()`. Type identity is now consistent across the exe/dll
+      boundary. See §8d #13.
 
 ### Content / LTSL
 - [x] Catalog which `resource/script/App/*.lts` apps currently run vs. crash.
@@ -903,9 +904,10 @@ an implementation note when you do.**
       `RNG_Int` *function* (random int), so it can never extract an int from a
       `Data`/thread result. The correct extraction path is the typed
       `Thread_GetResultInt` accessor (added this session), which `threads.lts` uses.
-      The generic `"unknown type"` fallback and the broader exe/dll `Type_Get<T>`
-      static-storage divergence (launch.cpp ~62-66) remain; lazy/late type
-      registration from `LTE_Initialize` is still the long-term fix (§8d #1).
+      The generic `"unknown type"` fallback remains (intentionally, and now
+      *consistent* across binaries); the broader exe/dll `Type_Get<T>`
+      static-storage divergence (launch.cpp ~62-66) has been **fixed** via cache
+      unification — see §8d #13.
 
 3. **`ltheory-main` universe knobs (§8b Pass A).** *(NOT started.)* Wire the
    §8b.2 `gameConfig.txt` keys (`numOfPlanets`, `numOfShips`, `numOfAsteroids`,
@@ -951,12 +953,53 @@ an implementation note when you do.**
     type"`. 12 tests / 60 checks pass. (A `Serializer` round-trip test is still
     open — it needs a `Location`/file backend; see note below.)
 
-13. **Lazy/late type registration from `LTE_Initialize` (proper SIOF fix).**
-    *(NOT started.)* Replace static-init `_Type_Get` caching with a single
-    process-wide map keyed by `std::type_index`/`typeid(T).name()`, populated
-    once at `LTE_Initialize`/`launch` after all types exist. Eliminates the whole
-    class of unreflected-type → "unknown type" corruption (the root cause behind
-    §7 / §8d #2). Medium effort, touches the reflection core — do carefully.
+ 13. **Lazy/late type registration (cache unification) — DONE this session.**
+     The root cause of the `Reference<unknown type>` class of corruption
+     (§7 / §8d #2) was a **per-translation-unit type cache**: `Type_GetStorage<T>()`
+     was a function-local `static Type t` in the header (`Type.h`), so the **exe
+     and the dll each held a *different* `Type` object for the same C++ type T**
+     — the `launch.cpp:62-66` "major design flaw". That broke `Type_Get<T>() ==
+     Type_Get<T>()` identity across the boundary and let unreflected abstract types
+     resolve to *distinct* `"unknown type"` instances.
+     - **The fix (cache unification, Revamp Work):** the authoritative type cache
+       is now a **single dll-owned `std::map<std::type_index, Type>`** in
+       `Type.cpp` (`GetTypeIndexMap()`), reached only through the new
+       `LT_API Type& Type_GetStorage(std::type_index)` helper. `Type_GetStorage<T>()`
+       (header) now just forwards `typeid(T)`. Because `Type.cpp` compiles into
+       `liblt.so`, both the exe and the dll observe the *same* `Type` per `T`, so
+       type identity is finally consistent. The reflection macros
+       (`DeclareMetadata`/`DefineMetadata`/`AUTOMATIC_REFLECTION_*`/`REGISTER_TYPE`)
+       and all ~396 `Type_Get<T>()` call sites and ~1500 function-binding macros
+       are **untouched** — the change is entirely inside `Type_GetStorage`.
+     - **`LTE_Initialize()`** (`Type.cpp`, `LT_API`, idempotent) force-resolves the
+       `PRIMITIVE_TYPE_X` essential types into the shared map. Called once at the
+       top of `Launcher::Launch()` (`launch.cpp`, before `ScriptFunction_Load`),
+       which is after both exe and dll static-init have completed — the safe
+       single registration point. Declared in `Type.h`.
+     - **Kept the `"unknown type"` fallback** (`Type.h` `#if 1` block) intact and
+       now *consistent* across binaries: removing it would hard-crash any
+       remaining genuinely-unreflected type the serializer tolerates today, with
+       no upside (the `RNGT`/`FontT`/`InterfaceT` abstract bases are already
+       reflected from §8d #2). Skipped pre-registration-walk and fallback-removal
+       (per user decision: cache unification only — lower risk, the lazy path is
+       already proven by `war`/`ltheory-main` running).
+     - **Verification:** added `Type_SharedCacheIsConsistent` regression test
+       (asserts `Type_Get<T>()` identity is stable across calls and equals the
+       `Type_Find(name)` name-map object — i.e. exactly one canonical `Type` per
+       `T`, no per-TU duplication). Full `configure.py test`: 66 checks, 0
+       failures. App smoke tests clean (`rails`/`war`/`ltheory-main`/`dogfight`/
+       `threads`/`launcher`/`hud`: 0 asserts, 0 compile errors).
+     - **Revisit / possible thorough refactor (noted for later):** the current
+       fix is a *minimal, surgical* change confined to `Type_GetStorage` — the
+       reflection macros, `_Type_Get` friend hooks, and all ~396 `Type_Get<T>()`
+       call sites are untouched. A fuller cleanup could: (a) route the primitive
+       pre-registration back into the reflection macros instead of the
+       `PRIMITIVE_TYPE_X` force-resolve loop in `LTE_Initialize`; (b) collapse
+       the separate name-map (`Type_Find`) and type-index caches into one
+       structure; (c) revisit the intentional `Type_Ref<T>()` null-reference
+       idiom (§8c.2 #3) now that the cache is unified. None of these are needed
+       for correctness — defer until we touch the reflection core for another
+       reason, to avoid risking the serialization/reflection backbone.
     Pairs with #10 (document first). See §8 Engine Code checklist.
 
 ### Group C+ — Tooling

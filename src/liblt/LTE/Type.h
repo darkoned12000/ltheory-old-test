@@ -5,6 +5,8 @@
 #include "Mutable.h"
 #include "String.h"
 
+#include <typeindex>
+
 #define DECLARE_DEFAULT_REFLECTION(name)                                       \
   LT_API Type _Type_Get(name const& t);
 
@@ -395,10 +397,24 @@ Type Type_Get() {
 
 inline void FillMetadata(TypeT* type) {}
 
+/* Cache unification (AGENTS §8d #13). Historically each translation unit had its
+ * own `static Type t` here, so the exe and the dll ended up with *different*
+ * Type objects for the same C++ type T (launch.cpp:62-66 "major design flaw").
+ * That made `Type_Get<T>() == Type_Get<T>()` comparisons fail across the
+ * exe/dll boundary and let unreflected abstract types resolve to distinct
+ * "unknown type" instances. We now keep a single, dll-owned cache keyed by
+ * std::type_index so every TU (exe and dll alike) observes the *same* Type for
+ * a given T. The map lives in Type.cpp (compiled into liblt.so) and is reached
+ * only through this LT_API helper, so there is exactly one instance.
+ *
+ * The returned reference is into that shared map: it is null until the
+ * corresponding _Type_Get(T const&) friend populates it on the first public
+ * Type_Get<T>() call (mirroring the old per-T `if (!type)` lazy pattern). */
+LT_API Type& Type_GetStorage(std::type_index);
+
 template <class T>
 Type& Type_GetStorage() {
-  static Type t;
-  return t;
+  return Type_GetStorage(typeid(T));
 }
 
 template <class T>
@@ -506,5 +522,11 @@ inline Type Type_Get<void>() {
     type = Type_Create("void", 0);
   return type;
 }
+
+/* Cache unification (AGENTS §8d #13). Called once at startup (top of
+ * Launcher::Launch, before any script compiles) to force-resolve the
+ * primitive/essential types into the single shared type-index cache. Safe to
+ * call multiple times; it is idempotent. Defined in Type.cpp. */
+LT_API void LTE_Initialize();
 
 #endif

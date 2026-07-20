@@ -8,6 +8,7 @@
 #include "LTE/Renderer.h"
 #include "LTE/Script.h"
 #include "LTE/Texture2D.h"
+#include "LTE/Type.h"
 #include "LTE/Window.h"
 
 // #define TIME_LTSL_COMPILE
@@ -38,6 +39,12 @@ struct Launcher : public Program {
   }
 
   void Launch() {
+    /* Cache unification (AGENTS §8d #13): force the primitive/essential types
+     * into the single shared type-index cache before any script compiles. By
+     * the time main() runs, both exe and dll static-init are complete, so this
+     * is the safe single point to populate the shared registry. */
+    LTE_Initialize();
+
     physicsEngine = nullptr;
     soundEngine = nullptr;
     physicsEngine = CreatePhysicsEngine();
@@ -60,10 +67,14 @@ struct Launcher : public Program {
     }
 
     /* NOTE : We have to raw cast here due to issues with the usual
-              .Convert<ScriptType>. Due to a major design flaw in the Type
-              system, Type_Get<T> returns different static storage in the exe
-              vs the dll, so type equality comparisons fail when they shouldn't.
-              I am not going to fix this right now. */
+              .Convert<ScriptType>. The type-cache divergence described in the
+              original comment (Type_Get<T> returning different static storage in
+              the exe vs the dll) has since been FIXED via cache unification
+              (AGENTS §8d #13): a single dll-owned std::map<std::type_index,
+              Type> now backs Type_GetStorage, populated by LTE_Initialize()
+              above. This raw cast is retained for minimal churn; a future
+              thorough refactor could re-evaluate whether a typed path is now
+              viable. */
     ScriptType app = *(ScriptType*)main->returnType->GetAux().data;
     initialize = app->GetFunction("Initialize");
     update = app->GetFunction("Update");

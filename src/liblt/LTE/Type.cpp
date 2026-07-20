@@ -10,6 +10,8 @@
 #include "Vector.h"
 
 #include <iostream>
+#include <map>
+#include <typeindex>
 
 String const kAutoPtrName = "AutoPtr";
 String const kHandleName = "Handle";
@@ -27,6 +29,17 @@ namespace {
     return m;
   }
 
+  /* Cache unification (AGENTS §8d #13). A single, dll-owned cache keyed by
+   * std::type_index, so the exe and the dll share one Type per C++ type T.
+   * Before, Type_GetStorage<T>() used a function-local static in the header,
+   * which each binary instantiated separately (the launch.cpp:62-66 flaw). */
+  std::map<std::type_index, Type>& GetTypeIndexMap() {
+    static std::map<std::type_index, Type> m;
+    return m;
+  }
+
+  bool g_typesInitialized = false;
+
   struct TypeExtra {
     Data aux;
     Vector<String> aliases;
@@ -40,6 +53,30 @@ namespace {
   struct TypeImpl : public TypeT {
     TypeExtra extra;
   };
+}
+
+/* Cache unification (AGENTS §8d #13). These mirror the LT_API declarations in
+ * Type.h. They are defined at external (file) scope so the exe can call them
+ * through the dll; the actual per-type cache lives in GetTypeIndexMap() above
+ * (anonymous-namespace, visible throughout this TU). */
+Type& Type_GetStorage(std::type_index index) {
+  return GetTypeIndexMap()[index];
+}
+
+void LTE_Initialize() {
+  if (g_typesInitialized)
+    return;
+  g_typesInitialized = true;
+
+  /* Force-resolve the primitive/essential types up front so they exist in the
+   * shared map before any script compiles. This matches what static-init used
+   * to do eagerly but does it once, in a known order, after both exe and dll
+   * static-init have completed. The PRIMITIVE_TYPE_X types define _Type_Get
+   * via MAKE_DEFAULT_REFLECTION and self-register into the name map on
+   * creation. */
+#define X(x) Type_Get<x>();
+  PRIMITIVE_TYPE_X
+#undef X
 }
 
 Type Type_Create(String const& name, size_t size) {

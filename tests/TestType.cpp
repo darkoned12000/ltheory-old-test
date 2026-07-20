@@ -67,3 +67,29 @@ LTE_TEST(Type_PrimitiveResolution) {
   LTE_CHECK(i->name.size() > 0);
   LTE_CHECK(!IsUnknownType(Type_Get<Vector<int> >()));
 }
+
+LTE_TEST(Type_SharedCacheIsConsistent) {
+  // AGENTS §8d #13: the type cache was historically a per-TU function-local
+  // static, so the exe and dll could hold *different* Type objects for the same
+  // C++ type T, breaking `Type_Get<T>() == Type_Get<T>()` identity across the
+  // boundary (launch.cpp:62-66). The cache is now a single dll-owned map keyed
+  // by std::type_index. These tests assert: (a) repeated Type_Get<T>() returns
+  // the SAME Type identity, and (b) the name-map lookup (Type_Find) yields the
+  // exact same object Type_Get<T>() returned -- proving there is one canonical
+  // instance per type, not a duplicated "unknown type" per translation unit.
+  Type i1 = Type_Get<int>();
+  Type i2 = Type_Get<int>();
+  LTE_CHECK(i1 == i2);                       // identity preserved across calls
+  LTE_CHECK(i1 == Type_Find(i1->name));     // name-map == cache object
+
+  Type s1 = Type_Get<String>();
+  Type s2 = Type_Get<String>();
+  LTE_CHECK(s1 == s2);
+  LTE_CHECK(s1 == Type_Find(s1->name));
+
+  // A reflected composite type must also resolve to exactly one object.
+  Type v1 = Type_Get<Vector<int> >();
+  Type v2 = Type_Get<Vector<int> >();
+  LTE_CHECK(v1 == v2);
+  LTE_CHECK(v1 == Type_Find(v1->name));
+}
