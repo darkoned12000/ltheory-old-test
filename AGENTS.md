@@ -395,7 +395,7 @@ correctness/tooling passes, NOT a ground-up rewrite.
 To successfully transition this old engine and slowly build a game out of it, the following phased approach is recommended:
 
 **Phase 1: Dependencies & Core Stability (High Priority)**
-- [ ] **FMOD Replacement:** Strip out the ancient FMOD binaries. Implement a new `SoundEngine` backend using `miniaudio` (a modern, single-file C header library) or leverage SFML's existing `sf::Audio` (OpenAL).
+- [x] **FMOD Replacement:** Strip out the ancient FMOD binaries. Implement a new `SoundEngine` backend using `miniaudio` (a modern, single-file C header library) or leverage SFML's existing `sf::Audio` (OpenAL).
 - [ ] **SFML 3.x Upgrade:** Move to SFML 3 to gain native Wayland support on Linux and modern windowing capabilities, dropping X11 legacy dependence.
 
 **Phase 2: Graphics & Rendering Modernization**

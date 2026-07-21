@@ -80,6 +80,7 @@ if(WINDOWS)
   set(LINK_LIBRARIES
       ${GLEW_GLEW_LIBRARY}
       sfml-graphics
+      sfml-audio
       sfml-network
       sfml-system
       sfml-window)
@@ -87,11 +88,10 @@ if(WINDOWS)
 elseif(MAC)
 
   set(LINK_LIBRARIES
-      fmodex
-      fmodevent
       freetype
       GLEW
       sfml-graphics
+      sfml-audio
       sfml-network
       sfml-system
       sfml-window
@@ -105,6 +105,7 @@ elseif(LINUX)
       dl
       freetype
       sfml-graphics
+      sfml-audio
       sfml-network
       sfml-system
       sfml-window
@@ -112,12 +113,12 @@ elseif(LINUX)
 
   if(ARCH_32)
 
-    set(LINK_LIBRARIES ${LINK_LIBRARIES} fmodex fmodevent)
+    set(LINK_LIBRARIES ${LINK_LIBRARIES})
     link_directories(${PROJECT_SOURCE_DIR}/extbin/linux32)
 
   elseif(ARCH_64)
 
-    set(LINK_LIBRARIES ${LINK_LIBRARIES} fmodex64 fmodevent64)
+    set(LINK_LIBRARIES ${LINK_LIBRARIES})
     link_directories(${PROJECT_SOURCE_DIR}/extbin/linux64)
 
   endif()

@@ -48,7 +48,7 @@ struct Launcher : public Program {
     physicsEngine = nullptr;
     soundEngine = nullptr;
     physicsEngine = CreatePhysicsEngine();
-    soundEngine = SoundEngine_Fmod();
+    soundEngine = SoundEngine_SFML();
 
     Script_ClearCache();
 
