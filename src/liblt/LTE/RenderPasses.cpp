@@ -51,8 +51,10 @@ namespace {
     void OnRender(DrawState* state) override {
       shaderInstance->Begin();
       DrawState_Link(shader);
+      int seedLoc = shader->QueryUniformLocation("seed");
+      if (seedLoc >= 0)
+        shader->SetFloat(seedLoc, Rand());
       (*shader)
-        ("seed", Rand())
         ("texture", state->primary);
       Renderer_SetShader(*shader);
       DrawSecondaryFSQ(state);

@@ -2,25 +2,28 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Part of the ltheory-old-test modernization effort (Revamp Work).
 # See NOTICE and LICENSE.GPL. Original engine (c) Josh Parnell, public domain.
-
 # hud.lts -- a HUD tech-demo.
 #
-# Originally a "self-widget" app (function Data Main + widget:Create). The
-# modern engine only drives "driven" apps (Main -> App + Initialize/Update), so
-# the universe/player build has been moved into HUDApp:Create and the widget is
-# wrapped in a driven App that runs the standard RenderPass pipeline.
-
+# Rewritten to use the same widget-tree pattern as ltheory.lts / loading.lts
+# (Data Main -> widget:Create -> Custom Widget), rather than a hand-driven
+# App + Initialize/Update + Interface_Create loop. That manual pattern isn't
+# used by any confirmed-working reference file, and its Update() never called
+# ui.Draw, so the HUD's own PreDraw had no guaranteed way to run. Folding
+# everything into a single widget with one CreateChildren tree removes both
+# problems and keeps the render pipeline identical to the working example.
 type HUDApp
   Object universe
   Object system
   Player player
-  Float t 0
+  Camera camera
   Texture texture Texture/RandomScreenshot:Get
 
   function Void Create (Widget self)
+    camera = Camera_Create
+    camera.Push
+
     universe = (Object_Universe 42 0)
     system = universe
-
     while (! (IsSystem system))
       system = system.GetInteriorObjects.Get
 
@@ -33,43 +36,33 @@ type HUDApp
     player.AddAsset ship
     player.Pilot ship
 
-    for i 0 i < 10 (++ i)
+    for i 0 i < 10 i.++
       ship.AddItem (Item_WeaponType i + 100) 1
 
   function List CreateChildren (Widget self)
     var l List
+
+    var passes Vector<Reference<RenderPassT>>
+    passes.Append (RenderPass_Clear (Vec4 0.0))
+    passes.Append (RenderPass_Camera camera)
+    passes.Append (RenderPass_PostFilter "post/dither.jsl")
+    l += (Widget_Rendered passes)
+
     l += (Widget/HUD:Create player)
     l
 
   function Void PreUpdate (Widget self)
-    Camera_Get.SetTarget player.GetPiloting
+    camera.SetTarget player.GetPiloting
+
+    var container player.GetPiloting.GetContainer
+    var dt (Min 0.1 FrameTimer_Get)
+    if Key_H.Down dt *= 20.0
+    container.Update dt
 
   function Void PreDraw (Widget self)
     Draw texture self.pos self.size 1.0
 
-type App
-  Interface ui
-  Interface gameView
-  Camera camera
-
-  function Void Initialize ()
-    camera = Camera_Create
-    camera.Push
-    ui = (Interface_Create "UI")
-    gameView = (Interface_Create "Game View")
-    var passes Vector<Reference<RenderPassT>>
-    passes.Append (RenderPass_Clear (Vec4 0.0))
-    passes.Append (RenderPass_Camera camera)
-    passes.Append (RenderPass_Interface ui)
-    passes.Append (RenderPass_PostFilter "post/dither.jsl")
-    gameView.Add (Widget_Rendered passes)
-    ui.Add (Custom Widget HUDApp)
-
-  function Void Update ()
-    ui.Update
-    gameView.Update
-    gameView.Draw
-
-function App Main ()
-  var self App
-  self
+function Data Main ()
+  widget:Create
+    Stack
+      Custom Widget HUDApp

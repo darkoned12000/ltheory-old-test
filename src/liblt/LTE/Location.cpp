@@ -252,7 +252,7 @@ namespace {
     AutoPtr< Array<uchar> > Read() const override {
       sf::Http http(host);
       sf::Http::Response response = http.sendRequest(sf::Http::Request(item));
-      if (response.getStatus() != sf::Http::Response::Ok)
+      if (response.getStatus() != sf::Http::Response::Status::Ok)
         return nullptr;
 
       String message = response.getBody();

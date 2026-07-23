@@ -14,7 +14,6 @@ uniform sampler2D depthBuffer;
 uniform sampler2D albedoMap;
 uniform sampler2D normalMap;
 uniform sampler2D detailMap;
-uniform sampler2D decal;
 
 #include fdm.jsl
 

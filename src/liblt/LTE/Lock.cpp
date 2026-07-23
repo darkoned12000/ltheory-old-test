@@ -1,10 +1,10 @@
 #include "Lock.h"
 
-#include "SFML/System/Mutex.hpp"
+#include <mutex>
 
 namespace {
   struct LockImpl : public LockT {
-    sf::Mutex mutex;
+    std::mutex mutex;
 
     void Acquire() override {
       mutex.lock();

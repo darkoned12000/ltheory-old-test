@@ -732,8 +732,13 @@ Colors:Primary                        # a named color (Vec3)
 > follow the mouse). This was the original launcher bug: `Cursor_Get` returned a
 > stale/fixed value because the cursor stack was empty outside the draw pass.
 
-Keyboard key names follow the SFML enum (see AGENTS.md note about deprecated
-aliases). `Key_<Name>.Pressed` / `.Down` are the two states.
+Keyboard key names follow the SFML enum, mapped through the engine's
+`Key_Name` / `Key_Down` / `Key_Pressed` bindings in `Keyboard.cpp`.
+The underlying SFML 3.x enums are scoped (`sf::Keyboard::Key::A`,
+`sf::Keyboard::Key::Escape`, etc.), but the engine presents them to LTSL
+as `Key_Escape`, `Key_Space`, `Key_F1`, etc. — **no change for script
+authors**. The key-value integer mapping (scan codes) is unchanged
+from SFML 2.x through 3.1.
 
 ---
 

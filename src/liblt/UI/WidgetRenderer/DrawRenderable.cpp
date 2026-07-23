@@ -53,7 +53,9 @@ namespace {
       else
         currentShader = holoShader;
 
-      currentShader->GetShader()->SetInt("prepass", 0);
+      int prepassLoc = currentShader->GetShader()->QueryUniformLocation("prepass");
+      if (prepassLoc >= 0)
+        currentShader->GetShader()->SetInt(prepassLoc, 0);
       DrawState_Inject(currentShader->GetShader());
     }
 

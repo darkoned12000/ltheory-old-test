@@ -31,7 +31,7 @@ CMakeLists.txt        Top-level build (project = LTheory)
 configure.py          Build/run helper (configure, build, clean, run)
 src/launch/           The launcher executable entry point (main())
 src/liblt/            The engine library: LTE + all subsystems (built as liblt.so)
-ext/SFML/             Vendored SFML 2.6.2 (built statically into liblt)
+ext/SFML/             Vendored SFML 2.6.2 (legacy — no longer built; system SFML 3.1.0 used via find_package)
 extbin/               Shipped runtime binaries (FMOD) — tracked
 resource/             Game data: shaders (.jsl), textures, fonts, scripts
 script/               Python tooling (tloc, assetlist, install_dependencies.sh)
@@ -70,14 +70,24 @@ python3 configure.py test       # runs all unit tests (lte_tests target)
 ```
 
 ### Key CMake facts (top-level `CMakeLists.txt`)
-- `BUILD_SHARED_LIBS=FALSE` forces SFML to build **static** archives
-  (`libsfml-*-s.a`), linked into the shared `liblt.so`.
-- `CMAKE_POSITION_INDEPENDENT_CODE ON` set **before** `add_subdirectory(ext/SFML)`
-  so static SFML archives are PIC.
+- **SFML 3.1.0** is found via `find_package(SFML 3.1 REQUIRED COMPONENTS ...)`.
+  The vendored `ext/SFML/` directory is legacy and not built. CMake imported
+  targets (`SFML::Graphics`, etc.) provide include paths and link libraries.
 - Linux flags: `-fno-exceptions -O2 -g -msse -msse2 -Wall -Wextra`
   (`-Werror` scoped to project targets `lt` and `launch`; vendored code excluded).
-- Link libraries (Linux): `dl freetype sfml-graphics sfml-network sfml-system
-  sfml-window GLEW` plus FMOD from `extbin/linux64` via `link_directories`.
+- **Known pre-existing warnings:** GCC 15 emits `-Wunused-parameter` warnings
+  from engine template/macro code (`Type.h`, `Common.h`, `Function_Generated.h`,
+  `Reference.h`, `AutoClass.h`, etc.) in the `launch` and `lte_tests` targets.
+  These come from macro-generated functions (e.g. empty `FIELDS {}` in base types
+  producing `MapFields(TypeT*, void*, FieldMapper&, void*)` with all params
+  unused). Suppressed by `-Wno-unused-parameter` in `CMAKE_CXX_FLAGS` but some
+  template instantiation paths bypass it. **Pre-existing — not caused by any
+  upgrade.** Low priority; fix at source if/when refactoring the reflection
+  macros.
+- Link libraries (Linux): `dl freetype`, `SFML::Graphics`, `SFML::Audio`,
+  `SFML::Network`, `SFML::System`, `SFML::Window` (CMake imported targets from
+  `find_package(SFML 3.1)`), `GLEW`, plus FMOD from `extbin/linux64` via
+  `link_directories`.
 - `OpenGL` found via `find_package(OpenGL REQUIRED)` with `CMP0072` NEW (GLVND).
 
 ### Runtime
@@ -93,7 +103,7 @@ python3 configure.py test       # runs all unit tests (lte_tests target)
 
 | Library      | Version / State           | Role                         | Status / Notes |
 |--------------|---------------------------|------------------------------|----------------|
-| **SFML**     | 2.6.2, vendored `ext/SFML`| Window, GL context, input, audio, graphics | Upgraded from 2.5.0. Key aliases updated to canonical names (completed). **No Wayland backend** — X11 only; runs on Wayland via XWayland. |
+| **SFML**     | 3.1.0, system-installed  | Window, GL context, input, audio, graphics | Upgraded from vendored 2.5.0 → 2.6.2 → system 3.0.2 → system 3.1.0. SFML 3 uses C++17, scoped enums, `std::variant` events, miniaudio backend. **No Wayland backend** — X11 only; runs on Wayland via XWayland. |
 | **FMOD**     | 4.44.24 (ex-api), binary  | 3D audio, music, sound       | Closed-source. Prebuilt `.so` in `extbin/linux64`. **Hard to upgrade** (old low-level API). |
 | **FreeType** | system (`libfreetype-dev`)| Font rasterization           | System freetype; bundled copy removed (conflicted). |
 | **GLEW**     | system (`libglew-dev`)    | OpenGL extension loading     | Link-only. |
@@ -304,7 +314,7 @@ correctness/tooling passes, NOT a ground-up rewrite.
   pure-virtual `SoundEngine` interface (`Fmod` and `Null` implementations,
   selected via `GetSoundEngine()`). New backends possible without touching
   call sites.
-- **SFML:** vendored 2.6.2, built static + PIC.
+- **SFML:** system 3.1.0, uses C++17, scoped enums, miniaudio backend.
 
 ### 9.2 Non-goals / Cautions
 
@@ -322,10 +332,12 @@ correctness/tooling passes, NOT a ground-up rewrite.
 ## 10. Modernization TODO — Remaining Work
 
 ### 10.1 Build & Tooling
-- [ ] **SFML 3.x upgrade** (Wayland support). Breaking API changes. **Deferred**
-      — XWayland covers current users. The real motivation is native Wayland
-      (Linux distros deprecating X11). Engine makes zero direct X11 calls;
-      SFML is the only blocker.
+- [x] **SFML 3.x upgrade** — Upgraded from vendored 2.5.0 → 2.6.2 → system 3.0.2 → system 3.1.0.
+      CMake `find_package(SFML 3.1 REQUIRED ...)`. Zero code changes required for
+      3.0→3.1 (all SFML 3.0→3.1 changes were deprecations of APIs the engine
+      doesn't use: `sf::Font::getKerning`, `sf::Text::findCharacterPos`,
+      `sf::Touch`, `sf::Ftp`, `sf::IpAddress::resolve`). Native Wayland support
+      still not available — SFML 3.1 is X11-only, runs on Wayland via XWayland.
 - [ ] **CI (GitHub Actions)** — Linux (GCC + Clang) and Windows. Reuse
       `configure.py` / CMakePresets. Run `clang-format --dry-run --Werror` +
       build with `-Werror` scoped to project targets.
@@ -396,7 +408,10 @@ To successfully transition this old engine and slowly build a game out of it, th
 
 **Phase 1: Dependencies & Core Stability (High Priority)**
 - [x] **FMOD Replacement:** Strip out the ancient FMOD binaries. Implement a new `SoundEngine` backend using `miniaudio` (a modern, single-file C header library) or leverage SFML's existing `sf::Audio` (OpenAL).
-- [ ] **SFML 3.x Upgrade:** Move to SFML 3 to gain native Wayland support on Linux and modern windowing capabilities, dropping X11 legacy dependence.
+- [x] **SFML 3.x Upgrade:** Move to SFML 3 to gain modern windowing, miniaudio
+      audio backend, and C++17/`std::variant` event API. Upgraded through 3.0.2
+      → 3.1.0 (system packages). **No Wayland backend yet** — SFML 3.1 is
+      X11-only; runs on Wayland via XWayland.
 
 **Phase 2: Graphics & Rendering Modernization**
 - [ ] **OpenGL 4.30 Upgrade:** Bump GLSL versions to 4.30 to unlock compute shaders (useful for volumetric nebulas and fast asteroid instancing).
@@ -511,6 +526,13 @@ Resolved during the initial modernization bring-up. Do not reintroduce:
       flow (keep `configure.py` as thin wrapper).
 - [x] Introduce `-Werror` scoped to project code (`lt`, `launch` targets).
       Vendored `ext/SFML/` excluded. Zero warnings.
+- [x] **SFML 3.1.0 upgrade** — Upgraded system SFML from 3.0.2 to 3.1.0
+      (Debian sid packages: `libsfml-dev` 3.1.0+dfsg-3). CMakeLists.txt
+      `find_package` updated to require SFML 3.1. Build clean, 148/148 tests pass.
+      All SFML 3.0→3.1 changes were deprecations of APIs the engine doesn't use
+      (`sf::Font::getKerning(uint32_t)`, `sf::Text::findCharacterPos`,
+      `sf::Touch`, `sf::Ftp`, `sf::IpAddress::resolve`). Zero code changes
+      required.
 
 ---
 

@@ -11,15 +11,10 @@ if(POLICY CMP0072)
   cmake_policy(SET CMP0072 NEW)
 endif()
 
-# Require position-independent code so the static SFML archives can be linked
-# into the shared liblt.so (must be set before add_subdirectory(ext/SFML))
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
 find_package(OpenGL REQUIRED)
 
-# force SFML to build as a static lib to minimize pain
-set(BUILD_SHARED_LIBS FALSE CACHE BOOL "" FORCE)
-add_subdirectory(ext/SFML)
+# SFML 3.1: find the system-installed package
+find_package(SFML 3.1 REQUIRED COMPONENTS Graphics Audio Network System Window)
 
 function (configure_output_dir target)
   set_target_properties (${target} PROPERTIES
@@ -70,8 +65,7 @@ endif()
 # Get ext includes
 include_directories(src/liblt
   include
-  include/FreeType
-  ext/SFML/include)
+  include/FreeType)
 
 # Get ext libraries
 if(WINDOWS)
@@ -79,23 +73,22 @@ if(WINDOWS)
   file(GLOB_RECURSE EXTLIB extlib/win32/*.lib)
   set(LINK_LIBRARIES
       ${GLEW_GLEW_LIBRARY}
-      sfml-graphics
-      sfml-audio
-      sfml-network
-      sfml-system
-      sfml-window)
+      SFML::Graphics
+      SFML::Audio
+      SFML::Network
+      SFML::System
+      SFML::Window)
 
 elseif(MAC)
 
   set(LINK_LIBRARIES
       freetype
       GLEW
-      sfml-graphics
-      sfml-audio
-      sfml-network
-      sfml-system
-      sfml-window
-      )
+      SFML::Graphics
+      SFML::Audio
+      SFML::Network
+      SFML::System
+      SFML::Window)
 
   link_directories(${PROJECT_SOURCE_DIR}/extbin/osx)
 
@@ -104,11 +97,11 @@ elseif(LINUX)
   set(LINK_LIBRARIES
       dl
       freetype
-      sfml-graphics
-      sfml-audio
-      sfml-network
-      sfml-system
-      sfml-window
+      SFML::Graphics
+      SFML::Audio
+      SFML::Network
+      SFML::System
+      SFML::Window
       GLEW)
 
   if(ARCH_32)

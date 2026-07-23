@@ -16,7 +16,8 @@ set(TEST_SRC
   Harness.h
   TestString.cpp
   TestVectorArray.cpp
-  TestType.cpp)
+  TestType.cpp
+  TestSFML.cpp)
 
 add_executable(lte_tests ${TEST_SRC})
 
@@ -30,8 +31,7 @@ target_compile_options(lte_tests PRIVATE
 target_include_directories(lte_tests PRIVATE
   ${CMAKE_SOURCE_DIR}/src/liblt
   ${CMAKE_SOURCE_DIR}/include
-  ${CMAKE_SOURCE_DIR}/include/FreeType
-  ${CMAKE_SOURCE_DIR}/ext/SFML/include)
+  ${CMAKE_SOURCE_DIR}/include/FreeType)
 
 # Link the engine shared library (resolved at runtime via LD_LIBRARY_PATH).
 target_link_libraries(lte_tests lt ${LINK_LIBRARIES})

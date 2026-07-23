@@ -24,7 +24,8 @@ namespace LTE {
     }
 
     float GetAxis(JoystickAxis axis) const override {
-      return sf::Joystick::getAxisPosition(id, (sf::Joystick::Axis)axis) / 100.f;
+      return sf::Joystick::getAxisPosition(id,
+        static_cast<sf::Joystick::Axis>(axis)) / 100.f;
     }
 
     float GetAxisDelta(JoystickAxis axis) const override {

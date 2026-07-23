@@ -187,9 +187,10 @@ namespace {
         }
       }
 
-      sf::Image image;
-      image.create(width, height, (sf::Uint8*)imageData.data());
-      image.saveToFile(path);
+      sf::Image image(
+        {width, height},
+        reinterpret_cast<std::uint8_t const*>(imageData.data()));
+      (void)image.saveToFile(std::string(path.c_str()));
     }
 
     void SetData(
@@ -402,11 +403,10 @@ void Texture_Generate(
 }
 
 DefineFunction(Texture_LoadFrom) {
-  sf::Image image;
   AutoPtr< Array<uchar> > arr = args.source->Read();
   if (!arr)
     Log_Critical("Failed to load texture from " + args.source->ToString());
-  image.loadFromMemory(arr->data(), arr->size());
+  sf::Image image(arr->data(), arr->size());
 
   return Texture_Create(
     image.getSize().x,

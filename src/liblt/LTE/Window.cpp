@@ -20,15 +20,15 @@ namespace {
 
   void ProcessMouseEvent(sf::Mouse::Button button, bool pressed) {
     switch (button) {
-      case sf::Mouse::Left:
+      case sf::Mouse::Button::Left:
         Mouse_SetPressed(MouseButton_Left, pressed); break;
-      case sf::Mouse::Right:
+      case sf::Mouse::Button::Right:
         Mouse_SetPressed(MouseButton_Right, pressed); break;
-      case sf::Mouse::Middle:
+      case sf::Mouse::Button::Middle:
         Mouse_SetPressed(MouseButton_Middle, pressed); break;
-      case sf::Mouse::XButton1:
+      case sf::Mouse::Button::Extra1:
         Mouse_SetPressed(MouseButton_X1, pressed); break;
-      case sf::Mouse::XButton2:
+      case sf::Mouse::Button::Extra2:
         Mouse_SetPressed(MouseButton_X2, pressed); break;
       default: break;
     }
@@ -56,32 +56,27 @@ namespace {
     {
       viewport = Viewport_Create(0, size, 1, true);
       sf::ContextSettings glSettings;
-      glSettings.majorVersion = 3;
-      glSettings.minorVersion = 3;
       // Request a 3.3 context (shaders use #version 330). Leave attributeFlags
-      // at 0: setting the explicit Core bit makes SFML 2.6 + this Mesa driver
-      // crash with a GLX MakeCurrent / oldCtxInfo assertion at first context
-      // switch. The engine's draw path is made core-compatible via the VBO
-      // fallbacks in Renderer.cpp (DrawQuad / DrawQuadOutline / DrawVertices),
+      // at Default: setting the explicit Core bit makes SFML 2.6 + this Mesa
+      // driver crash with a GLX MakeCurrent / oldCtxInfo assertion at first
+      // context switch. The engine's draw path is made core-compatible via the
+      // VBO fallbacks in Renderer.cpp (DrawQuad / DrawQuadOutline / DrawVertices),
       // so a core 3.3+ context works without client-side vertex arrays.
-      glSettings.attributeFlags = 0;
       glSettings.depthBits = 24;
       glSettings.stencilBits = 8;
+      glSettings.majorVersion = 3;
+      glSettings.minorVersion = 3;
+      glSettings.attributeFlags = sf::ContextSettings::Attribute::Default;
       impl.create(
-        sf::VideoMode(size.x, size.y, bpp),
+        sf::VideoMode({size.x, size.y}, bpp),
         title,
-        fullscreen
-          ? sf::Style::Fullscreen 
-          : border
-            ? sf::Style::Default
-            : sf::Style::None,
+        sf::Style::Default,
+        fullscreen ? sf::State::Fullscreen : sf::State::Windowed,
         glSettings);
       impl.setMouseCursorVisible(false);
-      impl.setView(sf::View(sf::FloatRect(0, 0, size.x, size.y)));
+      impl.setView(sf::View(sf::FloatRect({0, 0},
+        {static_cast<float>(size.x), static_cast<float>(size.y)})));
       viewport->size = size;
-
-      // sf::Vector2i p = sf::Mouse::getPosition(impl);
-      // sf::Mouse::setPosition(p, impl);
     }
 
     void Close() override {
@@ -117,7 +112,10 @@ namespace {
     }
 
     void SetFullscreen() override {
-      impl.create(sf::VideoMode(size.x, size.y, bpp), title, sf::Style::Fullscreen);
+      impl.create(
+        sf::VideoMode({size.x, size.y}, bpp),
+        title,
+        sf::State::Fullscreen);
       viewport->size.x = (float)impl.getSize().x;
       viewport->size.y = (float)impl.getSize().y;
       impl.setMouseCursorVisible(false);
@@ -127,9 +125,8 @@ namespace {
       Array<uchar> buf(icon->GetMemory());
       icon->GetData(buf.data());
       impl.setIcon(
-        icon->GetWidth(),
-        icon->GetHeight(),
-        (sf::Uint8 const*)buf.data());
+        {icon->GetWidth(), icon->GetHeight()},
+        reinterpret_cast<std::uint8_t const*>(buf.data()));
     }
 
     void SetPosition(V2I const& p) override {
@@ -141,30 +138,38 @@ namespace {
     }
 
     void Update() override {
-      sf::Event e;
-      while (impl.pollEvent(e)) {
-        if (e.type == sf::Event::Resized) {
-          float w = (float)e.size.width;
-          float h = (float)e.size.height;
-          impl.setView(sf::View(sf::FloatRect(0, 0, w, h)));
-          size.x = e.size.width;
-          size.y = e.size.height;
+      while (const auto event = impl.pollEvent()) {
+        if (const auto* resized = event->getIf<sf::Event::Resized>()) {
+          float w = (float)resized->size.x;
+          float h = (float)resized->size.y;
+          impl.setView(sf::View(sf::FloatRect({0, 0}, {w, h})));
+          size = V2U(resized->size.x, resized->size.y);
           viewport->size = V2(w, h);
         }
 
-        else if (e.type == sf::Event::KeyPressed) {
-          if (e.key.code != sf::Keyboard::Unknown)
-            Keyboard_AddDown((int)e.key.code);
+        else if (const auto* keyPressed =
+                   event->getIf<sf::Event::KeyPressed>())
+        {
+          if (keyPressed->code != sf::Keyboard::Key::Unknown)
+            Keyboard_AddDown(static_cast<int>(keyPressed->code));
         }
 
-        else if (e.type == sf::Event::MouseButtonPressed)
-          ProcessMouseEvent(e.mouseButton.button, true);
+        else if (const auto* mouseButton =
+                   event->getIf<sf::Event::MouseButtonPressed>())
+        {
+          ProcessMouseEvent(mouseButton->button, true);
+        }
 
-        else if (e.type == sf::Event::MouseButtonReleased)
-          ProcessMouseEvent(e.mouseButton.button, false);
+        else if (const auto* mouseButton =
+                   event->getIf<sf::Event::MouseButtonReleased>())
+        {
+          ProcessMouseEvent(mouseButton->button, false);
+        }
 
-        else if (e.type == sf::Event::MouseMoved) {
-          V2I p(e.mouseMove.x, e.mouseMove.y);
+        else if (const auto* mouseMoved =
+                   event->getIf<sf::Event::MouseMoved>())
+        {
+          V2I p(mouseMoved->position.x, mouseMoved->position.y);
 
           if (captureMouse) {
             const V2I borderSize = 1;
@@ -178,23 +183,27 @@ namespace {
               Mouse_SetPos(p);
             }
           }
-          Mouse_UpdatePos(p);  
+          Mouse_UpdatePos(p);
         }
 
-        else if (e.type == sf::Event::MouseWheelMoved && hasFocus) {
-          /* TODO : Improve precision on Windows. */
-          Mouse_SetScrollDelta((float)e.mouseWheel.delta);
+        else if (const auto* wheel =
+                   event->getIf<sf::Event::MouseWheelScrolled>())
+        {
+          if (hasFocus)
+            Mouse_SetScrollDelta((float)wheel->delta);
         }
 
-        else if (e.type == sf::Event::GainedFocus)
+        else if (event->is<sf::Event::FocusGained>())
           hasFocus = true;
 
-        else if (e.type == sf::Event::LostFocus)
+        else if (event->is<sf::Event::FocusLost>())
           hasFocus = false;
 
-        else if (e.type == sf::Event::TextEntered) {
-          if (e.text.unicode >= 32 && e.text.unicode <= 126)
-            Keyboard_AddText((char)e.text.unicode);
+        else if (const auto* textEntered =
+                   event->getIf<sf::Event::TextEntered>())
+        {
+          if (textEntered->unicode >= 32 && textEntered->unicode <= 126)
+            Keyboard_AddText(static_cast<char>(textEntered->unicode));
         }
       }
     }
