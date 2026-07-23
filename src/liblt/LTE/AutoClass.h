@@ -4,7 +4,7 @@
 #include "Type.h"
 
 struct EmptyBase {
-  friend Type _Type_Get(EmptyBase const& t) {
+  friend Type _Type_Get([[maybe_unused]] EmptyBase const& t) {
     return nullptr;
   }
 

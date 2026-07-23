@@ -244,22 +244,6 @@ type App
       if target.IsNotNull
         target.Send (MessageStopUsing player.GetPiloting)
 
-    # F2 DevTool
-    if Key_F2.Pressed
-      desktopVisible = desktopVisible.!
-      switch
-        desktopVisible
-          desktop =
-            Layer
-              Compositor_Basic 0.1 0.1 (Vec3 0.4 0.5 0.75)
-              Mesh_Quad
-              1
-              Widget/DevTool:Create
-          ui.Add desktop
-        otherwise
-          if desktop.IsNotNull
-            desktop.Delete
-
     # F3 Debug
     if Key_F3.Pressed
       debugVisible = debugVisible.!

@@ -18,8 +18,8 @@ void __MapBase(TypeT* type, void* address, FieldMapper& m, void* aux) {
 #define BASE_TYPE_EX(x)                                                        \
   typedef x SelfType;                                                          \
   typedef x VirtualBaseType;                                                   \
-                                                                               \
-  friend Type _Type_Get(x const& t) {                                          \
+                                                                                \
+  friend Type _Type_Get([[maybe_unused]] x const& t) {                         \
     Type& type = Type_GetStorage<x>();                                         \
     if (!type) {                                                               \
       type = Type_Create(#x, sizeof(x));                                       \
@@ -30,20 +30,20 @@ void __MapBase(TypeT* type, void* address, FieldMapper& m, void* aux) {
     }                                                                          \
     return type;                                                               \
   }                                                                            \
-                                                                               \
+                                                                                \
   template <class StreamT>                                                     \
   friend void _ToStream(StreamT& s, x const& t) {                              \
     s << t.ToString();                                                         \
   }                                                                            \
-                                                                               \
+                                                                                \
   virtual Type GetDerivedTypeInfo() const = 0;                                 \
-                                                                               \
+                                                                                \
   virtual int GetTypeGUID() const = 0;                                         \
-                                                                               \
+                                                                                \
   virtual String ToString() const {                                            \
     return ToStringDerived();                                                  \
   }                                                                            \
-                                                                               \
+                                                                                \
   virtual String ToStringDerived() const = 0;
 
 #define BASE_TYPE(x)                                                           \

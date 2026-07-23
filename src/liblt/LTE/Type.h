@@ -30,7 +30,7 @@
   LT_API friend Type _Type_Get(T const& t);
 
 #define DefineMetadata(T)                                                      \
-  Type _Type_Get(T const& t) {                                                 \
+  Type _Type_Get([[maybe_unused]] T const& t) {                                \
     Type& type = Type_GetStorage<T>();                                         \
     if (!type) {                                                               \
       type = Type_Create(#T, sizeof(T));                                       \
@@ -51,11 +51,11 @@
 #define DefineMetadataInline(T)                                                \
   friend DefineMetadata(T)
 
-#define AUTOMATIC_REFLECTION_PARAMETRIC1(T, T1)                                \
-  friend Type _Type_Get(T const& t) {                                          \
+#define AUTOMATIC_REFLECTION_PARAMETRIC1(T, T1T1)                              \
+  friend Type _Type_Get([[maybe_unused]] T const& t) {                         \
     Type& type = Type_GetStorage<T>();                                         \
     if (!type) {                                                               \
-      Type t1Type = Type_Get<T1>();                                            \
+      Type t1Type = Type_Get<T1T1>();                                          \
       type = Type_Create(                                                      \
         String(#T) + "<" + t1Type->name + ">",                                 \
         sizeof(T));                                                            \
@@ -73,12 +73,12 @@
     return type;                                                               \
   }
 
-#define AUTOMATIC_REFLECTION_PARAMETRIC2(T, T1, T2)                            \
-  friend Type _Type_Get(T const& t) {                                          \
+#define AUTOMATIC_REFLECTION_PARAMETRIC2(T, T1T1, T2T2)                      \
+  friend Type _Type_Get([[maybe_unused]] T const& t) {                         \
     Type& type = Type_GetStorage<T>();                                         \
     if (!type) {                                                               \
-      Type t1Type = Type_Get<T1>();                                            \
-      Type t2Type = Type_Get<T2>();                                            \
+      Type t1Type = Type_Get<T1T1>();                                          \
+      Type t2Type = Type_Get<T2T2>();                                          \
       type = Type_Create(                                                      \
         String(#T) + "<" + t1Type->name + ", " + t2Type->name + ">",           \
         sizeof(T));                                                            \
@@ -395,7 +395,7 @@ Type Type_Get() {
   return Type_Get(Type_Ref<T>());
 }
 
-inline void FillMetadata(TypeT* type) {}
+inline void FillMetadata([[maybe_unused]] TypeT* type) {}
 
 /* Cache unification (AGENTS §8d #13). Historically each translation unit had its
  * own `static Type t` here, so the exe and the dll ended up with *different*
@@ -423,44 +423,44 @@ void* __type_default_allocator(TypeT*) {
 }
 
 template <class T>
-void __type_default_assign(TypeT*, void const* src, void* dst) {
+void __type_default_assign([[maybe_unused]] TypeT*, void const* src, void* dst) {
   *(T*)dst = *(T*)src;
 }
 
 template <class T>
-int64 __type_default_castint(TypeT*, void const* t) {
+int64 __type_default_castint([[maybe_unused]] TypeT*, void const* t) {
   return (int64)(*(T*)t);
 }
 
 template <class T>
-double __type_default_castreal(TypeT*, void const* t) {
+double __type_default_castreal([[maybe_unused]] TypeT*, void const* t) {
   return (double)(*(T*)t);
 }
 
 template <class T>
-void __type_default_construct(TypeT*, void* buf) {
+void __type_default_construct([[maybe_unused]] TypeT*, void* buf) {
   new (buf) T;
 }
 
 template <class T>
-void __type_default_deallocator(TypeT*, void* t) {
+void __type_default_deallocator([[maybe_unused]] TypeT*, void* t) {
   delete (T*)t;
 }
 
 template <class T>
-void __type_default_destruct(TypeT*, void* buf) {
+void __type_default_destruct([[maybe_unused]] TypeT*, void* buf) {
   ((T*)buf)->~T();
 }
 
 template <class T>
-void __type_default_tostring(TypeT*, void* buf, String* str) {
+void __type_default_tostring([[maybe_unused]] TypeT*, void* buf, String* str) {
   std::stringstream stream;
   ToStream(stream, *(T*)buf);
   *(std::string*)str = stream.str();
 }
 
 template <class T>
-void __type_map_pointer(TypeT*, void* b, FieldMapper& m, void* aux) {
+void __type_map_pointer([[maybe_unused]] TypeT*, void* b, FieldMapper& m, void* aux) {
   T** self = (T**)b;
   m((void*)*self, "value", Type_Get(**self), aux);
 }
@@ -468,7 +468,7 @@ void __type_map_pointer(TypeT*, void* b, FieldMapper& m, void* aux) {
 #if 1
 /* Allow unknown types. */
 template <class T>
-Type _Type_Get(T const& t) {
+Type _Type_Get([[maybe_unused]] T const& t) {
   Type& type = Type_GetStorage<T>();
   if (!type)
     type = Type_Create("unknown type", sizeof(T));
@@ -477,7 +477,7 @@ Type _Type_Get(T const& t) {
 #endif
 
 template <class T>
-Type _Type_Get(T* const& t) {
+Type _Type_Get([[maybe_unused]] T* const& t) {
   Type& type = Type_GetStorage<T*>();
   if (!type) {
     Type pointeeType = Type_Get<T>();
@@ -496,7 +496,7 @@ Type _Type_Get(T* const& t) {
   return type;
 }
 
-inline Type _Type_Get(void* const& t) {
+inline Type _Type_Get([[maybe_unused]] void* const& t) {
   Type& type = Type_GetStorage<void*>();
   if (!type)
     type = Type_Create("void ptr", sizeof(void*));

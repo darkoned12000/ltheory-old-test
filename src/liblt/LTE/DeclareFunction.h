@@ -42,14 +42,15 @@
   static Function Name##_Metadata = Name##_GetMetadata();                      \
 
 template <class RT>
-inline void CallAndAssign(void** in, void* out, RT (*fn)()) {
+inline void CallAndAssign([[maybe_unused]] void** in, void* out, RT (*fn)()) {
   *(RT*)out = fn();
 }
 
 template <>
-inline void CallAndAssign(void** in, void* out, void (*fn)()) {
+inline void CallAndAssign([[maybe_unused]] void** in, void* out, void (*fn)()) {
   fn();
 }
+
 
 template <class RT>
 void Infer_MetaData(Function const& type, RT (*fn)()) {}

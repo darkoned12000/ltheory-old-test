@@ -17,7 +17,10 @@ set(TEST_SRC
   TestString.cpp
   TestVectorArray.cpp
   TestType.cpp
-  TestSFML.cpp)
+  TestSFML.cpp
+  TestSound.cpp
+  TestTexture2D.cpp
+  TestWindowInput.cpp)
 
 add_executable(lte_tests ${TEST_SRC})
 

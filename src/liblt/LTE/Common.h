@@ -283,11 +283,10 @@ namespace LTE {
   LT_API friend Type _Type_Get(T const& t);
 
 #define FIELDS                                                                 \
-  static void MapFields(                                                       \
-    TypeT* type,                                                               \
-    void* addr,                                                                \
-    FieldMapper& m,                                                            \
-    void* aux)
+  static void MapFields([[maybe_unused]] TypeT* type,                           \
+    [[maybe_unused]] void* addr,                                               \
+    [[maybe_unused]] FieldMapper& m,                                           \
+    [[maybe_unused]] void* aux)
 
 #define PRIMITIVE_TYPE_X                                                       \
   X(bool)                                                                      \
@@ -326,7 +325,7 @@ void _ToStream(StreamT& s, T* const& t) {
 
 #if 1
 template <class StreamT, class T>
-void _ToStream(StreamT& s, T const& t) {
+void _ToStream([[maybe_unused]] StreamT& s, [[maybe_unused]] T const& t) {
   s << "Unknown Type";
 }
 #endif
