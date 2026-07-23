@@ -5,8 +5,8 @@
 #include "Lock.h"
 
 #include <atomic>
-
-#include "SFML/System.hpp"
+#include <chrono>
+#include <thread>
 
 namespace {
   Lock GetThreadLock() {
@@ -17,7 +17,7 @@ namespace {
 
   struct ThreadImpl : public ThreadT {
     Job job;
-    AutoPtr<sf::Thread> thread;
+    std::thread thread;
     std::atomic<bool> finished;
     bool waited;
 
@@ -28,13 +28,16 @@ namespace {
     {
       ScopedLock lock(GetThreadLock());
       job->OnBegin();
-      thread = new sf::Thread(&ThreadImpl::Run, this);
-      thread->launch();
+      thread = std::thread(&ThreadImpl::Run, this);
     }
 
     ~ThreadImpl() override {
-      if (!finished.load(std::memory_order_acquire))
-        Terminate();
+      if (thread.joinable()) {
+        if (!finished.load(std::memory_order_acquire))
+          thread.detach();
+        else
+          thread.join();
+      }
       job->OnEnd();
     }
 
@@ -56,12 +59,14 @@ namespace {
 
     void Terminate() override {
       ScopedLock lock(GetThreadLock());
-      thread->terminate();
+      if (thread.joinable())
+        thread.detach();
     }
 
     void Wait() override {
       if (!waited) {
-        thread->wait();
+        if (thread.joinable())
+          thread.join();
         waited = true;
       }
     }
@@ -73,9 +78,9 @@ Thread Thread_Create(Job const& job) {
 }
 
 DefineFunction(Thread_SleepMS) {
-  sf::sleep(sf::milliseconds(args.ms));
+  std::this_thread::sleep_for(std::chrono::milliseconds(args.ms));
 }
 
 DefineFunction(Thread_SleepUS) {
-  sf::sleep(sf::microseconds(args.us));
+  std::this_thread::sleep_for(std::chrono::microseconds(args.us));
 }

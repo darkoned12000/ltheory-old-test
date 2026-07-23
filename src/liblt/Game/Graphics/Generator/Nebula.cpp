@@ -24,15 +24,12 @@ namespace {
 
     /* Generate nebulae. */ {
       static Shader shader = Shader_Create("identity.jsl", "gen/nebula.jsl");
-      V4 q1 = GetQuat(rng);
+      GetQuat(rng); // consume RNG to keep sequence stable
       V4 q2 = GetQuat(rng);
       (*shader)
         ("color1", args.color1)
         ("color2", args.color2)
-        ("offset", args.offset)
-        ("orientation1", q1)
         ("orientation2", q2)
-        ("roughness", args.roughness)
         ("seed", args.seed)
         ("starDir", args.starDir);
       self->GenerateFromShader(shader);

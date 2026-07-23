@@ -133,9 +133,12 @@ namespace {
       SFRAME("Generate CubeMap");
       Renderer_SetShader(*shader);
       BeginRender();
-      (*shader)
-        ("halfTexel", 0.5f / (float)resolution)
-        ("texelScale", (float)resolution / (float)(resolution - 1));
+      int halfTexelLoc = shader->QueryUniformLocation("halfTexel");
+      if (halfTexelLoc >= 0)
+        shader->SetFloat(halfTexelLoc, 0.5f / (float)resolution);
+      int texelScaleLoc = shader->QueryUniformLocation("texelScale");
+      if (texelScaleLoc >= 0)
+        shader->SetFloat(texelScaleLoc, (float)resolution / (float)(resolution - 1));
 
       for (uint i = 0; i < CubeFace::SIZE; ++i) {
         SetFace((CubeFace::Enum)i);
@@ -221,9 +224,10 @@ namespace {
           GL_DataFormat::UnsignedByte,
           imageData.data());
 
-        sf::Image image;
-        image.create(res, res, (sf::Uint8*)imageData.data());
-        image.saveToFile(Stringize() | path | "_" | i | ".png");
+        sf::Image image(
+          {res, res},
+          reinterpret_cast<std::uint8_t const*>(imageData.data()));
+        (void)image.saveToFile(std::string(Stringize() | path | "_" | i | ".png").c_str());
       }
     }
 

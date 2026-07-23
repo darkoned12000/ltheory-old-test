@@ -1,425 +1,549 @@
 # SFML 3.0.0 Upgrade Guide for Limit Theory Old
 
-**Version:** 1.0  
+**Version:** 3.0  
 **Last Updated:** 2026-07-22  
-**Status:** [IN_PROGRESS]
+**Status:** [BUILD COMPLETE — Integration Testing In Progress]
 
 ## Executive Summary
 
-Upgrading from **SFML 2.6.2** to **SFML 3.0.0** is a **major breaking change** requiring significant refactoring. The migration will affect approximately **40-50% of the codebase** and will require strategic testing at each phase.
+Upgrading from **SFML 2.6.2** to **SFML 3.0.0** is a breaking change, but the
+engine's SFML surface is **much smaller than initially assessed**. The engine
+has its own FreeType-based text renderer, its own raw-OpenGL shader system, and
+an abstracted `SoundEngine` layer. SFML is used only for:
 
-### Key Challenges
-- Complete LTSL SoundEngine abstraction rewrite
-- Text rendering API modernization  
-- Shader/variable binding updates
-- Window context management overhaul
-- Filesystem abstraction cleanup
+| Subsystem | SFML Types Used | Files |
+|-----------|----------------|-------|
+| Window/Events | `sf::RenderWindow`, `sf::Event`, `sf::Keyboard`, `sf::Mouse` | `Window.cpp`, `Mouse.cpp` |
+| Image I/O | `sf::Image` (save/load) | `Texture2D.cpp`, `CubeMap.cpp` |
 
-### Upgrade Strategy
-Implement a **phased migration** with comprehensive testing gates to ensure compatibility while maintaining progress.
+**NOT using SFML at all:**
+- Text rendering — custom FreeType SDF pipeline (`Font.cpp`, `WidgetRenderer.cpp`)
+- Shaders — raw OpenGL (`Shader.cpp`)
+- Audio — abstracted `SoundEngine` interface (`Module/SoundEngine/SFML.cpp`)
+
+### Key Findings (Phase 0)
+- **No `sf::Font`/`sf::Text`** usage — the engine renders text via its own
+  `Font_Get`/`DrawText` pipeline. Phase 2 (Text Rendering Modernization) is
+  **not needed**.
+- **No `sf::Shader`** usage — the engine compiles GLSL via raw OpenGL calls.
+  Phase 3 (Shader Modernization) is **not needed**.
+- **Audio** — `SFML.cpp` implements the `SoundEngine` abstract interface using
+  SFML's `sf::SoundBuffer`/`sf::Sound`/`sf::Music`/`sf::Listener`. SFML 3.0
+  changed audio backend from OpenAL to miniaudio; the `SoundEngine` abstraction
+  means only `SFML.cpp` needs changes.
+- **Filesystem** — the engine uses its own `Location`/`File` abstraction, not
+  SFML file APIs. Phase 5 (Filesystem Modernization) is **not needed**.
+
+### SFML 3.0→3.1 Upgrade (Completed 2026-07-22)
+
+SFML 3.1.0 was installed from Debian sid packages (`libsfml-dev` 3.1.0+dfsg-3)
+with new runtime dependencies: `libsheenbidi3`, `libsfml-audio3.1`,
+`libsfml-graphics3.1`, `libsfml-network3.1`, `libsfml-system3.1`,
+`libsfml-window3.1`.
+
+**Migration result: Zero code changes required.** All SFML 3.0→3.1 changes were
+deprecations of APIs the engine doesn't use:
+- `sf::Font::getKerning(uint32_t)` → deprecated (engine doesn't use `sf::Font`)
+- `sf::Text::findCharacterPos` → deprecated (engine doesn't use `sf::Text`)
+- `sf::Touch::isDown/getPosition` → deprecated (engine doesn't use touch)
+- `sf::Ftp` → deprecated (engine doesn't use FTP)
+- `sf::IpAddress::resolve` → deprecated (engine doesn't use raw IP resolution)
+
+New features in 3.1.0 (available but unused by engine):
+- HarfBuzz-powered Unicode text shaping (Arabic, Hebrew, CJK support)
+- HTTPS support for `sf::Http`
+- DNS API (`sf::Dns`)
+- SFTP client (`sf::Sftp`)
+- QOI image format support
+- `sf::PlaybackDevice::getDeviceSampleRate()`
+
+Build confirmed: `find_package(SFML 3.1 ...)` detects 3.1.0, all targets
+compile clean, 66/66 tests pass.
 
 ---
 
 ## Phase 0: Foundation & Planning
 
-### 0.1 Initial Setup & Assessment [PENDING]
+### 0.1 Initial Setup & Assessment [COMPLETED]
+- Git branch `feature/SFML3-upgrade` created from `main`
+- SFML 2.6.2 usage patterns documented
+- Migration checklist created
+- Performance baseline established
 
-#### Tasks:
-- [ ] Create Git branch `feature/SFML3-upgrade`
-- [ ] Document current SFML 2.6.2 usage patterns
-- [ ] Create detailed migration checklist
-- [ ] Set up testing framework for SFML 3.0
-- [ ] Establish performance baseline
+### 0.2 Dependency Management [COMPLETED]
+- CMake configuration analyzed; vendored SFML built as static archives
+- SFML 3.0 dependency detection plan documented
 
-#### Testing Gates:
+### 0.3 LTSL SoundEngine Layer Analysis [COMPLETED]
+- 22 LTSL scripts use `Sound_Play`/`Sound_Play2D`/`Sound_Play3D`
+- `Sound_SetVolume`, `Sound_SetPitch`, `Sound_RandomizePosition` usage documented
+- User validated sound works: `war` and `ltheory-main` tested
+
+### 0.4 LTSL Text Rendering Analysis [COMPLETED]
+
+**Key finding: The engine does NOT use `sf::Font` or `sf::Text`.**
+
+- `Font.cpp` implements a custom FreeType-based SDF text renderer
+- `WidgetRenderer.cpp` wraps it via `DrawText`/`DrawTextGlow` LTSL functions
+- `Fonts.lts` loads fonts via `Font_Get` → `Font.cpp::Font_Get` (FreeType)
+- SFML Graphics is only used for `sf::RenderWindow` (window) and `sf::Image`
+  (image loading/saving)
+
+**Conclusion:** Phase 2 (Text Rendering Modernization) is cancelled — no
+SFML Text API changes needed.
+
+### 0.5 LTSL Shader Analysis [COMPLETED]
+
+**Key finding: The engine does NOT use `sf::Shader`.**
+
+- `Shader.cpp` compiles GLSL via raw OpenGL (`GL_CreateShader`, `GL_CompileShader`,
+  `GL_CreateProgram`, `GL_LinkProgram`, `GL_Uniform*`)
+- The engine manages its own shader preprocessor (`JSLPreprocess`) for `.jsl` files
+
+**Conclusion:** Phase 3 (Shader Modernization) is cancelled — no SFML Shader
+API changes needed.
+
+### 0.6 LTSL Window/Event Analysis [COMPLETED]
+
+This is the **main migration area**. See Phase 1 below.
+
+### 0.7 LTSL File System Analysis [COMPLETED - CANCELLED]
+
+**Finding:** The engine uses its own `Location`/`File` abstraction, not SFML
+file APIs. Phase 5 is cancelled.
+
+---
+
+## Phase 1: Window/Event Migration
+
+**Scope:** `Window.cpp`, `Mouse.cpp`, `Texture2D.cpp`, `CubeMap.cpp`
+
+### 1.1 sf::Event API Rewrite [COMPLETED]
+
+**File:** `Window.cpp` — full event loop rewrite
+
+SFML 3.0 replaces `e.type == sf::Event::Foo` with `std::variant`-based API:
+- `window.pollEvent()` returns `std::optional<sf::Event>` (was `bool`)
+- Use `event->is<sf::Event::Closed>()` and `event->getIf<sf::Event::Foo>()`
+- Or use `window.handleEvents(callbacks...)`
+
+#### Complete API mapping for Window.cpp:
+
+| SFML 2.6.2 (current) | SFML 3.0.0 (target) |
+|----------------------|---------------------|
+| `impl.pollEvent(e)` (bool) | `const auto event = impl.pollEvent()` (optional) |
+| `e.type == sf::Event::Resized` | `event->getIf<sf::Event::Resized>()` |
+| `e.size.width` / `e.size.height` | `resized->size.x` / `resized->size.y` |
+| `e.type == sf::Event::KeyPressed` | `event->getIf<sf::Event::KeyPressed>()` |
+| `e.key.code != sf::Keyboard::Unknown` | `keyPressed->code != sf::Keyboard::Key::Unknown` |
+| `(int)e.key.code` | `static_cast<int>(keyPressed->code)` |
+| `e.type == sf::Event::MouseButtonPressed` | `event->getIf<sf::Event::MouseButtonPressed>()` |
+| `e.mouseButton.button` | `mouseButton->button` |
+| `e.type == sf::Event::MouseButtonReleased` | `event->getIf<sf::Event::MouseButtonReleased>()` |
+| `e.type == sf::Event::MouseMoved` | `event->getIf<sf::Event::MouseMoved>()` |
+| `e.mouseMove.x` / `e.mouseMove.y` | `mouseMoved->position.x` / `mouseMoved->position.y` |
+| `e.type == sf::Event::MouseWheelMoved` | `event->getIf<sf::Event::MouseWheelScrolled>()` |
+| `e.mouseWheel.delta` | `wheelScrolled->delta` |
+| `e.type == sf::Event::GainedFocus` | `event->is<sf::Event::FocusGained>()` |
+| `e.type == sf::Event::LostFocus` | `event->is<sf::Event::FocusLost>()` |
+| `e.type == sf::Event::TextEntered` | `event->getIf<sf::Event::TextEntered>()` |
+| `e.text.unicode` | `textEntered->unicode` |
+
+#### Window creation changes:
+
+| SFML 2.6.2 | SFML 3.0.0 |
+|-----------|-----------|
+| `sf::VideoMode(size.x, size.y, bpp)` | `sf::VideoMode({size.x, size.y}, bpp)` |
+| `sf::Style::Fullscreen` | `sf::State::Fullscreen` (new enum) |
+| `sf::Style::Default` | `sf::Style::Default` (unchanged) |
+| `sf::Style::None` | `sf::Style::None` (unchanged) |
+| `sf::ContextSettings(...)` constructor | Aggregate init `{...}` (no constructor) |
+| `glSettings.antialiasingLevel` | `glSettings.antiAliasingLevel` (capital A) |
+| `impl.create(mode, title, style, settings)` | `sf::RenderWindow(mode, title, style, settings)` (constructor) |
+| `impl.setView(sf::View(sf::FloatRect(...)))` | `impl.setView(sf::View(sf::FloatRect({0,0}, {w,h})))` |
+
+#### sf::Mouse changes (in Mouse.cpp + Window.cpp):
+
+| SFML 2.6.2 | SFML 3.0.0 |
+|-----------|-----------|
+| `sf::Mouse::Left` | `sf::Mouse::Button::Left` |
+| `sf::Mouse::Right` | `sf::Mouse::Button::Right` |
+| `sf::Mouse::Middle` | `sf::Mouse::Button::Middle` |
+| `sf::Mouse::XButton1` | `sf::Mouse::Button::Extra1` |
+| `sf::Mouse::XButton2` | `sf::Mouse::Button::Extra2` |
+| `sf::Mouse::getPosition(window)` | `window.getMousePosition()` |
+| `sf::Mouse::setPosition(pos, window)` | `window.setMousePosition(pos)` |
+
+#### sf::Keyboard changes (already mapped in A.3):
+
+| SFML 2.6.2 | SFML 3.0.0 |
+|-----------|-----------|
+| `sf::Keyboard::Unknown` | `sf::Keyboard::Key::Unknown` |
+
+#### sf::Rect/sf::FloatRect changes:
+
+| SFML 2.6.2 | SFML 3.0.0 |
+|-----------|-----------|
+| `sf::FloatRect(0, 0, w, h)` | `sf::FloatRect({0, 0}, {w, h})` |
+
+#### sf::Image changes (Texture2D.cpp, CubeMap.cpp):
+
+| SFML 2.6.2 | SFML 3.0.0 |
+|-----------|-----------|
+| `sf::Uint8` | `std::uint8_t` |
+| `image.create(w, h, data)` | `image.resize({w, h}, data)` |
+| `image.loadFromMemory(data, size)` | `sf::Image(data, size)` (constructor) |
+
+#### sf::String changes:
+
+| SFML 2.6.2 | SFML 3.0.0 |
+|-----------|-----------|
+| `title` (const char*) | Works as-is (implicit conversion) |
+
+### 1.2 Mouse.cpp Updates [COMPLETED]
+
+**File:** `Mouse.cpp` — no changes needed (sf::Mouse free functions still work)
+
+### 1.3 Texture2D.cpp Updates [COMPLETED]
+
+**File:** `Texture2D.cpp` — 3 changes:
+1. `sf::Image image; image.loadFromMemory(...)` →
+   `sf::Image image(arr->data(), arr->size())`
+2. `sf::Image image; image.create(w, h, (sf::Uint8*)data)` →
+   `sf::Image({w, h}, (std::uint8_t*)data)`
+3. `image.saveToFile(path)` → `(void)image.saveToFile(std::string(path.c_str()))`
+   (SFML 3.0 takes `std::filesystem::path`, nodiscard on return value)
+
+### 1.4 CubeMap.cpp Updates [COMPLETED]
+
+**File:** `CubeMap.cpp` — 2 changes:
+1. `image.create(res, res, (sf::Uint8*)imageData.data())` →
+   `sf::Image({res, res}, (std::uint8_t*)imageData.data())`
+2. `image.saveToFile(...)` → `(void)image.saveToFile(std::string(...).c_str())`
+   (SFML 3.0 takes `std::filesystem::path`, nodiscard on return value)
+
+### Testing Gate:
 ```
-Test_Gate_0_1:
-- Verify all existing tests pass (SFML 2.6.2 baseline)
-- Document all SFML API usage in codebase
-- Create migration impact matrix
-- Estimate effort for each component
-
-Success Criteria:
-✓ All existing tests pass
-✓ Documentation complete
-✓ Effort estimates accurate
-✓ Dependencies identified
-```
-
-### 0.2 Dependency Management [PENDING]
-
-#### Tasks:
-- [ ] Update CMake configuration for SFML 3.0
-- [ ] Remove/poorly vendored SFML 2.6.2
-- [ ] Configure system SFML 3.0 dependencies
-- [ ] Test build with SFML 3.0
-
-#### Testing Gates:
-```
-Test_Gate_0_2:
-- Verify CMakeLists.txt updates work correctly
-- Confirm SFML 3.0 headers are accessible
-- Build both engine library and launcher
-- Verify basic window creation works
-
-Success Criteria:
-✓ CMake configure succeeds with SFML 3.0
-✓ All build targets compile
-✓ Basic runtime functionality verified
-✓ LD_LIBRARY_PATH set correctly
-```
-
-### 0.3 LTSL SoundEngine Layer Analysis [PENDING]
-
-#### Tasks:
-- [ ] Catalog all LTSL SoundEngine usage in scripts
-- [ ] Identify SoundEngine API calls that need changes
-- [ ] Plan SoundEngine abstraction layer rewrite
-- [ ] Document all Sound-related LTSL bindings
-- [ ] Create SoundEngine migration plan
-
-#### Testing Gates:
-```
-Test_Gate_0_3:
-- Verify SoundEngine usage documented across all .lts scripts
-- Identify all SoundEngine API calls needing updates
-- Create comprehensive SoundEngine migration plan
-- Document all LTSL bindings that need changes
-
-Success Criteria:
-✓ All SoundEngine usage documented
-✓ Migration plan detailed
-✓ LTSL binding changes identified
-✓ Replacement strategy defined
-```
-
-### 0.4 LTSL Text Rendering Analysis [PENDING]
-
-#### Tasks:
-- [ ] Document all LTSL Text API usage
-- [ ] Identify Text rendering customizations
-- [ ] Catalog Text styling and formatting
-- [ ] Plan Text API migration (setColor -> setFillColor)
-- [ ] Document font loading and glyph usage
-
-#### Testing Gates:
-```
-Test_Gate_0_4:
-- Document all LTSL Text API usage patterns
-- Identify custom text rendering implementations
-- Create Text API migration plan
-- Document font and glyph usage
-
-Success Criteria:
-✓ All Text usage documented
-✓ Migration plan complete
-✓ Custom rendering identified
-✓ Font usage cataloged
-```
-
-### 0.5 LTSL Shader Analysis [PENDING]
-
-#### Tasks:
-- [ ] Document all custom shader usage
-- [ ] Identify shader parameter binding patterns
-- [ ] Catalog shader uniform usage
-- [ ] Plan shader API migration (setParameter -> setUniform)
-- [ ] Document shader preprocessor usage
-
-#### Testing Gates:
-```
-Test_Gate_0_5:
-- Document all shader usage in LTSL scripts
-- Identify custom parameter binding patterns
-- Create shader migration plan
-- Document shader preprocessor usage
-
-Success Criteria:
-✓ All shader usage documented
-✓ Migration patterns identified
-✓ Parameter binding updated
-✓ Preprocessor usage preserved
-```
-
-### 0.6 LTSL Window/Event Analysis [PENDING]
-
-#### Tasks:
-- [ ] Document all window creation patterns
-- [ ] Identify custom event handling
-- [ ] Catalog input processing
-- [ ] Plan window API migration
-- [ ] Document context management
-
-#### Testing Gates:
-```
-Test_Gate_0_6:
-- Document all window creation patterns
-- Identify custom event handling
-- Create window migration plan
-- Document context management
-
-Success Criteria:
-✓ All window usage documented
-✓ Event handling patterns preserved
-✓ Migration plan complete
-✓ Context management updated
-```
-
-### 0.7 LTSL File System Analysis [PENDING]
-
-#### Tasks:
-- [ ] Document all custom file loading
-- [ ] Identify resource management patterns
-- [ ] Catalog configuration file usage
-- [ ] Plan filesystem abstraction migration
-- [ ] Document OS-specific file operations
-
-#### Testing Gates:
-```
-Test_Gate_0_7:
-- Document all custom file loading patterns
-- Identify resource management implementations
-- Create filesystem migration plan
-- Document OS-specific operations
-
-Success Criteria:
-✓ All file loading documented
-✓ Resource patterns preserved
-✓ Migration plan complete
-✓ OS operations updated
+Test_Gate_1:
+- Build succeeds with SFML 3.0 headers
+- Window creation works (OpenGL 3.3 context)
+- Event loop handles: resize, keyboard, mouse buttons, mouse move, scroll
+- Mouse position get/set works
+- Texture loading from file works
+- CubeMap face save-to-file works
+- `war` and `ltheory-main` run with sound + graphics
 ```
 
 ---
 
-## Phase 1: LTSL SoundEngine Layer Rewrite
+## Phase 2: Audio Migration
 
-### 1.1 LTSL SoundEngine → Direct SFML Audio Binding [PENDING]
+**Scope:** `Module/SoundEngine/SFML.cpp` only
 
-#### Tasks:
-- [ ] Create LTSL Sound bindings using SFML 3.0 audio API
-- [ ] Remove SoundEngine interface layer
-- [ ] Update all LTSL scripts to use new API
-- [ ] Test sound loading and playback
-- [ ] Verify audio positioning and spatialization
+### 2.1 SFML Audio Backend Changes [COMPLETED]
 
-#### Testing Gates:
+SFML 3.0 replaced OpenAL with **miniaudio**. All changes applied to `SFML.cpp`:
+
+| SFML 2.6.2 | SFML 3.0.0 | Status |
+|-----------|-----------|--------|
+| `sf::SoundBuffer::loadFromFile(path)` | `sf::SoundBuffer(path)` or `.loadFromFile(path)` | OK — loadFromMemory signature unchanged |
+| `sf::Sound::setBuffer(buf)` | `sf::Sound(buf)` (constructor) | OK |
+| `sf::Sound::setLoop(bool)` | `sf::Sound::setLooping(bool)` | FIXED |
+| `sf::Sound::getLoop()` | `sf::Sound::isLooping()` | FIXED |
+| `sf::Sound::getBuffer()` | **Removed** — store buffer pointer separately | FIXED |
+| `sf::SoundSource::Stopped` | `sf::SoundSource::Status::Stopped` (scoped enum) | FIXED |
+| `sf::Sound::setPosition(x, y, z)` | `sf::Sound::setPosition({x, y, z})` (Vector3f) | FIXED |
+| `sf::Listener::setPosition(x, y, z)` | `sf::Listener::setPosition({x, y, z})` (Vector3f) | FIXED |
+| `sf::Listener::setDirection(...)` | `sf::Listener::setDirection({x, y, z})` (Vector3f) | FIXED |
+| `sf::Listener::setUpVector(...)` | `sf::Listener::setUpVector({x, y, z})` (Vector3f) | FIXED |
+| `sf::Music::setLoop(bool)` | `sf::Music::setLooping(bool)` | N/A — no sf::Music used |
+| Threading: `sf::Mutex`/`sf::Lock` | `std::mutex`/`std::lock_guard` | PREVIOUSLY DONE |
+| Threading: `sf::Thread` | `std::thread` | PREVIOUSLY DONE |
+
+### Testing Gate:
 ```
-Test_Gate_1_1:
-- Verify Sound bindings compile correctly
-- Test basic sound loading from files
-- Test sound playback control (play/pause/stop)
-- Test audio volume and pitch adjustments
-- Test 3D audio positioning
-
-Success Criteria:
-✓ All Sound bindings compile
-✓ Basic sound loading verified
-✓ Playback control functions
-✓ Volume/pitch adjustments tested
-✓ 3D audio working
-```
-
-### 1.2 LTSL ScriptAPI Sound Bindings Update [PENDING]
-
-#### Tasks:
-- [ ] Update LTSL ScriptAPI sound bindings
-- [ ] Add sound creation and management functions
-- [ ] Update existing sound-related script functions
-- [ ] Test script loading with sound APIs
-- [ ] Verify backward compatibility
-
-#### Testing Gates:
-```
-Test_Gate_1_2:
-- Verify ScriptAPI bindings compile
-- Test sound creation from scripts
-- Test sound manipulation in LTSL
-- Verify existing script compatibility
-- Test sound event integration
-
-Success Criteria:
-✓ All ScriptAPI bindings compile
-✓ Sound creation from LTSL works
-✓ Script-side sound control verified
-✓ Existing scripts still compatible
-✓ Event integration functional
+Test_Gate_2:
+- Sound effects play correctly
+- Music plays/loops correctly
+- 3D positional audio works
+- Volume/pitch controls work
+- `war` and `ltheory-main` verified with audio
 ```
 
 ---
 
-## Phase 2: LTSL Text Rendering Modernization
+## Phase 3: CMake Integration
 
-### 2.1 Text API Migration (setColor → setFillColor) [PENDING]
+### 3.1 Update CMakeLists.txt [COMPLETED]
 
-#### Tasks:
-- [ ] Update Text class API to use SFML 3.0 Text API
-- [ ] Migrate Text color handling to FillColor/OutlineColor
-- [ ] Update font glyph loading
-- [ ] Test text rendering with new API
-- [ ] Verify underline/strikethrough support
+SFML 3.0 CMake target names changed:
 
-#### Testing Gates:
+| SFML 2.6.2 | SFML 3.0.0 | Status |
+|-----------|-----------|--------|
+| `sfml-graphics`, `sfml-network`, `sfml-system`, `sfml-window` | `SFML::Graphics`, `SFML::Network`, `SFML::System`, `SFML::Window` | FIXED |
+| `sfml-audio` | `SFML::Audio` | FIXED |
+| `find_package(SFML ...)` | `find_package(SFML 3 REQUIRED COMPONENTS Graphics Audio Network System Window)` | FIXED |
+
+**Additional fixes applied:**
+- Added `SFML::Audio` to all platform link lists (Windows/Mac/Linux)
+- Added `Audio` component to `find_package` — was missing, caused linker errors
+
+### Testing Gate:
 ```
-Test_Gate_2_1:
-- Verify Text API compile with SFML 3.0
-- Test basic text rendering
-- Test fill color setting
-- Test outline color and thickness
-- Test text positioning and alignment
-
-Success Criteria:
-✓ Text API compiles
-✓ Basic rendering verified
-✓ Color setters functional
-✓ Outline support tested
-✓ Positioning accurate
+Test_Gate_3:
+- CMake configure succeeds with SFML 3.0
+- All build targets compile
+- LD_LIBRARY_PATH set correctly
 ```
 
 ---
 
-## Phase 3: LTSL Shader Modernization
+## Phase 4: Integration Testing
 
-### 3.1 Shader Parameter Migration (setParameter → setUniform) [PENDING]
+### 4.1 Full Application Testing [IN PROGRESS]
 
-#### Tasks:
-- [ ] Update shader parameter binding to use SFML 3.0 uniforms
-- [ ] Migrate custom parameter types
-- [ ] Update shader preprocessor integration
-- [ ] Test shader uniform setting
-- [ ] Verify shader variable types
+Build succeeds: `liblt.so`, `launch`, `lte_tests` all link and run.
+Unit tests: 66/66 pass, 0 failures.
+Remaining: runtime testing with `war` and `ltheory-main`.
 
-#### Testing Gates:
+### 4.2 Unit Tests [COMPLETED]
+
+All 66 checks pass (13 tests: String, Vector, Array, Type).
+
+---
+
+## Additional Breaking Changes Discovered During Build
+
+The following changes were not in the original migration plan but were
+discovered during compilation/linking:
+
+### Location.cpp — `sf::Http::Response::Status` Scoped Enum
+```cpp
+// SFML 2.6.2:
+if (response.getStatus() != sf::Http::Response::Ok)
+// SFML 3.0.0:
+if (response.getStatus() != sf::Http::Response::Status::Ok)
 ```
-Test_Gate_3_1:
-- Verify shader compilation with SFML 3.0
-- Test basic shader uniforms
-- Test float, vec2, vec3, vec4 parameters
-- Test matrix uniforms
-- Test texture samplers
 
-Success Criteria:
-✓ Shader compilation successful
-✓ Basic uniform setting works
-✓ All vector types supported
-✓ Matrix uniforms functional
-✓ Texture sampling verified
+### Window.cpp — V2U ↔ sf::Vector2u Assignment
+```cpp
+// SFML 3.0.0: sf::Event::Resized::size is sf::Vector2u, not assignable to V2U directly
+size = V2U(resized->size.x, resized->size.y);
+```
+
+### Texture2D.cpp / CubeMap.cpp — `saveToFile` Takes `std::filesystem::path`
+```cpp
+// SFML 3.0.0: saveToFile now takes std::filesystem::path, not sf::String
+// Also [[nodiscard]] on return value — cast to (void) to suppress -Werror
+(void)image.saveToFile(std::string(path.c_str()).c_str());
+```
+
+### SFML.cpp — `sf::Sound::getBuffer()` Removed
+```cpp
+// SFML 2.6.2: sound->getBuffer() returned sf::SoundBuffer*
+// SFML 3.0.0: method removed — store buffer pointer in SoundSFMLImpl member
+sf::SoundBuffer const* buffer;  // added to SoundSFMLImpl
+```
+
+### SFML.cpp — `sf::Sound::setPosition()` Takes Vector3f
+```cpp
+// SFML 2.6.2: sound->setPosition(x, y, z)
+// SFML 3.0.0: sound->setPosition({x, y, z})
+```
+
+### SFML.cpp — `sf::Listener` Methods Take Vector3f
+```cpp
+// SFML 2.6.2: sf::Listener::setPosition(x, y, z)
+// SFML 3.0.0: sf::Listener::setPosition({x, y, z})
+// Same for setDirection, setUpVector
 ```
 
 ---
 
-## Phase 4: LTSL Window/Event Modernization
+## Appendix A: Detailed sf::Event Rewrite (Window.cpp)
 
-### 4.1 Window Context Migration [PENDING]
-
-#### Tasks:
-- [ ] Update window creation to use SFML 3.0 ContextSettings
-- [ ] Update event handling to SFML 3.0 Event API
-- [ ] Migrate input system (keyboard, mouse, joystick)
-- [ ] Update window state management
-- [ ] Test window creation and events
-
-#### Testing Gates:
-```
-Test_Gate_4_1:
-- Verify window creation with SFML 3.0
-- Test window states (focus, visibility, resizing)
-- Test keyboard input (keys, text entry)
-- Test mouse input (position, buttons, scrolling)
-- Test event system
-
-Success Criteria:
-✓ Window creation works
-✓ Window states functional
-✓ Input handling accurate
-✓ Event system reliable
+Current event loop (SFML 2.6.2):
+```cpp
+sf::Event e;
+while (impl.pollEvent(e)) {
+    if (e.type == sf::Event::Resized) {
+        float w = (float)e.size.width;
+        float h = (float)e.size.height;
+        impl.setView(sf::View(sf::FloatRect(0, 0, w, h)));
+        size.x = e.size.width;
+        size.y = e.size.height;
+        viewport->size = V2(w, h);
+    }
+    else if (e.type == sf::Event::KeyPressed) {
+        if (e.key.code != sf::Keyboard::Unknown)
+            Keyboard_AddDown((int)e.key.code);
+    }
+    // ... more events
+}
 ```
 
----
-
-## Phase 5: LTSL Filesystem Modernization
-
-### 5.1 File System Abstraction Migration [PENDING]
-
-#### Tasks:
-- [ ] Update file loading to use SFML 3.0 resources
-- [ ] Migrate configuration file reading
-- [ ] Update resource path handling
-- [ ] Test file loading with new API
-- [ ] Verify cross-platform compatibility
-
-#### Testing Gates:
-```
-Test_Gate_5_1:
-- Verify file loading with SFML 3.0
-- Test texture/font loading
-- Test configuration file parsing
-- Test resource path resolution
-- Test error handling
-
-Success Criteria:
-✓ File loading functional
-✓ Resource loading verified
-✓ Config parsing works
-✓ Path resolution correct
-✓ Error handling robust
-```
-
----
-
-## Phase 6: Integration Testing
-
-### 6.1 LTSL Application Compatibility [PENDING]
-
-#### Tasks:
-- [ ] Test all LTSL applications with new APIs
-- [ ] Verify script compilation and execution
-- [ ] Update application scripts for API changes
-- [ ] Test application integration
-- [ ] Performance benchmarking
-
-#### Testing Gates:
-```
-Test_Gate_6_1:
-- Test war application with new SFML APIs
-- Test colony application with new APIs
-- Test ltheory-main application
-- Test all LTSL scripts compile and run
-- Compare performance with baseline
-
-Success Criteria:
-✓ war application functional
-✓ colony application functional
-✓ ltheory-main application runs
-✓ All LTSL scripts compile
-✓ Performance acceptable
+Target event loop (SFML 3.0.0):
+```cpp
+while (const auto event = impl.pollEvent()) {
+    if (const auto* resized = event->getIf<sf::Event::Resized>()) {
+        float w = (float)resized->size.x;
+        float h = (float)resized->size.y;
+        impl.setView(sf::View(sf::FloatRect({0, 0}, {w, h})));
+        size = resized->size;
+        viewport->size = V2(w, h);
+    }
+    else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
+        if (keyPressed->code != sf::Keyboard::Key::Unknown)
+            Keyboard_AddDown(static_cast<int>(keyPressed->code));
+    }
+    else if (const auto* mouseButton = event->getIf<sf::Event::MouseButtonPressed>()) {
+        ProcessMouseEvent(mouseButton->button, true);
+    }
+    else if (const auto* mouseButton = event->getIf<sf::Event::MouseButtonReleased>()) {
+        ProcessMouseEvent(mouseButton->button, false);
+    }
+    else if (const auto* mouseMoved = event->getIf<sf::Event::MouseMoved>()) {
+        V2I p(mouseMoved->position.x, mouseMoved->position.y);
+        if (captureMouse) {
+            const V2I borderSize = 1;
+            V2I s = (V2I)size - borderSize;
+            if (p.x < borderSize.x || p.y < borderSize.y ||
+                p.x > s.x || p.y > s.y)
+            {
+                p = Clamp(p, borderSize, s);
+                Mouse_SetPos(p);
+            }
+        }
+        Mouse_UpdatePos(p);
+    }
+    else if (const auto* wheel = event->getIf<sf::Event::MouseWheelScrolled>()) {
+        if (hasFocus)
+            Mouse_SetScrollDelta((float)wheel->delta);
+    }
+    else if (event->is<sf::Event::FocusGained>()) {
+        hasFocus = true;
+    }
+    else if (event->is<sf::Event::FocusLost>()) {
+        hasFocus = false;
+    }
+    else if (const auto* textEntered = event->getIf<sf::Event::TextEntered>()) {
+        if (textEntered->unicode >= 32 && textEntered->unicode <= 126)
+            Keyboard_AddText(static_cast<char>(textEntered->unicode));
+    }
+}
 ```
 
----
+## Appendix B: Window Creation Rewrite (Window.cpp)
 
-## Phase 7: Engine Core Testing
-
-### 7.1 Unit Tests Update [PENDING]
-
-#### Tasks:
-- [ ] Update all LTE unit tests for SFML 3.0
-- [ ] Add new unit tests for migrated APIs
-- [ ] Verify test coverage
-- [ ] Run comprehensive test suite
-- [ ] Fix any test failures
-
-#### Testing Gates:
+Current (SFML 2.6.2):
+```cpp
+sf::ContextSettings glSettings;
+glSettings.majorVersion = 3;
+glSettings.minorVersion = 3;
+glSettings.attributeFlags = 0;
+glSettings.depthBits = 24;
+glSettings.stencilBits = 8;
+impl.create(
+    sf::VideoMode(size.x, size.y, bpp),
+    title,
+    fullscreen ? sf::Style::Fullscreen
+               : border ? sf::Style::Default : sf::Style::None,
+    glSettings);
+impl.setMouseCursorVisible(false);
+impl.setView(sf::View(sf::FloatRect(0, 0, size.x, size.y)));
 ```
-Test_Gate_7_1:
-- Run all existing LTE unit tests
-- Verify test results match baseline
-- Fix any compilation or runtime errors
-- Add missing test coverage
-- Benchmark test performance
 
-Success Criteria:
-✓ All existing tests pass
-✓ New tests added
-✓ Test coverage verified
-✓ No regressions
-✓ Performance acceptable
+Target (SFML 3.0.0):
+```cpp
+sf::ContextSettings glSettings{
+    .depthBits = 24,
+    .stencilBits = 8,
+    .antiAliasingLevel = 0,
+    .majorVersion = 3,
+    .minorVersion = 3,
+    .attributeFlags = sf::ContextSettings::Attribute::Default,
+    .sRgbCapable = false,
+};
+// Note: sf::RenderWindow constructor replaces impl.create()
+// sf::Style::Fullscreen → sf::State::Fullscreen
+*static_cast<sf::RenderWindow*>(&impl) = sf::RenderWindow(
+    sf::VideoMode({size.x, size.y}, bpp),
+    title,
+    fullscreen ? sf::State::Fullscreen
+               : border ? sf::Style::Default : sf::Style::None,
+    glSettings);
+// OR: assign to a member sf::RenderWindow directly
+impl.setMouseCursorVisible(false);
+impl.setView(sf::View(sf::FloatRect({0, 0}, {size.x, size.y})));
+```
+
+**Note on sf::RenderWindow construction:** In SFML 3.0, `sf::RenderWindow`
+still has `create()` (verified in SFML 3.0.2 headers). We use `create()` with
+the new signature: `create(VideoMode, title, style, State, ContextSettings)`.
+The `sf::RenderWindow` member in `WindowImpl` works as before with `create()`.
+
+## Appendix C: sf::Mouse ProcessMouseEvent Rewrite
+
+Current:
+```cpp
+void ProcessMouseEvent(sf::Mouse::Button button, bool pressed) {
+    switch (button) {
+        case sf::Mouse::Left:  ...
+        case sf::Mouse::Right: ...
+        case sf::Mouse::Middle: ...
+        case sf::Mouse::XButton1: ...
+        case sf::Mouse::XButton2: ...
+    }
+}
+```
+
+Target:
+```cpp
+void ProcessMouseEvent(sf::Mouse::Button button, bool pressed) {
+    switch (button) {
+        case sf::Mouse::Button::Left:    ...
+        case sf::Mouse::Button::Right:   ...
+        case sf::Mouse::Button::Middle:  ...
+        case sf::Mouse::Button::Extra1:  ... // was XButton1
+        case sf::Mouse::Button::Extra2:  ... // was XButton2
+    }
+}
+```
+
+## Appendix D: sf::Image Usage (Texture2D.cpp)
+
+### Texture_LoadFrom (line 404-416):
+
+Current:
+```cpp
+sf::Image image;
+AutoPtr< Array<uchar> > arr = args.source->Read();
+image.loadFromMemory(arr->data(), arr->size());
+return Texture_Create(
+    image.getSize().x, image.getSize().y,
+    GL_TextureFormat::RGBA8, image.getPixelsPtr());
+```
+
+Target:
+```cpp
+AutoPtr< Array<uchar> > arr = args.source->Read();
+sf::Image image(arr->data(), arr->size());
+return Texture_Create(
+    image.getSize().x, image.getSize().y,
+    GL_TextureFormat::RGBA8, image.getPixelsPtr());
+```
+
+### SaveToFile (line 190-192):
+
+Current:
+```cpp
+sf::Image image;
+image.create(width, height, (sf::Uint8*)imageData.data());
+image.saveToFile(path);
+```
+
+Target:
+```cpp
+sf::Image image({width, height}, (std::uint8_t*)imageData.data());
+image.saveToFile(path);
 ```

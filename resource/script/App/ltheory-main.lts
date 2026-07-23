@@ -251,7 +251,7 @@ type App
         desktopVisible
           desktop =
             Layer
-              (Compositor_Basic 0.1 0.1 (Vec3 0.4 0.5 0.75))
+              Compositor_Basic 0.1 0.1 (Vec3 0.4 0.5 0.75)
               Mesh_Quad
               1
               Widget/DevTool:Create

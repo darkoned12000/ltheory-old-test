@@ -25,6 +25,7 @@ namespace {
 
   struct SoundSFMLImpl : public SoundT {
     std::unique_ptr<sf::Sound> sound;
+    sf::SoundBuffer const* buffer;
     bool deleted;
     float pan;
     float pitch;
@@ -32,11 +33,11 @@ namespace {
     bool looped;
     bool playing;
 
-    SoundSFMLImpl(std::unique_ptr<sf::Sound> s) : 
-      sound(std::move(s)), deleted(false), pan(0), pitch(1), volume(1), looped(false), playing(false) {
+    SoundSFMLImpl(std::unique_ptr<sf::Sound> s, sf::SoundBuffer const* buf) : 
+      sound(std::move(s)), buffer(buf), deleted(false), pan(0), pitch(1), volume(1), looped(false), playing(false) {
       if (sound) {
         volume = sound->getVolume() / 100.0f;
-        looped = sound->getLoop();
+        looped = sound->isLooping();
       }
     }
 
@@ -47,7 +48,7 @@ namespace {
 
     bool IsFinished() const override {
       if (!sound) return true;
-      return sound->getStatus() == sf::SoundSource::Stopped;
+      return sound->getStatus() == sf::SoundSource::Status::Stopped;
     }
 
     bool IsLooped() const override {
@@ -55,8 +56,8 @@ namespace {
     }
 
     float GetDuration() const override {
-      if (!sound || !sound->getBuffer()) return 0.0f;
-      return sound->getBuffer()->getDuration().asMilliseconds();
+      if (!sound || !buffer) return 0.0f;
+      return buffer->getDuration().asMilliseconds();
     }
 
     float GetPan() const override {
@@ -117,7 +118,7 @@ namespace {
       V3 relative = (V3)(position - camPos);
       
       // SFML expects coordinates. We pass the relative position.
-      sound->sound->setPosition(relative.x, relative.y, relative.z);
+      sound->sound->setPosition({relative.x, relative.y, relative.z});
     }
   };
 
@@ -169,20 +170,19 @@ namespace {
       // In FMOD, this was used for raw floating point PCM data.
       // We can load raw PCM into sf::SoundBuffer, but it expects 16-bit integers.
       // For now, we will stub it, as it is rarely used (often for synth generation).
-      return new SoundSFMLImpl(nullptr);
-    }
+      return new SoundSFMLImpl(nullptr, nullptr);    }
 
     Sound Play2D(String const& filename, float volume, bool looped) override {
       sf::SoundBuffer* buf = GetBuffer(filename);
-      if (!buf) return new SoundSFMLImpl(nullptr);
+      if (!buf) return new SoundSFMLImpl(nullptr, nullptr);
 
       auto snd = std::make_unique<sf::Sound>(*buf);
       snd->setRelativeToListener(true);
-      snd->setPosition(0, 0, 0);
+      snd->setPosition({0, 0, 0});
 
-      auto s = new SoundSFMLImpl(std::move(snd));
+      auto s = new SoundSFMLImpl(std::move(snd), buf);
       s->SetVolume(volume);
-      s->sound->setLoop(looped);
+      s->sound->setLooping(looped);
       s->looped = looped;
       s->SetPlaying(true);
       
@@ -199,16 +199,16 @@ namespace {
       bool looped) override
     {
       sf::SoundBuffer* buf = GetBuffer(s);
-      if (!buf) return new SoundSFMLImpl(nullptr);
+      if (!buf) return new SoundSFMLImpl(nullptr, nullptr);
 
       auto snd = std::make_unique<sf::Sound>(*buf);
       snd->setRelativeToListener(true); // We manage relative position manually 
       snd->setMinDistance(kDistanceScale * distanceDiv);
       snd->setAttenuation(1.0f); // Default linear attenuation in SFML
 
-      auto sndImpl = new SoundSFMLImpl(std::move(snd));
+      auto sndImpl = new SoundSFMLImpl(std::move(snd), buf);
       sndImpl->SetVolume(f);
-      sndImpl->sound->setLoop(looped);
+      sndImpl->sound->setLooping(looped);
       sndImpl->looped = looped;
       
       auto info = std::make_unique<Sound3DInstance>();
@@ -232,12 +232,12 @@ namespace {
         camPos = camera->GetPos();
         // We set SFML listener to origin, because we manually subtract camPos from all 3D sounds
         // This avoids large coordinate floating point precision issues.
-        sf::Listener::setPosition(0, 0, 0);
+        sf::Listener::setPosition({0, 0, 0});
         
         V3 camLook = camera->GetLook();
         V3 camUp = camera->GetUp();
-        sf::Listener::setDirection(camLook.x, camLook.y, camLook.z);
-        sf::Listener::setUpVector(camUp.x, camUp.y, camUp.z);
+        sf::Listener::setDirection({camLook.x, camLook.y, camLook.z});
+        sf::Listener::setUpVector({camUp.x, camUp.y, camUp.z});
       }
 
       // Cleanup 2D sounds

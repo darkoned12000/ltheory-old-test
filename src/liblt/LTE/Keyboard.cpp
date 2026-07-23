@@ -280,24 +280,24 @@ namespace LTE {
 namespace {
   sf::Keyboard::Key Key_LTE_to_SFML(Key key) {
     switch (key) {
-      #define X(x) case Key_##x: return sf::Keyboard::x;
+      #define X(x) case Key_##x: return sf::Keyboard::Key::x;
       KEY_X2
       #undef X
 
-      #define XY(x, y) case Key_##x: return sf::Keyboard::y;
+      #define XY(x, y) case Key_##x: return sf::Keyboard::Key::y;
       KEY_MAP_XY
       #undef XY
-      default: return sf::Keyboard::Unknown;
+      default: return sf::Keyboard::Key::Unknown;
     };
   }
 
   Key Key_SFML_to_LTE(sf::Keyboard::Key key) {
     switch (key) {
-      #define X(x) case sf::Keyboard::x: return Key_##x;
+      #define X(x) case sf::Keyboard::Key::x: return Key_##x;
       KEY_X2
       #undef X
 
-      #define XY(x, y) case sf::Keyboard::y: return Key_##x;
+      #define XY(x, y) case sf::Keyboard::Key::y: return Key_##x;
       KEY_MAP_XY
       #undef XY
       default: return Key_SIZE;

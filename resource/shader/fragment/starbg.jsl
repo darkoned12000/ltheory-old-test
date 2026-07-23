@@ -4,8 +4,6 @@
 
 FRAG_IN vec3 position;
 
-uniform sampler2D texture;
-
 void main() {
 #if 0
   float r = length(uv);

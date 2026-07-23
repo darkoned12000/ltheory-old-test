@@ -128,7 +128,6 @@ namespace {
 
           (*shader)
             ("baseColor", flare.color)
-            ("center", flare.center)
             ("depth", flare.depth)
             ("opacity", flare.light->visibility)
             ("texture", flareTexture);
